@@ -1,14 +1,52 @@
-## Iniciando o projeto
+# Iniciando o projeto
 
-Em **/backstage/** baixe as dependências do projeto com:
+## 1. Configuração do backend (`/backstage/`)
 
-``
-pip install -r requirements.txt
-``
+1. Instale as dependências:
 
-Na raiz do projeto crie uma .env com as credênciais do banco de dados:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-`touch .env` 
+2. Crie o arquivo `.env` na raiz do projeto e configure as credenciais do Supabase:
+
+   ```bash
+   touch .env
+   ```
+
+3. Inicie o servidor backend:
+
+   * Windows:
+
+     ```bash
+     python manage.py runserver
+     ```
+   * Linux/MacOS:
+
+     ```bash
+     python3 manage.py runserver
+     ```
 
 ---
+
+## 2. Configuração do frontend (`/frontend/`)
+
+1. Instale as dependências:
+
+   ```bash
+   npm install
+   ```
+
+2. Inicie o servidor de desenvolvimento:
+
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## 3. Acessando o projeto
+
+* Backend: [http://127.0.0.1:8000](http://127.0.0.1:8000)
+* Frontend: [http://localhost:5173](http://localhost:5173)
 
