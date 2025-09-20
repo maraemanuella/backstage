@@ -1,10 +1,12 @@
-.vscode
+# Ambientes e dependências
 .venv
-backstage/backstage/__pycache__
-.idea
 .env
-backstage/api/__pycache__
-backstage/api/migrations/__pycache__
 frontend/node_modules
-backstage/api/__pycache__\
+
+# IDEs
+.vscode
+.idea
+
+# Python
+__pycache__/
 *.pyc
