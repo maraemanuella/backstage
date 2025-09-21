@@ -5,7 +5,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
-    profile_photo = serializers.ImageField(use_url=True)
+    profile_photo = serializers.ImageField(use_url=True, required=False)
 
     class Meta:
         model = User

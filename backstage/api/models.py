@@ -31,7 +31,7 @@ class CustomUser(AbstractUser):
     cnpj = models.CharField(max_length=14, blank=True, null=True, unique=True)
     data_nascimento = models.DateField(blank=True, null=True)
     score = models.FloatField(default=5)
-    profile_photo = models.ImageField(upload_to="profile_photos/", blank=True, null=True)
+    profile_photo = models.ImageField(upload_to="profile_photos/", blank=True, null=True, default="profile_photos/user.jpg")
     sexo = models.CharField(
         max_length=10,
         choices=[("M", "Masculino"), ("F", "Feminino"), ("O", "Outro")],
