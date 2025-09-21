@@ -19,6 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
             "data_nascimento",
             "sexo",
             "password",
+            "score",
             "profile_photo"
         )
         extra_kwargs = {

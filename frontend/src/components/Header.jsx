@@ -1,18 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../api";
 
-function Header() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    // exemplo: pega o usuário logado na rota /api/me/
-    api.get("api/user/me/").then((res) => {
-      setUser(res.data);
-    }).catch(err => {
-      console.error("Erro ao carregar usuário", err);
-    });
-  }, []);
-
+function Header({ user }) {
   return (
     <header className="flex flex-row w-auto border-b-2 border-black/10 h-[80px]">
       <h1 className="flex flex-row justify-center items-center ml-[150px] gap-2 font-script text-[25px]">

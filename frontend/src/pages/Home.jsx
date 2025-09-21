@@ -3,9 +3,23 @@ import Busca from "../components/Busca";
 import Filtro from "../components/Filtro";
 import Eventos from "../components/Eventos";
 import Score from "../components/Score";
-import { useState } from "react";
+import {useEffect, useState} from "react";
+import api from "../api.js";
 
 function Home() {
+
+    const [user, setUser] = useState(null);
+
+  useEffect(() => {
+      api.get("api/user/me/")
+        .then(res => {
+          console.log(res.data);
+          setUser(res.data);
+        })
+        .catch(err => console.error(err));
+    }, []);
+
+
   const eventos = [
     {
       id: 1,
@@ -41,11 +55,9 @@ function Home() {
     },
   ];
 
-  // estados para filtro e busca
   const [busca, setBusca] = useState("");
   const [filtroAtivo, setFiltroAtivo] = useState("Todos");
 
-  // filtra os eventos
   const eventosFiltrados = eventos.filter((evento) => {
     const filtroTipo = filtroAtivo === "Todos" || evento.tipo === filtroAtivo;
     const filtroBusca =
@@ -56,9 +68,9 @@ function Home() {
 
   return (
     <main>
-      <Header />
+      <Header user={user}/>
       <Busca busca={busca} setBusca={setBusca} />
-      <Score />
+      <Score user={user}/>
       <Filtro filtroAtivo={filtroAtivo} setFiltroAtivo={setFiltroAtivo} />
       <Eventos eventos={eventosFiltrados} />
     </main>
