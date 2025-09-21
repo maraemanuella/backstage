@@ -8,3 +8,4 @@ backstage/api/migrations/__pycache__
 frontend/node_modules
 backstage/api/__pycache__\
 *.pyc
+/backstage/api/__pycache__
