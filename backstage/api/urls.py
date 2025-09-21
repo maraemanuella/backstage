@@ -33,5 +33,3 @@ urlpatterns = [
 
 #     Retorna o usuário logado na sessão
     path("user/me/", MeView.as_view(), name="me"),
-
-]

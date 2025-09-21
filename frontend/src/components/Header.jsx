@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../api"; // seu axios configurado com baseURL
+import api from "../api";
 
 function Header() {
   const [user, setUser] = useState(null);
