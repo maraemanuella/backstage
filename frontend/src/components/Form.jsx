@@ -72,7 +72,7 @@ function Form({ route, method }) {
   return (
     <>
       <ToastContainer />
-      <main className="min-h-screen w-full grid grid-cols-1 md:grid-cols-2">
+      <main className="min-h-screen w-full grid grid-cols-1 md:grid-cols-2 select-none">
         <div className="container hidden md:flex bg-black text-white items-center justify-center">
             <img src={Img} alt="" className={"w-1/2"}/>
         </div>

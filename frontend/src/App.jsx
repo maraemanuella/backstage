@@ -5,6 +5,7 @@ import Home from "./pages/Home"
 import NotFound from "./pages/NotFound"
 import ProtectedRoute from "./components/ProtectedRoute"
 import EventDescription from "./pages/EventDescription"
+import TitleUpdater from "./components/TitleUpdater";
 
 function Logout() {
   localStorage.clear()
@@ -19,6 +20,7 @@ function RegisterAndLogout() {
 function App() {
   return (
     <BrowserRouter>
+        <TitleUpdater />
       <Routes>
         <Route
           path="/"
