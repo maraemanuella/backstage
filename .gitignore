@@ -9,3 +9,4 @@ frontend/node_modules
 backstage/api/__pycache__\
 *.pyc
 /backstage/api/__pycache__
+venv
