@@ -58,7 +58,7 @@ function Form({ route, method }) {
             .join("\n");
         }
       } else if (error.request) {
-        errorMessage = "Sem resposta do servidor. Verifique sua conexão.";
+        errorMessage = "Sem resposta do servidor: Verifique sua conexão.";
       } else {
         errorMessage = error.message;
       }
@@ -74,7 +74,7 @@ function Form({ route, method }) {
       <ToastContainer />
       <main className="min-h-screen w-full grid grid-cols-1 md:grid-cols-2">
         <div className="container hidden md:flex bg-black text-white items-center justify-center">
-            <img src={Img} alt=""/>
+            <img src={Img} alt="" className={"w-1/2"}/>
         </div>
 
         <div className="flex items-center justify-center bg-white px-8 sm:px-16">
