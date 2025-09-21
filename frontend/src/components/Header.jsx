@@ -1,12 +1,21 @@
-import { useState } from "react";
-// import Logo from "../assets/Logo.png";
+import { useEffect, useState } from "react";
+import api from "../api"; // seu axios configurado com baseURL
 
-function Header(params) {
+function Header() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // exemplo: pega o usuário logado na rota /api/me/
+    api.get("api/user/me/").then((res) => {
+      setUser(res.data);
+    }).catch(err => {
+      console.error("Erro ao carregar usuário", err);
+    });
+  }, []);
 
   return (
     <header className="flex flex-row w-auto border-b-2 border-black/10 h-[80px]">
       <h1 className="flex flex-row justify-center items-center ml-[150px] gap-2 font-script text-[25px]">
-        {/*<img src={Logo} alt="logo_backstage" className="w-[40px] h-[40px]" />*/}
         BACKSTAGE
       </h1>
 
@@ -14,10 +23,18 @@ function Header(params) {
         id="profile"
         className="flex flex-col justify-center items-center gap-2 ml-auto mr-[200px]"
       >
-        <button className="cursor-pointer">
-          <img src="#" alt="profile_img" />
-        </button>
-        <span>Nick_name</span>
+        {user && (
+          <>
+              <button className="cursor-pointer flex flex-col items-center">
+                <img
+                  src={`http://localhost:8000${user.profile_photo}`}
+                  alt="Foto de perfil"
+                  className="w-[50px] h-[50px] rounded-full object-cover"
+                />
+                <span className="mt-[0.5]">{user.username}</span>
+              </button>
+        </>
+        )}
       </div>
     </header>
   );

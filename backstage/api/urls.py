@@ -9,6 +9,7 @@ from .views import (
     ListUsersView,
     RetrieveUpdateUserView,
     DeleteUserView,
+    MeView,
 )
 
 
@@ -29,5 +30,8 @@ urlpatterns = [
     path('token/', CustomTokenObtainView.as_view(), name='get_token'),
     path('token/refresh/', TokenRefreshView.as_view(), name='refresh'),
     path('api-auth/', include('rest_framework.urls')),
+
+#     Retorna o usuário logado na sessão
+    path("user/me/", MeView.as_view(), name="me"),
 
 ]
