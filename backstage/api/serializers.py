@@ -61,4 +61,3 @@ class CustomTokenSerializer(serializers.Serializer):
         return {
             'access': str(refresh.access_token),
             'refresh': str(refresh)
-        }

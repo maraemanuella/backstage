@@ -5,6 +5,7 @@ function Header() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    // exemplo: pega o usuário logado na rota /api/me/
     api.get("api/user/me/").then((res) => {
       setUser(res.data);
     }).catch(err => {
