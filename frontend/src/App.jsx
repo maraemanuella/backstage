@@ -5,6 +5,7 @@ import Home from "./pages/Home"
 import NotFound from "./pages/NotFound"
 import ProtectedRoute from "./components/ProtectedRoute"
 import EventDescription from "./pages/EventDescription"
+import CheckoutPage from "./pages/CheckoutPage";
 import TitleUpdater from "./components/TitleUpdater";
 
 function Logout() {
@@ -34,6 +35,14 @@ function App() {
   <Route path="/logout" element={<Logout />} />
   <Route path="/register" element={<RegisterAndLogout />} />
   <Route path="/evento" element={<EventDescription />} />
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <CheckoutPage />
+            </ProtectedRoute>
+          }
+        />
   <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>
