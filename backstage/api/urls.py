@@ -10,11 +10,6 @@ from .views import (
     RetrieveUpdateUserView,
     DeleteUserView,
     MeView,
-    EventoDetailView,
-    InscricaoCreateView,
-    MinhasInscricoesView,
-    evento_resumo_inscricao,
-    inscricao_detalhes,
 )
 
 
@@ -36,21 +31,6 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='refresh'),
     path('api-auth/', include('rest_framework.urls')),
 
-    # Retorna o usuário logado na sessão
+#     Retorna o usuário logado na sessão
     path("user/me/", MeView.as_view(), name="me"),
-    
-    # Buscar dados de um evento específico
-    path('eventos/<uuid:id>/', EventoDetailView.as_view(), name='evento-detail'),
-    
-    # Resumo do evento para tela de inscrição 
-    path('eventos/<uuid:evento_id>/resumo-inscricao/', evento_resumo_inscricao, name='evento-resumo-inscricao'),
-    
-    # Criar nova inscrição
-    path('inscricoes/', InscricaoCreateView.as_view(), name='inscricao-create'),
-    
-    # Listar minhas inscrições
-    path('inscricoes/minhas/', MinhasInscricoesView.as_view(), name='minhas-inscricoes'),
-    
-    # Detalhes de uma inscrição específica
-    path('inscricoes/<uuid:inscricao_id>/', inscricao_detalhes, name='inscricao-detail'),
 ]
