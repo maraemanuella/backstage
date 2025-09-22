@@ -16,6 +16,8 @@ from .views import (
     RegisterForEventView,
     RegistrationDetailView,
     UserRegistrationsView,
+    evento_resumo_inscricao,
+    inscricao_detalhes,
 )
 
 
@@ -49,4 +51,5 @@ urlpatterns = [
     path('events/<int:event_id>/register/', RegisterForEventView.as_view(), name='register-event'),
     path('registrations/<int:registration_id>/', RegistrationDetailView.as_view(), name='registration-detail'),
     path('user/registrations/', UserRegistrationsView.as_view(), name='user-registrations'),
+
 ]
