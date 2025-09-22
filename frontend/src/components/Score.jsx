@@ -11,13 +11,9 @@ function Score({ user }) {
       </div>
 
       <div className="ml-auto mr-[20px] text-amber-800 font-[600] flex flex-col justify-center items-center">
-          <span>Score Atual</span>
-          {user ? (
-            <span>{user.score}</span>
-          ) : (
-            <span>Carregando...</span>
-          )}
-    </div>
+        <span>Score Atual</span>
+        {user ? <span>{user.score}</span> : <span>Carregando...</span>}
+      </div>
     </div>
   );
 }
