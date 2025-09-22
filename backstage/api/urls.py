@@ -10,6 +10,12 @@ from .views import (
     RetrieveUpdateUserView,
     DeleteUserView,
     MeView,
+    EventListView,
+    EventCreateView,
+    EventDetailView,
+    RegisterForEventView,
+    RegistrationDetailView,
+    UserRegistrationsView,
 )
 
 
@@ -33,4 +39,14 @@ urlpatterns = [
 
 #     Retorna o usuário logado na sessão
     path("user/me/", MeView.as_view(), name="me"),
+    
+    # Eventos
+    path('events/', EventListView.as_view(), name='event-list'),
+    path('events/create/', EventCreateView.as_view(), name='event-create'),
+    path('events/<int:pk>/', EventDetailView.as_view(), name='event-detail'),
+    
+    # Inscrições
+    path('events/<int:event_id>/register/', RegisterForEventView.as_view(), name='register-event'),
+    path('registrations/<int:registration_id>/', RegistrationDetailView.as_view(), name='registration-detail'),
+    path('user/registrations/', UserRegistrationsView.as_view(), name='user-registrations'),
 ]
