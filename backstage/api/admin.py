@@ -7,8 +7,10 @@ class CustomUserAdmin(UserAdmin):
     list_display = ('username', 'email', 'is_staff', 'is_active')
     list_filter = ('is_staff', 'is_active')
     fieldsets = (
-        (None, {'fields': ('username', 'email', 'password')}),
-        ('Informações pessoais', {'fields': ('telefone', 'cpf', 'cnpj', 'data_nascimento', 'sexo', 'score', 'profile_photo')}),
+        ('Informações Principais', {'fields': ('username', 'email', 'password')}),
+        ('Informações Adicionais', {'fields': ('telefone', 'cpf', 'cnpj', 'data_nascimento', 'sexo')}),
+        ('Score', {'fields': ('score',)}),
+        ('Foto de Perfil', {'fields': ('profile_photo',)}),
         ('Permissões', {'fields': ('is_staff', 'is_active', 'is_superuser', 'groups', 'user_permissions')}),
     )
     add_fieldsets = (
@@ -17,6 +19,7 @@ class CustomUserAdmin(UserAdmin):
             'fields': ('username', 'email', 'password1', 'password2', 'is_staff', 'is_active')}
         ),
     )
+    readonly_fields = ('cpf', 'cnpj', 'telefone', 'sexo', 'data_nascimento')
     search_fields = ('email', 'username')
     ordering = ('email',)
 
@@ -83,7 +86,7 @@ class InscricaoAdmin(admin.ModelAdmin):
         }),
     )
 
-    readonly_fields = ('qr_code', 'created_at', 'updated_at')
+    readonly_fields = ('qr_code', 'created_at', 'updated_at', 'aceita_termos')
 
     def save_model(self, request, obj, form, change):
         """Calcula valores automaticamente ao criar"""
