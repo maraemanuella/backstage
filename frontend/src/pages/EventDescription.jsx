@@ -2,305 +2,227 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import api from "../api.js";
-import "../styles/EventDescription.css";
 import { GoogleMap, LoadScript } from "@react-google-maps/api";
+import {
+  FaMapMarkerAlt,
+  FaClock,
+  FaCalendarAlt,
+  FaUser,
+  FaStar,
+  FaInstagram,
+  FaFacebook,
+  FaLinkedin,
+  FaArrowLeft,
+  FaUsers,
+  FaCheckCircle,
+  FaShareAlt,
+} from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 
+function EventButton({ children, className, ...props }) {
+  return (
+    <button
+      className={`rounded-md px-4 py-2 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+function InfoItem({ icon, children }) {
+  return (
+    <div className="flex items-center gap-2 text-gray-600 text-sm">
+      {icon}
+      {children}
+    </div>
+  );
+}
+
 function EventDescription() {
-    const { eventId } = useParams();
-    const navigate = useNavigate();
-    const [event, setEvent] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [registering, setRegistering] = useState(false);
-    const [isRegistered, setIsRegistered] = useState(false);
+  const { eventId } = useParams();
+  const navigate = useNavigate();
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [registering, setRegistering] = useState(false);
+  const [isRegistered, setIsRegistered] = useState(false);
 
-    useEffect(() => {
-        if (!eventId) {
-            setError("ID do evento não fornecido");
-            setLoading(false);
-            return;
-        }
+  useEffect(() => {
+    if (!eventId) {
+      setError("ID do evento não fornecido");
+      setLoading(false);
+      return;
+    }
 
-        // Carregar dados do evento
-        api.get(`api/events/${eventId}/`)
-            .then(res => {
-                console.log("Evento carregado:", res.data);
-                setEvent(res.data);
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error("Erro ao carregar evento:", err);
-                if (err.response?.status === 404) {
-                    setError("Evento não encontrado");
-                } else {
-                    setError("Erro ao carregar dados do evento");
-                }
-                setLoading(false);
-            });
-
-        // Verificar se o usuário já está inscrito
-        checkRegistrationStatus();
-    }, [eventId]);
-
-    const checkRegistrationStatus = async () => {
-        try {
-            const response = await api.get("api/user/registrations/");
-            const userRegistrations = response.data;
-            const isAlreadyRegistered = userRegistrations.some(
-                reg => reg.event === parseInt(eventId) && reg.is_active
-            );
-            setIsRegistered(isAlreadyRegistered);
-        } catch (err) {
-            console.error("Erro ao verificar inscrições:", err);
-        }
-    };
-
-    const handleRegister = async () => {
-        if (isRegistered) {
-            toast.info("Você já está inscrito neste evento!");
-            return;
-        }
-
-        if (!event.available_spots || event.available_spots <= 0) {
-            toast.error("Evento lotado! Não há mais vagas disponíveis.");
-            return;
-        }
-
-        setRegistering(true);
-        try {
-            const response = await api.post(`api/events/${eventId}/register/`);
-            console.log("Inscrição realizada:", response.data);
-            
-            toast.success("Inscrição realizada com sucesso!");
-            setIsRegistered(true);
-            
-            // Atualizar dados do evento para refletir a nova inscrição
-            const updatedEvent = await api.get(`api/events/${eventId}/`);
-            setEvent(updatedEvent.data);
-            
-            // Navegar para página de sucesso após um delay
-            setTimeout(() => {
-                navigate(`/inscricao-realizada/${response.data.id}`);
-            }, 2000);
-            
-        } catch (err) {
-            console.error("Erro ao se inscrever:", err);
-            let errorMessage = "Erro ao realizar inscrição";
-            
-            if (err.response?.data?.error) {
-                errorMessage = err.response.data.error;
-            } else if (err.response?.status === 401) {
-                errorMessage = "Você precisa estar logado para se inscrever";
-                navigate("/login");
-                return;
-            }
-            
-            toast.error(errorMessage);
-        } finally {
-            setRegistering(false);
-        }
-    };
-
-    const handleBack = () => {
-        navigate("/");
-    };
-
-    const handleShare = () => {
-        if (navigator.share) {
-            navigator.share({
-                title: event.title,
-                text: event.description,
-                url: window.location.href,
-            });
+    api
+      .get(`api/events/${eventId}/`)
+      .then((res) => {
+        setEvent(res.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (err.response?.status === 404) {
+          setError("Evento não encontrado");
         } else {
-            navigator.clipboard.writeText(window.location.href);
-            toast.success("Link copiado para a área de transferência!");
+          setError("Erro ao carregar dados do evento");
         }
-    };
+        setLoading(false);
+      });
 
-    const formatDate = (dateString) => {
-        if (!dateString) return "Data não informada";
-        try {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric'
-            });
-        } catch {
-            return dateString;
-        }
-    };
+    checkRegistrationStatus();
+  }, [eventId]);
 
-    const formatTime = (dateString) => {
-        if (!dateString) return "Horário não informado";
-        try {
-            const date = new Date(dateString);
-            return date.toLocaleTimeString('pt-BR', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } catch {
-            return dateString;
-        }
-    };
+  const checkRegistrationStatus = async () => {
+    try {
+      const response = await api.get("api/user/registrations/");
+      const userRegistrations = response.data;
+      const isAlreadyRegistered = userRegistrations.some(
+        (reg) => reg.event === parseInt(eventId) && reg.is_active
+      );
+      setIsRegistered(isAlreadyRegistered);
+    } catch (err) {
+      console.error("Erro ao verificar inscrições:", err);
+    }
+  };
 
-    const formatEndTime = (dateString) => {
-        if (!dateString) return "Horário não informado";
-        try {
-            const date = new Date(dateString);
-            return date.toLocaleTimeString('pt-BR', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } catch {
-            return dateString;
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="event-description-container">
-                <div style={{textAlign: 'center', padding: '2rem'}}>
-                    <p>Carregando evento...</p>
-                </div>
-            </div>
-        );
+  const handleRegister = async () => {
+    if (isRegistered) {
+      toast.info("Você já está inscrito neste evento!");
+      return;
     }
 
-    if (error) {
-        return (
-            <div className="event-description-container">
-                <div style={{textAlign: 'center', padding: '2rem'}}>
-                    <p style={{color: 'red'}}>{error}</p>
-                    <button onClick={handleBack} className="back-btn">
-                        Voltar
-                    </button>
-                </div>
-            </div>
-        );
+    if (!event.available_spots || event.available_spots <= 0) {
+      toast.error("Evento lotado! Não há mais vagas disponíveis.");
+      return;
     }
 
-    if (!event) {
-        return (
-            <div className="event-description-container">
-                <div style={{textAlign: 'center', padding: '2rem'}}>
-                    <p>Evento não encontrado</p>
-                    <button onClick={handleBack} className="back-btn">
-                        Voltar
-                    </button>
-                </div>
-            </div>
-        );
+    setRegistering(true);
+    try {
+      const response = await api.post(`api/events/${eventId}/register/`);
+      toast.success("Inscrição realizada com sucesso!");
+      setIsRegistered(true);
+
+      const updatedEvent = await api.get(`api/events/${eventId}/`);
+      setEvent(updatedEvent.data);
+
+      setTimeout(() => {
+        navigate(`/inscricao-realizada/${response.data.id}`);
+      }, 2000);
+    } catch (err) {
+      let errorMessage = "Erro ao realizar inscrição";
+      if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.response?.status === 401) {
+        errorMessage = "Você precisa estar logado para se inscrever";
+        navigate("/login");
+        return;
+      }
+      toast.error(errorMessage);
+    } finally {
+      setRegistering(false);
     }
+  };
 
-    const progressPercentage = event.max_participants > 0 
-        ? (event.current_participants / event.max_participants) * 100 
-        : 0;
+  const handleBack = () => navigate("/");
 
-    return (
-        <>
-            <ToastContainer />
-            <div className="event-description-container">
-                {/* Banner Placeholder */}
-                <div className="event-banner"></div>
-                <button className="back-btn" onClick={handleBack}>voltar</button>
-                
-                <div className="event-content">
-                    <h1>{event.title}</h1>
-                    
-                    <div className="event-actions">
-                        <button 
-                            className={`subscribe-btn ${isRegistered ? 'registered' : ''}`}
-                            onClick={handleRegister}
-                            disabled={registering || isRegistered || event.available_spots <= 0}
-                        >
-                            {registering ? "INSCREVENDO..." : 
-                             isRegistered ? "JÁ INSCRITO" : 
-                             event.available_spots <= 0 ? "LOTADO" : "SE INSCREVER"}
-                        </button>
-                        <button className="share-btn" onClick={handleShare}>COMPARTILHAR</button>
-                        {event.available_spots <= 0 && (
-                            <button className="waitlist-btn">FILA DE ESPERA</button>
-                        )}
-                    </div>
-                    
-                    <div className="event-info">
-                        <div className="event-date">{formatDate(event.start_date)}</div>
-                        <div className="event-time">
-                            {formatTime(event.start_date)} - {formatEndTime(event.end_date)}
-                        </div>
-                        <div className="event-location">{event.location}</div>
-                    </div>
-                    
-                    <div className="event-progress">
-                        <div className="progress-bar">
-                            <div className="progress" style={{width: `${progressPercentage}%`}}></div>
-                        </div>
-                        <div className="progress-labels">
-                            <span>{event.current_participants}/{event.max_participants} inscritos</span>
-                            <span>{event.available_spots} vagas restantes</span>
-                        </div>
-                    </div>
-                    
-                    <div className="event-price">
-                        <span className="current-price">R$ {event.price}</span>
-                    </div>
-                    
-                    <section className="event-section">
-                        <h2>Sobre o Evento</h2>
-                        <p>{event.description}</p>
-                        
-                        {event.organizer_contact && (
-                            <div className="organizer-contact">
-                                <h3>Contato do Organizador</h3>
-                                <p>{event.organizer_contact}</p>
-                            </div>
-                        )}
-                    </section>
-                    
-                    <section className="event-instructor">
-                        <div className="instructor-profile">
-                            <div className="avatar"></div>
-                            <div>
-                                <strong>{event.organizer_name}</strong>
-                                <div className="bio">Organizador do evento</div>
-                            </div>
-                        </div>
-                    </section>
-                    
-                    <section className="event-location">
-                        <h3>Localização</h3>
-                        <div>{event.location}</div>
-                        <div style={{width: "100%", height: "220px", marginTop: 8, borderRadius: 8, overflow: "hidden"}}>
-                            <LoadScript googleMapsApiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "SUA_CHAVE_AQUI"}>
-                                <GoogleMap
-                                    mapContainerStyle={{ width: "100%", height: "220px" }}
-                                    center={{ lat: -23.5956, lng: -46.6856 }}
-                                    zoom={16}
-                                    options={{
-                                        disableDefaultUI: true,
-                                        zoomControl: true,
-                                    }}
-                                />
-                            </LoadScript>
-                        </div>
-                    </section>
-                </div>
-                
-                <button 
-                    className="subscribe-bottom"
-                    onClick={handleRegister}
-                    disabled={registering || isRegistered || event.available_spots <= 0}
-                >
-                    {registering ? "Inscrevendo..." : 
-                     isRegistered ? "Já inscrito" : 
-                     event.available_spots <= 0 ? "Lotado" : `Se inscrever - R$${event.price}`}
-                </button>
-            </div>
-        </>
-    );
+  if (loading) return <p className="text-center">Carregando evento...</p>;
+  if (error) return <p className="text-center text-red-500">{error}</p>;
+  if (!event) return <p className="text-center">Evento não encontrado</p>;
+
+  const progressPercentage =
+    event.max_participants > 0
+      ? (event.current_participants / event.max_participants) * 100
+      : 0;
+
+  return (
+    <div className="bg-gray-50 min-h-screen py-6 px-2 md:px-0">
+      <ToastContainer />
+      <div className="max-w-7xl mx-auto bg-white rounded-xl shadow p-6 md:p-14">
+        {/* Banner */}
+        <div className="w-full h-48 md:h-56 bg-gray-200 rounded-lg mb-6 flex items-center justify-center">
+          <span className="text-gray-400 text-3xl">Banner do Evento</span>
+        </div>
+
+        <div className="flex items-center mb-4">
+          <EventButton
+            className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 flex items-center gap-2 px-3 py-1 text-sm mr-2"
+            onClick={handleBack}
+          >
+            <FaArrowLeft /> Voltar
+          </EventButton>
+        </div>
+
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+          {event.title}
+        </h1>
+
+        <div className="flex flex-col gap-2 mt-4 mb-6">
+          <InfoItem icon={<FaCalendarAlt />}>
+            {new Date(event.start_date).toLocaleDateString("pt-BR")}
+          </InfoItem>
+          <InfoItem icon={<FaClock />}>
+            {new Date(event.start_date).toLocaleTimeString("pt-BR")} -{" "}
+            {new Date(event.end_date).toLocaleTimeString("pt-BR")}
+          </InfoItem>
+          <InfoItem icon={<FaMapMarkerAlt />}>{event.location}</InfoItem>
+        </div>
+
+        <div className="flex gap-4 mt-4">
+          <EventButton
+            className="bg-green-600 text-white hover:bg-green-700 flex items-center gap-2 px-8 py-3"
+            onClick={handleRegister}
+            disabled={registering || isRegistered || event.available_spots <= 0}
+          >
+            <FaCheckCircle />
+            {isRegistered
+              ? "Já inscrito"
+              : event.available_spots <= 0
+              ? "Lotado"
+              : "Se inscrever"}
+          </EventButton>
+          <EventButton className="bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-2 px-8 py-3">
+            <FaShareAlt /> Compartilhar
+          </EventButton>
+        </div>
+
+        <div className="mt-6">
+          <div className="w-full h-2 bg-gray-200 rounded-full mb-1">
+            <div
+              className="h-2 bg-green-500 rounded-full"
+              style={{ width: `${progressPercentage}%` }}
+            ></div>
+          </div>
+          <span className="text-sm text-gray-600">
+            {event.current_participants}/{event.max_participants} inscritos —{" "}
+            {event.available_spots} vagas restantes
+          </span>
+        </div>
+
+        <section className="mt-6">
+          <h2 className="text-lg font-semibold mb-2">Sobre o Evento</h2>
+          <p className="text-gray-700">{event.description}</p>
+        </section>
+
+        <section className="mt-6">
+          <h3 className="font-semibold mb-2">Localização</h3>
+          <div className="w-full h-56 rounded-lg overflow-hidden">
+            <LoadScript
+              googleMapsApiKey={
+                import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "SUA_CHAVE_AQUI"
+              }
+            >
+              <GoogleMap
+                mapContainerStyle={{ width: "100%", height: "100%" }}
+                center={{ lat: -23.5962, lng: -46.6823 }}
+                zoom={14}
+              />
+            </LoadScript>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
 }
 
 export default EventDescription;
