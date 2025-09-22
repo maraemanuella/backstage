@@ -63,3 +63,36 @@ class CustomTokenSerializer(serializers.Serializer):
             'access': str(refresh.access_token),
             'refresh': str(refresh)
         }
+
+from .models import Event, Registration
+
+class EventSerializer(serializers.ModelSerializer):
+    current_participants = serializers.ReadOnlyField()
+    available_spots = serializers.ReadOnlyField()
+    organizer_name = serializers.CharField(source='organizer.username', read_only=True)
+
+    class Meta:
+        model = Event
+        fields = [
+            'id', 'title', 'description', 'start_date', 'end_date', 
+            'location', 'price', 'max_participants', 'organizer', 
+            'organizer_name', 'organizer_contact', 'current_participants', 
+            'available_spots', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['organizer', 'created_at', 'updated_at']
+
+
+class RegistrationSerializer(serializers.ModelSerializer):
+    event_title = serializers.CharField(source='event.title', read_only=True)
+    event_start_date = serializers.DateTimeField(source='event.start_date', read_only=True)
+    event_location = serializers.CharField(source='event.location', read_only=True)
+    organizer_contact = serializers.CharField(source='event.organizer_contact', read_only=True)
+
+    class Meta:
+        model = Registration
+        fields = [
+            'id', 'user', 'event', 'registration_date', 'qr_code', 
+            'is_active', 'event_title', 'event_start_date', 
+            'event_location', 'organizer_contact'
+        ]
+        read_only_fields = ['user', 'registration_date', 'qr_code']
