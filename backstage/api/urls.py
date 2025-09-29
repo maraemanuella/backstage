@@ -18,10 +18,19 @@ from .views import (
     UserRegistrationsView,
     evento_resumo_inscricao,
     inscricao_detalhes,
+    EventoListView,
+    EventoDetailView,
+    InscricaoCreateView,
+    AvaliacaoListView,
+    AvaliacaoCreateView,
 )
 
-
 urlpatterns = [
+
+    # Eventos do modelo Evento
+    path('eventos/', EventoListView.as_view(), name='evento-list'),
+    path('eventos/<uuid:id>/', EventoDetailView.as_view(), name='evento-detail'),
+    path('eventos/<uuid:id>/inscrever/', InscricaoCreateView.as_view(), name='evento-inscrever'),
     # Registro de usuário
     path('user/register/', CreateUserView.as_view(), name='register'),
 
@@ -41,15 +50,21 @@ urlpatterns = [
 
 #     Retorna o usuário logado na sessão
     path("user/me/", MeView.as_view(), name="me"),
-    
+
     # Eventos
     path('events/', EventListView.as_view(), name='event-list'),
     path('events/create/', EventCreateView.as_view(), name='event-create'),
     path('events/<int:pk>/', EventDetailView.as_view(), name='event-detail'),
-    
+
+    # Eventos do modelo Evento
+    path('eventos/', EventoListView.as_view(), name='evento-list'),
+
     # Inscrições
     path('events/<int:event_id>/register/', RegisterForEventView.as_view(), name='register-event'),
     path('registrations/<int:registration_id>/', RegistrationDetailView.as_view(), name='registration-detail'),
     path('user/registrations/', UserRegistrationsView.as_view(), name='user-registrations'),
 
+    # Avaliações de eventos
+    path('eventos/<uuid:evento_id>/avaliacoes/', AvaliacaoListView.as_view(), name='avaliacao-list'),
+    path('eventos/<uuid:evento_id>/avaliacoes/criar/', AvaliacaoCreateView.as_view(), name='avaliacao-create'),
 ]

@@ -47,6 +47,11 @@ function EventDescription() {
   const [error, setError] = useState(null);
   const [registering, setRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  // Avaliação
+  const [avaliacoes, setAvaliacoes] = useState([]);
+  const [comentario, setComentario] = useState("");
+  const [nota, setNota] = useState(0);
+  const [enviandoAvaliacao, setEnviandoAvaliacao] = useState(false);
 
   useEffect(() => {
     if (!eventId) {
@@ -56,7 +61,7 @@ function EventDescription() {
     }
 
     api
-      .get(`api/events/${eventId}/`)
+      .get(`api/eventos/${eventId}/`)
       .then((res) => {
         setEvent(res.data);
         setLoading(false);
@@ -70,8 +75,63 @@ function EventDescription() {
         setLoading(false);
       });
 
+    // Buscar avaliações do evento
+    api
+      .get(`api/eventos/${eventId}/avaliacoes/`)
+      .then((res) => {
+        setAvaliacoes(res.data);
+      })
+      .catch((err) => {
+        setAvaliacoes([]);
+      });
+
     checkRegistrationStatus();
   }, [eventId]);
+  // Enviar avaliação
+  const handleAvaliacaoSubmit = async (e) => {
+    e.preventDefault();
+    if (!comentario || nota < 0 || nota > 5) {
+      toast.error("Preencha o comentário e selecione uma nota de 0 a 5.");
+      return;
+    }
+    setEnviandoAvaliacao(true);
+    try {
+      // Recupera o token JWT do localStorage
+      const token = localStorage.getItem('access');
+      if (!token) {
+        toast.error("Você precisa estar logado para avaliar.");
+        setEnviandoAvaliacao(false);
+        return;
+      }
+      await api.post(
+        `api/eventos/${eventId}/avaliacoes/criar/`,
+        { comentario, nota },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success("Avaliação enviada!");
+      setComentario("");
+      setNota(0);
+      // Atualizar lista de avaliações
+      const res = await api.get(`api/eventos/${eventId}/avaliacoes/`);
+      setAvaliacoes(res.data);
+    } catch (err) {
+      let errorMessage = "Erro ao enviar avaliação.";
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMessage = err.response.data;
+        } else if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        } else if (Array.isArray(err.response.data)) {
+          errorMessage = err.response.data.join(' ');
+        } else {
+          errorMessage = Object.values(err.response.data).join(' ');
+        }
+      }
+      toast.error(errorMessage);
+    } finally {
+      setEnviandoAvaliacao(false);
+    }
+  };
 
   const checkRegistrationStatus = async () => {
     try {
@@ -92,18 +152,19 @@ function EventDescription() {
       return;
     }
 
-    if (!event.available_spots || event.available_spots <= 0) {
+    if (event.esta_lotado || event.vagas_disponiveis <= 0) {
       toast.error("Evento lotado! Não há mais vagas disponíveis.");
       return;
     }
 
     setRegistering(true);
     try {
-      const response = await api.post(`api/events/${eventId}/register/`);
+      // Usar endpoint correto do modelo Evento
+      const response = await api.post(`api/eventos/${eventId}/inscrever/`);
       toast.success("Inscrição realizada com sucesso!");
       setIsRegistered(true);
 
-      const updatedEvent = await api.get(`api/events/${eventId}/`);
+      const updatedEvent = await api.get(`api/eventos/${eventId}/`);
       setEvent(updatedEvent.data);
 
       setTimeout(() => {
@@ -111,8 +172,16 @@ function EventDescription() {
       }, 2000);
     } catch (err) {
       let errorMessage = "Erro ao realizar inscrição";
-      if (err.response?.data?.error) {
-        errorMessage = err.response.data.error;
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMessage = err.response.data;
+        } else if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        } else if (Array.isArray(err.response.data)) {
+          errorMessage = err.response.data.join(' ');
+        } else {
+          errorMessage = Object.values(err.response.data).join(' ');
+        }
       } else if (err.response?.status === 401) {
         errorMessage = "Você precisa estar logado para se inscrever";
         navigate("/login");
@@ -131,17 +200,21 @@ function EventDescription() {
   if (!event) return <p className="text-center">Evento não encontrado</p>;
 
   const progressPercentage =
-    event.max_participants > 0
-      ? (event.current_participants / event.max_participants) * 100
+    event?.capacidade_maxima > 0
+      ? (event.inscritos_count / event.capacidade_maxima) * 100
       : 0;
 
   return (
     <div className="bg-gray-50 min-h-screen py-6 px-2 md:px-0">
       <ToastContainer />
       <div className="max-w-7xl mx-auto bg-white rounded-xl shadow p-6 md:p-14">
-        {/* Banner */}
-        <div className="w-full h-48 md:h-56 bg-gray-200 rounded-lg mb-6 flex items-center justify-center">
-          <span className="text-gray-400 text-3xl">Banner do Evento</span>
+        {/* Foto/Capa do Evento */}
+        <div className="w-full h-48 md:h-56 bg-gray-200 rounded-lg mb-6 flex items-center justify-center overflow-hidden">
+          {event.foto_capa ? (
+            <img src={event.foto_capa} alt="Capa do Evento" className="object-cover w-full h-full" />
+          ) : (
+            <span className="text-gray-400 text-3xl">Banner do Evento</span>
+          )}
         </div>
 
         <div className="flex items-center mb-4">
@@ -154,39 +227,31 @@ function EventDescription() {
         </div>
 
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-          {event.title}
+          {event.titulo}
         </h1>
 
         <div className="flex flex-col gap-2 mt-4 mb-6">
           <InfoItem icon={<FaCalendarAlt />}>
-            {new Date(event.start_date).toLocaleDateString("pt-BR")}
+            {event.data_evento ? new Date(event.data_evento).toLocaleDateString("pt-BR") : ""}
           </InfoItem>
           <InfoItem icon={<FaClock />}>
-            {new Date(event.start_date).toLocaleTimeString("pt-BR")} -{" "}
-            {new Date(event.end_date).toLocaleTimeString("pt-BR")}
+            {event.data_evento ? new Date(event.data_evento).toLocaleTimeString("pt-BR") : ""}
           </InfoItem>
-          <InfoItem icon={<FaMapMarkerAlt />}>{event.location}</InfoItem>
+          <InfoItem icon={<FaMapMarkerAlt />}>{event.endereco}</InfoItem>
         </div>
 
-        <div className="flex gap-4 mt-4">
-          <EventButton
-            className="bg-green-600 text-white hover:bg-green-700 flex items-center gap-2 px-8 py-3"
-            onClick={handleRegister}
-            disabled={registering || isRegistered || event.available_spots <= 0}
-          >
-            <FaCheckCircle />
-            {isRegistered
-              ? "Já inscrito"
-              : event.available_spots <= 0
-              ? "Lotado"
-              : "Se inscrever"}
-          </EventButton>
-          <EventButton className="bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-2 px-8 py-3">
-            <FaShareAlt /> Compartilhar
-          </EventButton>
-        </div>
+        {/* Informações do organizador */}
+        <section className="mt-4 mb-6 flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <FaUser className="text-gray-600" />
+            <span className="font-semibold text-gray-800">{event.organizador_nome || event.organizador_username || "Organizador"}</span>
+            <FaStar className="text-yellow-400 ml-2" />
+            <span className="text-gray-700">{event.organizador_score || "5.0"}</span>
+          </div>
+        </section>
 
-        <div className="mt-6">
+        {/* Capacidade do evento */}
+        <div className="mt-2 mb-6">
           <div className="w-full h-2 bg-gray-200 rounded-full mb-1">
             <div
               className="h-2 bg-green-500 rounded-full"
@@ -194,16 +259,51 @@ function EventDescription() {
             ></div>
           </div>
           <span className="text-sm text-gray-600">
-            {event.current_participants}/{event.max_participants} inscritos —{" "}
-            {event.available_spots} vagas restantes
+            {event.inscritos_count}/{event.capacidade_maxima} inscritos — {event.vagas_disponiveis} vagas restantes
           </span>
         </div>
 
-        <section className="mt-6">
-          <h2 className="text-lg font-semibold mb-2">Sobre o Evento</h2>
-          <p className="text-gray-700">{event.description}</p>
+        {/* Valores do evento */}
+        <section className="mb-6">
+          <h3 className="font-semibold mb-2">Valores</h3>
+          <div className="flex gap-4 items-center">
+            <span className="text-gray-700">Depósito original: <b>R$ {event.valor_deposito || "0,00"}</b></span>
+            <span className="text-green-700">Com desconto: <b>R$ {event.valor_com_desconto || "0,00"}</b></span>
+          </div>
         </section>
 
+        {/* Botões de ação */}
+        <div className="flex gap-4 mt-4 mb-6">
+          <EventButton
+            className="bg-green-600 text-white hover:bg-green-700 flex items-center gap-2 px-8 py-3"
+            onClick={handleRegister}
+            disabled={registering || isRegistered || event.esta_lotado || event.vagas_disponiveis <= 0}
+          >
+            <FaCheckCircle />
+            {isRegistered
+              ? "Já inscrito"
+              : event.esta_lotado || event.vagas_disponiveis <= 0
+              ? "Lotado"
+              : "Se inscrever"}
+          </EventButton>
+          <EventButton className="bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-2 px-8 py-3">
+            <FaUsers /> Lista de espera
+          </EventButton>
+          <EventButton className="bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-2 px-8 py-3">
+            <FaShareAlt /> Compartilhar
+          </EventButton>
+          <EventButton className="bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-2 px-8 py-3">
+            <FaStar /> Favoritar
+          </EventButton>
+        </div>
+
+        {/* Descrição completa do evento */}
+        <section className="mt-6">
+          <h2 className="text-lg font-semibold mb-2">Sobre o Evento</h2>
+          <p className="text-gray-700">{event.descricao}</p>
+        </section>
+
+        {/* Mapa interativo */}
         <section className="mt-6">
           <h3 className="font-semibold mb-2">Localização</h3>
           <div className="w-full h-56 rounded-lg overflow-hidden">
@@ -219,6 +319,66 @@ function EventDescription() {
               />
             </LoadScript>
           </div>
+        </section>
+
+        {/* Política de cancelamento */}
+        <section className="mt-6">
+          <h3 className="font-semibold mb-2">Política de Cancelamento</h3>
+          <p className="text-gray-700">{event.politica_cancelamento || "Cancelamento permitido até 24h antes do evento."}</p>
+        </section>
+
+        {/* Avaliações do Evento */}
+        <section className="mt-6">
+          <h3 className="font-semibold mb-2">Avaliações do Evento</h3>
+          <div className="space-y-2 mb-4">
+            {avaliacoes.length > 0 ? (
+              avaliacoes.map((review, idx) => (
+                <div key={idx} className="bg-gray-100 rounded p-2">
+                  <span className="font-semibold">{review.usuario_nome || review.usuario || "Usuário"}</span>: {review.comentario}
+                  <span className="ml-2 text-yellow-500"><FaStar /> {review.nota}</span>
+                </div>
+              ))
+            ) : (
+              <span className="text-gray-500">Nenhuma avaliação disponível.</span>
+            )}
+          </div>
+          {/* Formulário de avaliação */}
+          <form onSubmit={handleAvaliacaoSubmit} className="bg-gray-50 p-4 rounded shadow flex flex-col gap-2">
+            <label className="font-semibold">Deixe sua avaliação:</label>
+            <textarea
+              className="border rounded p-2"
+              value={comentario}
+              onChange={e => setComentario(e.target.value)}
+              placeholder="Escreva seu comentário..."
+              rows={3}
+              required
+            />
+            <div className="flex items-center gap-2">
+              <label htmlFor="nota">Nota:</label>
+              <select
+                id="nota"
+                value={nota}
+                onChange={e => setNota(Number(e.target.value))}
+                className="border rounded p-1"
+                required
+              >
+                <option value={0}>0</option>
+                <option value={1}>1</option>
+                <option value={2}>2</option>
+                <option value={3}>3</option>
+                <option value={4}>4</option>
+                <option value={5}>5</option>
+              </select>
+              <FaStar className="text-yellow-500" />
+            </div>
+            <button
+              type="submit"
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              disabled={enviandoAvaliacao}
+            >
+              {enviandoAvaliacao ? "Enviando..." : "Enviar Avaliação"}
+            </button>
+          </form>
         </section>
       </div>
     </div>
