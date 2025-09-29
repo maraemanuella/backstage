@@ -10,12 +10,9 @@ from .views import (
     RetrieveUpdateUserView,
     DeleteUserView,
     MeView,
-    EventListView,
-    EventCreateView,
-    EventDetailView,
-    RegisterForEventView,
-    RegistrationDetailView,
-    UserRegistrationsView,
+    EventoDetailView,
+    InscricaoCreateView,
+    MinhasInscricoesView,
     evento_resumo_inscricao,
     inscricao_detalhes,
 )
@@ -42,14 +39,15 @@ urlpatterns = [
 #     Retorna o usuário logado na sessão
     path("user/me/", MeView.as_view(), name="me"),
     
-    # Eventos
-    path('events/', EventListView.as_view(), name='event-list'),
-    path('events/create/', EventCreateView.as_view(), name='event-create'),
-    path('events/<int:pk>/', EventDetailView.as_view(), name='event-detail'),
-    
-    # Inscrições
-    path('events/<int:event_id>/register/', RegisterForEventView.as_view(), name='register-event'),
-    path('registrations/<int:registration_id>/', RegistrationDetailView.as_view(), name='registration-detail'),
-    path('user/registrations/', UserRegistrationsView.as_view(), name='user-registrations'),
+    # Buscar dados de um evento específico
+    path('eventos/<uuid:id>/', EventoDetailView.as_view(), name='evento-detail'),
+    # Resumo do evento para tela de inscrição
+    path('eventos/<uuid:evento_id>/resumo-inscricao/', evento_resumo_inscricao, name='evento-resumo-inscricao'),
+    # Criar nova inscrição
+    path('inscricoes/', InscricaoCreateView.as_view(), name='inscricao-create'),
+    # Listar minhas inscrições
+    path('inscricoes/minhas/', MinhasInscricoesView.as_view(), name='minhas-inscricoes'),
+    # Detalhes de uma inscrição específica
+    path('inscricoes/<uuid:inscricao_id>/', inscricao_detalhes, name='inscricao-detail'),
 
 ]
