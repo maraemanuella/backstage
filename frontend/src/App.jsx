@@ -6,6 +6,7 @@ import NotFound from "./pages/NotFound"
 import ProtectedRoute from "./components/ProtectedRoute"
 import EventDescription from "./pages/EventDescription"
 import RegistrationSuccess from "./pages/RegistrationSuccess"
+import EventInscription from "./pages/EventInscription"
 import TitleUpdater from "./components/TitleUpdater";
 
 function Logout() {
@@ -36,6 +37,8 @@ function App() {
   <Route path="/register" element={<RegisterAndLogout />} />
   <Route path="/evento" element={<EventDescription />} />
   <Route path="/evento/:eventId" element={<EventDescription />} />
+  <Route path="/inscricao/:eventId" element={<EventInscription />} />
+
   <Route 
     path="/inscricao-realizada/:registrationId" 
     element={

@@ -80,6 +80,12 @@ class Evento(models.Model):
         on_delete=models.CASCADE,
         related_name='eventos_organizados'
     )
+    
+    itens_incluidos = models.TextField(
+        blank=True,
+        default='',
+        help_text="Digite um item por linha"
+    )
 
     # Data e Local
     data_evento = models.DateTimeField()

@@ -47,6 +47,9 @@ class EventoAdmin(admin.ModelAdmin):
         ('Mídia e Status', {
             'fields': ('foto_capa', 'status')
         }),
+        ('Benefícios', {
+            'fields': ('itens_incluidos',)
+        }), 
     )
 
 
