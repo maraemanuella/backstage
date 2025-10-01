@@ -13,44 +13,18 @@ from .serializers import (
     EventoSerializer,
     InscricaoCreateSerializer,
     InscricaoSerializer,
-    EventSerializer,
-    RegistrationSerializer,
-    AvaliacaoSerializer,
 )
-from .models import Evento, Inscricao, Event, Registration, Avaliacao
+from .models import Evento, Inscricao
 
 import qrcode
 from io import BytesIO
 import base64
-
-
-# Listar avaliações de um evento
-class AvaliacaoListView(generics.ListAPIView):
-    serializer_class = AvaliacaoSerializer
-    permission_classes = [AllowAny]
-
-    def get_queryset(self):
-        evento_id = self.kwargs.get('evento_id')
-        return Avaliacao.objects.filter(evento__id=evento_id)
-
-
-# Criar avaliação/comentário para um evento
-class AvaliacaoCreateView(generics.CreateAPIView):
-    serializer_class = AvaliacaoSerializer
-    permission_classes = [IsAuthenticated]
-
-    def perform_create(self, serializer):
-        evento_id = self.kwargs.get('evento_id')
-        evento = get_object_or_404(Evento, id=evento_id)
-        serializer.save(usuario=self.request.user, evento=evento)
-
 
 # Listar todos os eventos publicados
 class EventoListView(generics.ListAPIView):
     queryset = Evento.objects.filter(status='publicado')
     serializer_class = EventoSerializer
     permission_classes = [AllowAny]
-
 
 User = get_user_model()
 

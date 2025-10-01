@@ -1,8 +1,11 @@
+# Imports da biblioteca padrão
+import uuid
+from decimal import Decimal
+
+# Imports do Django
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import MinValueValidator, MaxValueValidator
-import uuid
-from decimal import Decimal
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
@@ -98,7 +101,6 @@ class Evento(models.Model):
     politica_cancelamento = models.TextField(
         default="Cancelamento gratuito até 24h antes do evento"
     )
-
 
     # Mídia
     foto_capa = models.ImageField(upload_to='eventos/capas/', blank=True, null=True)
@@ -240,19 +242,3 @@ class Inscricao(models.Model):
     def calcular_reembolso_estimado(self):
         """Calcula o valor estimado de reembolso se comparecer"""
         return self.valor_final
-
-# Model de Avaliação de Evento
-class Avaliacao(models.Model):
-    evento = models.ForeignKey('Evento', on_delete=models.CASCADE, related_name='avaliacoes')
-    usuario = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='avaliacoes')
-    comentario = models.TextField(verbose_name="Comentário")
-    nota = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(5)], verbose_name="Nota (0-5)")
-    criado_em = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        verbose_name = "Avaliação"
-        verbose_name_plural = "Avaliações"
-        ordering = ['-criado_em']
-
-    def __str__(self):
-        return f"{self.usuario.username} - {self.evento.titulo} ({self.nota} estrelas)"
