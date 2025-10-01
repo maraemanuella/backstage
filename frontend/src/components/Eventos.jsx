@@ -1,6 +1,10 @@
+
 import { MapPin } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
 
 function Eventos({ eventos }) {
+  const navigate = useNavigate();
   return (
     <div className="grid grid-cols-3 gap-4 w-[100vh] ml-auto mr-auto">
       {eventos.map((evento) => (
@@ -33,8 +37,11 @@ function Eventos({ eventos }) {
           </div>
 
           {/* botão */}
-          <button className="bg-black rounded-b-2xl text-white mt-[10px] hover:bg-sky-700 hover:duration-200 hover:scale-105">
-            <a href="#">Ver detalhes</a>
+          <button
+            className="bg-black rounded-b-2xl text-white mt-[10px] hover:bg-sky-700 hover:duration-200 hover:scale-105"
+            onClick={() => navigate(`/evento/${evento.id}`)}
+          >
+            Ver detalhes
           </button>
         </div>
       ))}

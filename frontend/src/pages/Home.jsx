@@ -29,10 +29,10 @@ function Home() {
   }, []);
 
   const eventosFiltrados = eventos.filter((evento) => {
-    const filtroTipo = filtroAtivo === "Todos" || evento.tipo === filtroAtivo;
+    const filtroTipo = filtroAtivo === "Todos" || evento.categoria === filtroAtivo;
     const filtroBusca =
-      evento.nome.toLowerCase().includes(busca.toLowerCase()) ||
-      evento.local.toLowerCase().includes(busca.toLowerCase());
+      (evento.titulo && evento.titulo.toLowerCase().includes(busca.toLowerCase())) ||
+      (evento.endereco && evento.endereco.toLowerCase().includes(busca.toLowerCase()));
     return filtroTipo && filtroBusca;
   });
 

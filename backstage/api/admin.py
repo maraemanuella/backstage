@@ -1,6 +1,12 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Evento, Inscricao
+from .models import CustomUser, Evento, Inscricao, Avaliacao
+@admin.register(Avaliacao)
+class AvaliacaoAdmin(admin.ModelAdmin):
+    list_display = ('evento', 'usuario', 'nota', 'criado_em')
+    list_filter = ('nota', 'criado_em', 'evento')
+    search_fields = ('evento__titulo', 'usuario__username', 'comentario')
+    date_hierarchy = 'criado_em'
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
@@ -36,7 +42,7 @@ class EventoAdmin(admin.ModelAdmin):
             'fields': ('titulo', 'descricao', 'categoria', 'organizador')
         }),
         ('Data e Local', {
-            'fields': ('data_evento', 'endereco', 'local_especifico')
+                'fields': ('data_evento', 'endereco', 'local_especifico', 'latitude', 'longitude')
         }),
         ('Capacidade e Financeiro', {
             'fields': ('capacidade_maxima', 'valor_deposito')

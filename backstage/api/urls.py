@@ -10,44 +10,40 @@ from .views import (
     RetrieveUpdateUserView,
     DeleteUserView,
     MeView,
+    EventoListView,
     EventoDetailView,
     InscricaoCreateView,
     MinhasInscricoesView,
     evento_resumo_inscricao,
     inscricao_detalhes,
+    AvaliacaoListView,
+    AvaliacaoCreateView,
 )
 
-
 urlpatterns = [
+    # Eventos
+    path('eventos/', EventoListView.as_view(), name='evento-list'),
+    path('eventos/<uuid:id>/', EventoDetailView.as_view(), name='evento-detail'),
+
     # Registro de usuário
     path('user/register/', CreateUserView.as_view(), name='register'),
-
-    # Listagem de usuários (IsAuthenticated)
     path('user/', ListUsersView.as_view(), name='usuario-listar'),
-
-    # Recuperar/Atualizar usuário específico (IsAuthenticated)
     path('user/<int:pk>/', RetrieveUpdateUserView.as_view(), name='usuario-detalhe'),
-
-    # Deletar usuário (IsAdminUser)
     path('user/<int:pk>/delete/', DeleteUserView.as_view(), name='usuario-deletar'),
+    path("user/me/", MeView.as_view(), name="me"),
 
     # JWT
     path('token/', CustomTokenObtainView.as_view(), name='get_token'),
     path('token/refresh/', TokenRefreshView.as_view(), name='refresh'),
     path('api-auth/', include('rest_framework.urls')),
 
-#     Retorna o usuário logado na sessão
-    path("user/me/", MeView.as_view(), name="me"),
-    
-    # Buscar dados de um evento específico
-    path('eventos/<uuid:id>/', EventoDetailView.as_view(), name='evento-detail'),
-    # Resumo do evento para tela de inscrição
+    # Inscrições
     path('eventos/<uuid:evento_id>/resumo-inscricao/', evento_resumo_inscricao, name='evento-resumo-inscricao'),
-    # Criar nova inscrição
     path('inscricoes/', InscricaoCreateView.as_view(), name='inscricao-create'),
-    # Listar minhas inscrições
     path('inscricoes/minhas/', MinhasInscricoesView.as_view(), name='minhas-inscricoes'),
-    # Detalhes de uma inscrição específica
     path('inscricoes/<uuid:inscricao_id>/', inscricao_detalhes, name='inscricao-detail'),
 
+    # Avaliações
+    path('eventos/<uuid:evento_id>/avaliacoes/', AvaliacaoListView.as_view(), name='avaliacao-list'),
+    path('eventos/<uuid:evento_id>/avaliacoes/criar/', AvaliacaoCreateView.as_view(), name='avaliacao-create'),
 ]
