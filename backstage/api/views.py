@@ -155,6 +155,12 @@ def evento_resumo_inscricao(request, evento_id):
         return Response({
             'error': 'Você já está inscrito neste evento'
         }, status=status.HTTP_400_BAD_REQUEST)
+        
+    itens_incluidos = [
+        item.strip() 
+        for item in evento.itens_incluidos.split('\n') 
+        if item.strip()
+    ]
 
     # Calcula valores
     valor_original = evento.valor_deposito
@@ -177,6 +183,7 @@ def evento_resumo_inscricao(request, evento_id):
             'esta_lotado': evento.esta_lotado,
             'permite_transferencia': evento.permite_transferencia,
             'politica_cancelamento': evento.politica_cancelamento,
+            'itens_incluidos': evento.itens_incluidos,
         },
         'organizador': {
             'nome': evento.organizador.get_full_name() or evento.organizador.username,
