@@ -5,6 +5,8 @@ from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
+from .serializers import FavoriteSerializer
+from .models import Evento, Favorite
 from django.http import JsonResponse
 
 from .serializers import (
@@ -13,11 +15,9 @@ from .serializers import (
     EventoSerializer,
     InscricaoCreateSerializer,
     InscricaoSerializer,
-    EventSerializer,
-    RegistrationSerializer,
     AvaliacaoSerializer,
 )
-from .models import Evento, Inscricao, Event, Registration, Avaliacao
+from .models import Evento, Inscricao, Avaliacao
 
 import qrcode
 from io import BytesIO
@@ -217,3 +217,28 @@ def inscricao_detalhes(request, inscricao_id):
 
     serializer = InscricaoSerializer(inscricao)
     return Response(serializer.data)
+
+# Lista favoritos do usuário logado
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_favorites(request):
+    favorites = Favorite.objects.filter(user=request.user)
+    serializer = FavoriteSerializer(favorites, many=True, context={'request': request})
+    return Response(serializer.data)
+
+# Alterna favorito: adiciona se não existir, remove se já existir
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_favorite(request, evento_id):
+    user = request.user
+    evento = get_object_or_404(Evento, id=evento_id)
+
+    favorite, created = Favorite.objects.get_or_create(user=user, evento=evento)
+
+    if not created:
+        # Já existia, então remove
+        favorite.delete()
+        return Response({"favorito": False})
+    
+    # Criou agora
+    return Response({"favorito": True})
