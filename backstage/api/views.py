@@ -6,6 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
+from .models import Evento, Evento, Inscricao, Avaliacao
 
 from .serializers import (
     CustomTokenSerializer,
@@ -13,16 +14,10 @@ from .serializers import (
     EventoSerializer,
     InscricaoCreateSerializer,
     InscricaoSerializer,
-    EventSerializer,
-    RegistrationSerializer,
+    EventoSerializer,
+    InscricaoCreateSerializer,
     AvaliacaoSerializer,
 )
-from .models import Evento, Inscricao, Event, Registration, Avaliacao
-
-import qrcode
-from io import BytesIO
-import base64
-
 
 # Listar avaliações de um evento
 class AvaliacaoListView(generics.ListAPIView):

@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
+from .models import Evento, Inscricao, Avaliacao
 
 # Serializer para avaliações/comentários de eventos
 class AvaliacaoSerializer(serializers.ModelSerializer):
@@ -13,7 +14,7 @@ class AvaliacaoSerializer(serializers.ModelSerializer):
             'id', 'evento', 'evento_titulo', 'usuario', 'usuario_nome', 'nota', 'comentario', 'criado_em'
         ]
         read_only_fields = ['id', 'usuario', 'evento', 'criado_em', 'usuario_nome', 'evento_titulo']
-from .models import Event, Registration
+
 
 User = get_user_model()
 
