@@ -6,8 +6,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
 from .serializers import FavoriteSerializer
-from .models import Evento, Favorite
+from .models import Evento, Favorite, TransferRequest
 from django.http import JsonResponse
+from django.db import models
 
 from .serializers import (
     CustomTokenSerializer,
@@ -16,6 +17,7 @@ from .serializers import (
     InscricaoCreateSerializer,
     InscricaoSerializer,
     AvaliacaoSerializer,
+    TransferRequestSerializer,
 )
 from .models import Evento, Inscricao, Avaliacao
 
@@ -242,3 +244,58 @@ def toggle_favorite(request, evento_id):
     
     # Criou agora
     return Response({"favorito": True})
+
+class TransferRequestCreateView(generics.CreateAPIView):
+    queryset = TransferRequest.objects.all()
+    serializer_class = TransferRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+class TransferRequestListView(generics.ListAPIView):
+    serializer_class = TransferRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Mostra solicitações que o usuário recebeu ou enviou
+        user = self.request.user
+        return TransferRequest.objects.filter(
+            models.Q(from_user=user) | models.Q(to_user=user)
+        ).order_by('-created_at')
+
+class TransferRequestDetailView(generics.RetrieveUpdateAPIView):
+    queryset = TransferRequest.objects.all()
+    serializer_class = TransferRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+    def update(self, request, *args, **kwargs):
+        transfer_request = self.get_object()
+        status_update = request.data.get('status')
+        # Somente quem recebeu e um admin(debug) pode aceitar ou negar
+
+        if transfer_request.to_user != request.user and not request.user.is_staff:
+            return Response({'error': 'Apenas o destinatário ou um admin(debug) pode aceitar ou negar.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        if status_update not in ['accepted', 'denied']:
+            return Response({'error': 'Status inválido.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        transfer_request.status = status_update
+
+        if status_update == 'accepted':
+            # Transferir a inscrição
+            inscricao = transfer_request.inscricao
+            inscricao.usuario = transfer_request.to_user
+            inscricao.status = 'transferida'
+            inscricao.save()
+            
+        transfer_request.save()
+        serializer = self.get_serializer(transfer_request)
+        return Response(serializer.data)

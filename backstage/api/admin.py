@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Evento, Inscricao, Avaliacao
+from .models import CustomUser, Evento, Inscricao, Avaliacao, TransferRequest
 @admin.register(Avaliacao)
 class AvaliacaoAdmin(admin.ModelAdmin):
     list_display = ('evento', 'usuario', 'nota', 'criado_em')
@@ -104,3 +104,8 @@ class InscricaoAdmin(admin.ModelAdmin):
                 obj.valor_final = valor_com_desconto
                 obj.desconto_aplicado = obj.valor_original - valor_com_desconto
         super().save_model(request, obj, form, change)
+
+@admin.register(TransferRequest)
+class TransferRequestAdmin(admin.ModelAdmin):
+    list_display = ('inscricao', 'from_user', 'to_user', 'status', 'created_at')
+    list_filter = ('status',)
