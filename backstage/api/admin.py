@@ -1,12 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Evento, Inscricao, Avaliacao
-@admin.register(Avaliacao)
-class AvaliacaoAdmin(admin.ModelAdmin):
-    list_display = ('evento', 'usuario', 'nota', 'criado_em')
-    list_filter = ('nota', 'criado_em', 'evento')
-    search_fields = ('evento__titulo', 'usuario__username', 'comentario')
-    date_hierarchy = 'criado_em'
+from .models import CustomUser, Evento, Inscricao
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser

@@ -16,8 +16,6 @@ from .views import (
     MinhasInscricoesView,
     evento_resumo_inscricao,
     inscricao_detalhes,
-    AvaliacaoListView,
-    AvaliacaoCreateView,
 )
 
 urlpatterns = [
@@ -42,8 +40,4 @@ urlpatterns = [
     path('inscricoes/', InscricaoCreateView.as_view(), name='inscricao-create'),
     path('inscricoes/minhas/', MinhasInscricoesView.as_view(), name='minhas-inscricoes'),
     path('inscricoes/<uuid:inscricao_id>/', inscricao_detalhes, name='inscricao-detail'),
-
-    # Avaliações
-    path('eventos/<uuid:evento_id>/avaliacoes/', AvaliacaoListView.as_view(), name='avaliacao-list'),
-    path('eventos/<uuid:evento_id>/avaliacoes/criar/', AvaliacaoCreateView.as_view(), name='avaliacao-create'),
 ]
