@@ -309,7 +309,12 @@ class TransferRequest(models.Model):
         related_name='transfer_requests_received'
         )
     
+    class Meta:
+        verbose_name = "Transferir Inscrição"
+        verbose_name_plural = "Transfer. de Inscrição"
+    
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='sent')
+    mensagem = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

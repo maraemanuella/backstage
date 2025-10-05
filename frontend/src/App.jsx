@@ -10,6 +10,8 @@ import RegistrationSuccess from "./pages/RegistrationSuccess";
 import EventInscription from "./pages/EventInscription";
 import TitleUpdater from "./components/TitleUpdater";
 import HeartPage from "./pages/HeartPage";
+import SolicitarTransferencia from "./pages/SolicitarTransferencia";
+import AceitarOferta from "./pages/AceitarOferta";
 
 function Logout() {
   localStorage.clear();
@@ -41,7 +43,20 @@ function App() {
         <Route path="/evento" element={<EventDescription />} />
         <Route path="/evento/:eventId" element={<EventDescription />} />
         <Route path="/inscricao/:eventId" element={<EventInscription />} />
-
+        <Route path="/transferir-inscricao" element={
+          <ProtectedRoute>
+            <SolicitarTransferencia />
+          </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ofertas-transferencia"
+          element={
+            <ProtectedRoute>
+              <AceitarOferta />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/inscricao-realizada/:registrationId"
           element={
