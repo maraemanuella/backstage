@@ -19,6 +19,9 @@ from .views import (
     inscricao_detalhes,
     AvaliacaoListView,
     AvaliacaoCreateView,
+    TransferRequestCreateView,
+    TransferRequestListView,
+    TransferRequestDetailView,
 )
 
 urlpatterns = [
@@ -51,4 +54,9 @@ urlpatterns = [
     #lista favorditos
     path('favorites/', list_favorites, name='list_favorites'), 
     path('favorites/toggle/<uuid:evento_id>/', toggle_favorite, name='toggle_favorite'),
+
+    # Transferênciade incrição
+    path('transfer-requests/', TransferRequestListView.as_view(), name='transfer-request-list'),
+    path('transfer-requests/create/', TransferRequestCreateView.as_view(), name='transfer-request-create'),
+    path('transfer-requests/<int:pk>/', TransferRequestDetailView.as_view(), name='transfer-request-detail'),
 ]
