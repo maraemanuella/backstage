@@ -50,13 +50,10 @@ class Evento(models.Model):
     """Model para eventos criados pelos organizadores"""
 
     CATEGORIA_CHOICES = [
-        ('workshop', 'Workshop'),
-        ('palestra', 'Palestra'),
-        ('curso', 'Curso'),
-        ('networking', 'Networking'),
-        ('meetup', 'Meetup'),
-        ('conferencia', 'Conferência'),
-        ('outro', 'Outro'),
+    ('Workshop', 'Workshop'),
+    ('Palestra', 'Palestra'),
+    ('Networking', 'Networking'),
+    ('Curso', 'Curso'),
     ]
 
     STATUS_CHOICES = [
@@ -262,3 +259,25 @@ class Avaliacao(models.Model):
 
     def __str__(self):
         return f"{self.usuario.username} - {self.evento.titulo} ({self.nota} estrelas)"
+    
+    
+# Model de Favorito
+class Favorite(models.Model):   
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="favorites"
+    )
+    evento = models.ForeignKey(
+        Evento,
+        on_delete=models.CASCADE,
+        related_name="favorited_by"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "evento")
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user.username} favoritou {self.evento.titulo}"

@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
+from .models import Avaliacao, Evento, Inscricao
 
 # Serializer para avaliações/comentários de eventos
 class AvaliacaoSerializer(serializers.ModelSerializer):
@@ -13,7 +14,6 @@ class AvaliacaoSerializer(serializers.ModelSerializer):
             'id', 'evento', 'evento_titulo', 'usuario', 'usuario_nome', 'nota', 'comentario', 'criado_em'
         ]
         read_only_fields = ['id', 'usuario', 'evento', 'criado_em', 'usuario_nome', 'evento_titulo']
-from .models import Event, Registration
 
 User = get_user_model()
 
@@ -267,3 +267,22 @@ class InscricaoSerializer(serializers.ModelSerializer):
     def get_reembolso_estimado(self, obj):
         """Calcula o valor estimado de reembolso"""
         return obj.calcular_reembolso_estimado()
+    
+    from rest_framework import serializers
+from .models import Evento, Favorite
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    evento = EventoSerializer(read_only=True)
+    evento_id = serializers.UUIDField(write_only=True)  # recebe do frontend
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = Favorite
+        fields = ["id", "user", "evento", "evento_id"]
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        evento_id = validated_data.pop('evento_id')
+        evento = Evento.objects.get(id=evento_id)
+        favorite, created = Favorite.objects.get_or_create(user=user, evento=evento)
+        return favorite

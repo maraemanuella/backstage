@@ -2,6 +2,7 @@ from django.urls import path, include
 from django.contrib import admin
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from .views import toggle_favorite, list_favorites
 
 from .views import (
     CreateUserView,
@@ -46,4 +47,8 @@ urlpatterns = [
     # Avaliações
     path('eventos/<uuid:evento_id>/avaliacoes/', AvaliacaoListView.as_view(), name='avaliacao-list'),
     path('eventos/<uuid:evento_id>/avaliacoes/criar/', AvaliacaoCreateView.as_view(), name='avaliacao-create'),
+
+    #lista favorditos
+    path('favorites/', list_favorites, name='list_favorites'), 
+    path('favorites/toggle/<uuid:evento_id>/', toggle_favorite, name='toggle_favorite'),
 ]

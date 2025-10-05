@@ -1,5 +1,5 @@
 function Filtro({ filtroAtivo, setFiltroAtivo }) {
-  const filtros = ["Todos", "Workshop", "Palestras", "Networking", "Cursos"];
+  const filtros = ["Todos", "Workshop", "Palestra", "Networking", "Curso"];
 
   return (
     <div className="mb-[10px]">
