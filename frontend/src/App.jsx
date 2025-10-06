@@ -8,6 +8,7 @@ import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EventDescription from "./pages/EventDescription";
+import Waitlist from "./pages/Waitlist";
 import RegistrationSuccess from "./pages/RegistrationSuccess";
 import EventInscription from "./pages/EventInscription";
 import TitleUpdater from "./components/TitleUpdater";
@@ -64,6 +65,7 @@ function App() {
 
           {/* Eventos */}
           <Route path="/evento/:eventId" element={<EventDescription />} />
+          <Route path="/evento/:eventId/waitlist" element={<Waitlist />} />
           <Route
             path="/inscricao/:eventId"
             element={

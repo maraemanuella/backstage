@@ -3,6 +3,7 @@ from django.contrib import admin
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .views import toggle_favorite, list_favorites
+from .waitlist_views import waitlist_status, waitlist_join, waitlist_leave, waitlist_suggestions
 
 from .views import (
     CreateUserView,
@@ -63,4 +64,10 @@ urlpatterns = [
     path('transfer-requests/', TransferRequestListView.as_view(), name='transfer-request-list'),
     path('transfer-requests/create/', TransferRequestCreateView.as_view(), name='transfer-request-create'),
     path('transfer-requests/<int:pk>/', TransferRequestDetailView.as_view(), name='transfer-request-detail'),
+]
+urlpatterns += [
+    path('waitlist/<uuid:event_id>/status/', waitlist_status, name='waitlist-status'),
+    path('waitlist/<uuid:event_id>/join/', waitlist_join, name='waitlist-join'),
+    path('waitlist/<uuid:event_id>/leave/', waitlist_leave, name='waitlist-leave'),
+    path('waitlist/<uuid:event_id>/suggestions/', waitlist_suggestions, name='waitlist-suggestions'),
 ]

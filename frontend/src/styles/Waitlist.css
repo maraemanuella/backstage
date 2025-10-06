@@ -1,0 +1,18 @@
+.waitlist-page{padding:24px;min-height:100vh;background:#f7fafc}
+.waitlist-container{max-width:1100px;margin:0 auto;display:flex;gap:20px}
+.waitlist-container .left{flex:1 1 700px}
+.waitlist-container .right{width:320px}
+.waitlist-actions{margin-top:16px;padding:12px;background:#fff;border-radius:8px;box-shadow:0 2px 8px #0000000d}
+.status-row{display:flex;gap:18px;align-items:center;margin-bottom:12px}
+.waitlist-buttons{display:flex;gap:8px}
+.btn-join{background:#ffb800;color:#111;padding:8px 12px;border-radius:6px;border:none;cursor:pointer}
+.btn-leave{background:#f3f4f6;color:#111;padding:8px 12px;border-radius:6px;border:1px solid #e5e7eb;cursor:pointer}
+.waitlist-badge{padding:4px 8px;border-radius:999px;font-weight:600;font-size:13px}
+.badge-gray{background:#e5e7eb;color:#111}
+.badge-green{background:#22c55e;color:#fff}
+.badge-red{background:#ef4444;color:#fff}
+.suggestions{background:#fff;padding:12px;border-radius:8px;box-shadow:0 2px 8px #0000000d}
+.suggestion-item{display:flex;gap:12px;padding:8px;border-radius:6px;cursor:pointer;align-items:center}
+.suggestion-item img{width:64px;height:48px;object-fit:cover;border-radius:6px}
+.thumb-placeholder{width:64px;height:48px;background:#eee;border-radius:6px}
+.small{font-size:12px;color:#555}

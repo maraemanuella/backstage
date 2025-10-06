@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Evento, Inscricao, Avaliacao, TransferRequest
+from .models import CustomUser, Evento, Inscricao, Avaliacao, TransferRequest, WaitlistEntry
 @admin.register(Avaliacao)
 class AvaliacaoAdmin(admin.ModelAdmin):
     list_display = ('evento', 'usuario', 'nota', 'criado_em')
@@ -109,3 +109,11 @@ class InscricaoAdmin(admin.ModelAdmin):
 class TransferRequestAdmin(admin.ModelAdmin):
     list_display = ('inscricao', 'from_user', 'to_user', 'status', 'created_at')
     list_filter = ('status',)
+
+
+@admin.register(WaitlistEntry)
+class WaitlistEntryAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'evento', 'status', 'created_at', 'notified_at', 'expires_at')
+    list_filter = ('status', 'created_at')
+    search_fields = ('usuario__username', 'evento__titulo')
+    date_hierarchy = 'created_at'

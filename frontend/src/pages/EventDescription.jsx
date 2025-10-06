@@ -174,6 +174,20 @@ function EventDescription() {
     navigate(`/inscricao/${eventId}`);
   };
 
+  const handleWaitlist = () => {
+    // Decisão robusta: usa event.esta_lotado quando disponível, caso contrário verifica vagas_disponiveis
+    const isLotado = event && (event.esta_lotado === true || Number(event.vagas_disponiveis) <= 0);
+
+    if (!isLotado) {
+      // Ainda há vagas: ir para inscrição normal
+      toast.info("Ainda há vagas — você pode se inscrever normalmente.");
+      return navigate(`/inscricao/${eventId}`);
+    }
+
+    // Evento está lotado ou sem informação de vagas: abrir a tela de lista de espera
+    navigate(`/evento/${eventId}/waitlist`);
+  };
+
   const handleBack = () => navigate("/");
 
   if (loading) return <p className="text-center">Carregando evento...</p>;
@@ -267,7 +281,7 @@ function EventDescription() {
               ? "Lotado"
               : "Se inscrever"}
           </EventButton>
-          <EventButton className="bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-2 px-8 py-3">
+          <EventButton className="bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-2 px-8 py-3" onClick={handleWaitlist}>
             <FaUsers /> Lista de espera
           </EventButton>
           <EventButton className="bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-2 px-8 py-3">
