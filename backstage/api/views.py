@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
 from .serializers import FavoriteSerializer
-from .models import Evento, Favorite, TransferRequest
+from .models import Evento, Favorite, TransferRequest, Inscricao, Avaliacao
 from django.http import JsonResponse
 from django.db import models
 
@@ -20,7 +20,10 @@ from .serializers import (
     InscricaoSerializer,
     AvaliacaoSerializer,
     TransferRequestSerializer,
+    EventoSerializer,
+    InscricaoCreateSerializer,
 )
+
 from .models import Evento, Inscricao, Avaliacao
 
 import qrcode

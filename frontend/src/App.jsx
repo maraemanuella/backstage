@@ -11,6 +11,8 @@ import EventDescription from "./pages/EventDescription";
 import RegistrationSuccess from "./pages/RegistrationSuccess";
 import EventInscription from "./pages/EventInscription";
 import TitleUpdater from "./components/TitleUpdater";
+import PublicRoute from "./components/PublicRoute";
+import Checkin from "./components/Checkin.jsx"
 import HeartPage from "./pages/HeartPage";
 import SolicitarTransferencia from "./pages/SolicitarTransferencia";
 import AceitarOferta from "./pages/AceitarOferta";
@@ -39,6 +41,28 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <RegisterAndLogout />
+            </PublicRoute>
+          }
+        />
+
+        <Route path="/logout" element={<Logout />} />
+        <Route path="/evento/:eventId" element={<EventDescription />} />
+        <Route path="/inscricao/:eventId" element={<EventInscription />} />
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/register" element={<RegisterAndLogout />} />
@@ -67,6 +91,14 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="*" element={<NotFound />} />
+
+        <Route path="/checkin/:id" element={<Checkin />} />
+
+
+      </Routes>
+    </BrowserRouter>
 
         <Route
           path="/heart"
