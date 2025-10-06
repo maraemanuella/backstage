@@ -22,6 +22,7 @@ from .views import (
     TransferRequestCreateView,
     TransferRequestListView,
     TransferRequestDetailView,
+    update_user_profile,
 )
 
 urlpatterns = [
@@ -35,6 +36,7 @@ urlpatterns = [
     path('user/<int:pk>/', RetrieveUpdateUserView.as_view(), name='usuario-detalhe'),
     path('user/<int:pk>/delete/', DeleteUserView.as_view(), name='usuario-deletar'),
     path("user/me/", MeView.as_view(), name="me"),
+    path('user/profile/', update_user_profile, name='update-user-profile'),
 
     # JWT
     path('token/', CustomTokenObtainView.as_view(), name='get_token'),

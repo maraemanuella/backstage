@@ -4,6 +4,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
+import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EventDescription from "./pages/EventDescription";
 import RegistrationSuccess from "./pages/RegistrationSuccess";
@@ -75,6 +77,22 @@ function App() {
           }
         />
 
+        <Route 
+          path="/perfil" 
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/perfil/editar" 
+          element={
+            <ProtectedRoute>
+              <EditProfile />
+            </ProtectedRoute>
+          } 
+        />
         <Route path="*" element={<NotFound />}></Route>
       </Routes>
     </BrowserRouter>

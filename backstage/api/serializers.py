@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Avaliacao, Evento, Inscricao, CustomUser, TransferRequest
+from .models import Avaliacao, Evento, Inscricao, CustomUser, TransferRequest, Favorite
+
+User = get_user_model()
 
 # Serializer para avaliações/comentários de eventos
 class AvaliacaoSerializer(serializers.ModelSerializer):
@@ -14,8 +16,6 @@ class AvaliacaoSerializer(serializers.ModelSerializer):
             'id', 'evento', 'evento_titulo', 'usuario', 'usuario_nome', 'nota', 'comentario', 'criado_em'
         ]
         read_only_fields = ['id', 'usuario', 'evento', 'criado_em', 'usuario_nome', 'evento_titulo']
-
-User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     profile_photo = serializers.ImageField(use_url=True, required=False)
@@ -267,9 +267,7 @@ class InscricaoSerializer(serializers.ModelSerializer):
     def get_reembolso_estimado(self, obj):
         """Calcula o valor estimado de reembolso"""
         return obj.calcular_reembolso_estimado()
-    
-    from rest_framework import serializers
-from .models import Evento, Favorite
+
 
 class FavoriteSerializer(serializers.ModelSerializer):
     evento = EventoSerializer(read_only=True)
@@ -286,6 +284,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         evento = Evento.objects.get(id=evento_id)
         favorite, created = Favorite.objects.get_or_create(user=user, evento=evento)
         return favorite
+
 
 class TransferRequestSerializer(serializers.ModelSerializer):
     inscricao_id = serializers.UUIDField(write_only=True)
