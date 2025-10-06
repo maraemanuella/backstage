@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from 'react-router-dom';
 import Header from "../components/Header";
 import api from "../api.js";
 import "../styles/Form.css";
@@ -39,7 +40,29 @@ function SolicitarTransferencia() {
       }
     };
 
+  const location = useLocation();
+
   useEffect(() => {
+    // tenta pré-selecionar inscrição enviada via navigate state
+    const stateSelected = location?.state?.selectedInscricao;
+    if (stateSelected) {
+      setSelectedInscricao(stateSelected);
+      setExpandir(true);
+    } else {
+      // fallback para query param ?inscricao=
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const q = params.get('inscricao');
+        if (q) {
+          const n = Number(q);
+          setSelectedInscricao(Number.isNaN(n) ? q : n);
+          setExpandir(true);
+        }
+      } catch (e) {
+        // noop
+      }
+    }
+
     api.get("api/user/me/")
       .then(res => setUser(res.data))
       .catch(console.error);
@@ -51,7 +74,7 @@ function SolicitarTransferencia() {
     api.get("/api/user/")
       .then(res => setUsuarios(res.data))
       .catch(() => setUsuarios([]));
-  }, []);
+  }, [location]);
 
   return (
     <main>

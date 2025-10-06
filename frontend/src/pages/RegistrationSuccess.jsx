@@ -194,7 +194,10 @@ function RegistrationSuccess() {
                     <p className="qr-code-text" style={{cursor: 'pointer'}} onClick={handleCopyCode}>
                         Copiar código do QR
                     </p>
-                    <button className="transfer-btn">
+                    <button
+                        className="transfer-btn"
+                        onClick={() => navigate('/transferir-inscricao', { state: { selectedInscricao: registration?.id } })}
+                    >
                         Transferir ingresso
                     </button>
                 </div>
