@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Avaliacao, Evento, Inscricao, CustomUser, TransferRequest, Favorite
+from django.utils import timezone
+from datetime import timedelta
 from io import BytesIO
 import base64
 
@@ -370,6 +372,11 @@ class TransferRequestSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Transferência não permitida para este evento.")
         if inscricao.status != 'confirmada':
             raise serializers.ValidationError("Só inscrições confirmadas podem ser transferidas.")
+        
+        # Restrição de tempo: evento deve ser daqui a mais de 24h
+        agora = timezone.now()
+        if inscricao.evento.data_evento - agora < timedelta(hours=24):
+            raise serializers.ValidationError("A transferência só pode ser feita com mais de 24h de antecedência do evento.")
 
         transfer_request = TransferRequest.objects.create(
             inscricao=inscricao,
