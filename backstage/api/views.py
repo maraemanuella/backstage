@@ -5,8 +5,12 @@ from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
+from .serializers import FavoriteSerializer
+from .models import Evento, Favorite, TransferRequest, Inscricao, Avaliacao
 from django.http import JsonResponse
-from .models import Evento, Evento, Inscricao, Avaliacao
+from django.db import models
+
+User = get_user_model()
 
 from .serializers import (
     CustomTokenSerializer,
@@ -14,10 +18,18 @@ from .serializers import (
     EventoSerializer,
     InscricaoCreateSerializer,
     InscricaoSerializer,
+    AvaliacaoSerializer,
+    TransferRequestSerializer,
     EventoSerializer,
     InscricaoCreateSerializer,
-    AvaliacaoSerializer,
 )
+
+from .models import Evento, Inscricao, Avaliacao
+
+import qrcode
+from io import BytesIO
+import base64
+
 
 # Listar avaliações de um evento
 class AvaliacaoListView(generics.ListAPIView):
@@ -122,11 +134,19 @@ class InscricaoCreateView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        inscricao = serializer.save()
+        try:
+            inscricao = serializer.save()
+        except Exception as e:
+            # Erro na hora de salvar a inscrição (ex: problemas relacionados a signals, geração de qr, etc.)
+            return Response({'error': 'Erro ao criar inscrição', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Retorna os dados completos da inscrição criada
-        response_serializer = InscricaoSerializer(inscricao)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        try:
+            response_serializer = InscricaoSerializer(inscricao)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            # Se ocorrer erro ao serializar a resposta, devolve uma mensagem útil
+            return Response({'error': 'Inscrição criada, porém falha ao montar resposta', 'details': str(e), 'id': str(inscricao.id)}, status=status.HTTP_201_CREATED)
 
 
 class MinhasInscricoesView(generics.ListAPIView):
@@ -143,13 +163,9 @@ def evento_resumo_inscricao(request, evento_id):
     evento = get_object_or_404(Evento, id=evento_id, status='publicado')
     usuario = request.user
 
-    # Verifica se já está inscrito
+    # Verifica se já está inscrito - retornamos um flag em vez de erro para permitir
+    # que o frontend mostre a tela de resumo mesmo quando o usuário já tiver inscrição.
     ja_inscrito = Inscricao.objects.filter(usuario=usuario, evento=evento).exists()
-
-    if ja_inscrito:
-        return Response({
-            'error': 'Você já está inscrito neste evento'
-        }, status=status.HTTP_400_BAD_REQUEST)
         
     itens_incluidos = [
         item.strip() 
@@ -197,6 +213,8 @@ def evento_resumo_inscricao(request, evento_id):
             'telefone': usuario.telefone,
         }
     }
+    # Flag indicando se o usuário já possui inscrição neste evento
+    data['ja_inscrito'] = ja_inscrito
 
     return Response(data)
 
@@ -212,3 +230,174 @@ def inscricao_detalhes(request, inscricao_id):
 
     serializer = InscricaoSerializer(inscricao)
     return Response(serializer.data)
+
+
+# Lista favoritos do usuário logado
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_favorites(request):
+    favorites = Favorite.objects.filter(user=request.user)
+    serializer = FavoriteSerializer(favorites, many=True, context={'request': request})
+    return Response(serializer.data)
+
+# Alterna favorito: adiciona se não existir, remove se já existir
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def toggle_favorite(request, evento_id):
+    user = request.user
+    evento = get_object_or_404(Evento, id=evento_id)
+
+    favorite, created = Favorite.objects.get_or_create(user=user, evento=evento)
+
+    if not created:
+        # Já existia, então remove
+        favorite.delete()
+        return Response({"favorito": False})
+    
+    # Criou agora
+    return Response({"favorito": True})
+
+class TransferRequestCreateView(generics.CreateAPIView):
+    queryset = TransferRequest.objects.all()
+    serializer_class = TransferRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+class TransferRequestListView(generics.ListAPIView):
+    serializer_class = TransferRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Mostra solicitações que o usuário recebeu ou enviou
+        user = self.request.user
+        return TransferRequest.objects.filter(
+            models.Q(from_user=user) | models.Q(to_user=user)
+        ).order_by('-created_at')
+
+class TransferRequestDetailView(generics.RetrieveUpdateAPIView):
+    queryset = TransferRequest.objects.all()
+    serializer_class = TransferRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+    def update(self, request, *args, **kwargs):
+        transfer_request = self.get_object()
+        status_update = request.data.get('status')
+        # Somente quem recebeu e um admin(debug) pode aceitar ou negar
+
+        if transfer_request.to_user != request.user and not request.user.is_staff:
+            return Response({'error': 'Apenas o destinatário ou um admin(debug) pode aceitar ou negar.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        if status_update not in ['accepted', 'denied']:
+            return Response({'error': 'Status inválido.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        transfer_request.status = status_update
+
+        if status_update == 'accepted':
+            # Transferir a inscrição
+            inscricao = transfer_request.inscricao
+            inscricao.usuario = transfer_request.to_user
+            inscricao.status = 'transferida'
+            inscricao.save()
+            
+        transfer_request.save()
+        serializer = self.get_serializer(transfer_request)
+        return Response(serializer.data)
+
+
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_user_profile(request):
+    """
+    Atualiza o perfil do usuário autenticado
+    """
+    user = request.user
+    
+    try:
+        # Campos que podem ser atualizados
+        updatable_fields = [
+            'username', 'email', 'telefone', 'cpf', 'cnpj', 
+            'data_nascimento', 'sexo', 'profile_photo'
+        ]
+        
+        # Validações específicas
+        if 'email' in request.data:
+            email = request.data['email']
+            if User.objects.filter(email=email).exclude(id=user.id).exists():
+                return Response(
+                    {'email': ['Este email já está em uso por outro usuário.']}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        if 'username' in request.data:
+            username = request.data['username']
+            if User.objects.filter(username=username).exclude(id=user.id).exists():
+                return Response(
+                    {'username': ['Este nome de usuário já está em uso.']}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        if 'cpf' in request.data and request.data['cpf']:
+            cpf = request.data['cpf'].replace('.', '').replace('-', '').replace(' ', '')
+            if len(cpf) != 11 or not cpf.isdigit():
+                return Response(
+                    {'cpf': ['CPF deve ter exatamente 11 dígitos.']}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if User.objects.filter(cpf=cpf).exclude(id=user.id).exists():
+                return Response(
+                    {'cpf': ['Este CPF já está em uso por outro usuário.']}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            request.data['cpf'] = cpf
+        
+        if 'cnpj' in request.data and request.data['cnpj']:
+            cnpj = request.data['cnpj'].replace('.', '').replace('/', '').replace('-', '').replace(' ', '')
+            if len(cnpj) != 14 or not cnpj.isdigit():
+                return Response(
+                    {'cnpj': ['CNPJ deve ter exatamente 14 dígitos.']}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if User.objects.filter(cnpj=cnpj).exclude(id=user.id).exists():
+                return Response(
+                    {'cnpj': ['Este CNPJ já está em uso por outro usuário.']}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            request.data['cnpj'] = cnpj
+        
+        if 'telefone' in request.data and request.data['telefone']:
+            telefone = request.data['telefone'].replace('(', '').replace(')', '').replace('-', '').replace(' ', '')
+            if len(telefone) not in [10, 11] or not telefone.isdigit():
+                return Response(
+                    {'telefone': ['Telefone deve ter 10 ou 11 dígitos.']}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            request.data['telefone'] = telefone
+        
+        # Atualizar campos
+        for field in updatable_fields:
+            if field in request.data:
+                setattr(user, field, request.data[field])
+        
+        user.save()
+        
+        # Retornar dados atualizados
+        serializer = UserSerializer(user)
+        return Response({
+            'message': 'Perfil atualizado com sucesso!',
+            'user': serializer.data
+        }, status=status.HTTP_200_OK)
+        
+    except Exception as e:
+        return Response(
+            {'error': 'Erro interno do servidor.'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

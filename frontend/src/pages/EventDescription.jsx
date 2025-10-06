@@ -85,7 +85,22 @@ function EventDescription() {
         setAvaliacoes([]);
       });
 
-    checkRegistrationStatus();
+    // Em vez de uma checagem separada, usamos o resumo de inscrição que fornece
+    // informações completas, incluindo se o usuário já está inscrito.
+    const fetchResumo = async () => {
+      try {
+        const token = localStorage.getItem('access')
+        if (!token) return
+        const res = await api.get(`/api/eventos/${eventId}/resumo-inscricao/`, { headers: { Authorization: `Bearer ${token}` } })
+        // O backend agora retorna a flag 'ja_inscrito'
+        if (res.data && typeof res.data.ja_inscrito !== 'undefined') {
+          setIsRegistered(!!res.data.ja_inscrito)
+        }
+      } catch (err) {
+        // ignore — manterá como não inscrito
+      }
+    }
+    fetchResumo();
   }, [eventId]);
   // Enviar avaliação
   const handleAvaliacaoSubmit = async (e) => {
@@ -133,20 +148,10 @@ function EventDescription() {
     }
   };
 
-  const checkRegistrationStatus = async () => {
-    try {
-      const response = await api.get("api/user/registrations/");
-      const userRegistrations = response.data;
-      const isAlreadyRegistered = userRegistrations.some(
-        (reg) => reg.event === parseInt(eventId) && reg.is_active
-      );
-      setIsRegistered(isAlreadyRegistered);
-    } catch (err) {
-      console.error("Erro ao verificar inscrições:", err);
-    }
-  };
+  // ...existing code continues...
 
   const handleRegister = async () => {
+    // Redirect to the full inscription form instead of calling a non-existing endpoint
     if (isRegistered) {
       toast.info("Você já está inscrito neste evento!");
       return;
@@ -157,40 +162,16 @@ function EventDescription() {
       return;
     }
 
-    setRegistering(true);
-    try {
-      // Usar endpoint correto do modelo Evento
-      const response = await api.post(`api/eventos/${eventId}/inscrever/`);
-      toast.success("Inscrição realizada com sucesso!");
-      setIsRegistered(true);
-
-      const updatedEvent = await api.get(`api/eventos/${eventId}/`);
-      setEvent(updatedEvent.data);
-
-      setTimeout(() => {
-        navigate(`/inscricao-realizada/${response.data.id}`);
-      }, 2000);
-    } catch (err) {
-      let errorMessage = "Erro ao realizar inscrição";
-      if (err.response?.data) {
-        if (typeof err.response.data === 'string') {
-          errorMessage = err.response.data;
-        } else if (err.response.data.error) {
-          errorMessage = err.response.data.error;
-        } else if (Array.isArray(err.response.data)) {
-          errorMessage = err.response.data.join(' ');
-        } else {
-          errorMessage = Object.values(err.response.data).join(' ');
-        }
-      } else if (err.response?.status === 401) {
-        errorMessage = "Você precisa estar logado para se inscrever";
-        navigate("/login");
-        return;
-      }
-      toast.error(errorMessage);
-    } finally {
-      setRegistering(false);
+    // Verifica se o usuário está autenticado antes de navegar para o formulário
+    const token = localStorage.getItem('access');
+    if (!token) {
+      toast.info("Você precisa estar logado para se inscrever");
+      navigate('/login');
+      return;
     }
+
+    // Navega para a página de inscrição onde o usuário preencherá o formulário
+    navigate(`/inscricao/${eventId}`);
   };
 
   const handleBack = () => navigate("/");
