@@ -12,7 +12,7 @@ import RegistrationSuccess from "./pages/RegistrationSuccess";
 import EventInscription from "./pages/EventInscription";
 import TitleUpdater from "./components/TitleUpdater";
 import PublicRoute from "./components/PublicRoute";
-import Checkin from "./components/Checkin.jsx"
+import Checkin from "./components/Checkin.jsx";
 import HeartPage from "./pages/HeartPage";
 import SolicitarTransferencia from "./pages/SolicitarTransferencia";
 import AceitarOferta from "./pages/AceitarOferta";
@@ -30,104 +30,117 @@ function RegisterAndLogout() {
 function App() {
   return (
     <FavoritesProvider>
-    <BrowserRouter>
-      <TitleUpdater />
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
-          }
-        />
+      <BrowserRouter>
+        <TitleUpdater />
+        <Routes>
+          {/* Página inicial */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          }
-        />
+          {/* Rotas públicas */}
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <RegisterAndLogout />
+              </PublicRoute>
+            }
+          />
+          <Route path="/logout" element={<Logout />} />
 
-        <Route
-          path="/register"
-          element={
-            <PublicRoute>
-              <RegisterAndLogout />
-            </PublicRoute>
-          }
-        />
+          {/* Eventos */}
+          <Route path="/evento/:eventId" element={<EventDescription />} />
+          <Route
+            path="/inscricao/:eventId"
+            element={
+              <ProtectedRoute>
+                <EventInscription />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inscricao-realizada/:registrationId"
+            element={
+              <ProtectedRoute>
+                <RegistrationSuccess />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="/logout" element={<Logout />} />
-        <Route path="/evento/:eventId" element={<EventDescription />} />
-        <Route path="/inscricao/:eventId" element={<EventInscription />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/logout" element={<Logout />} />
-        <Route path="/register" element={<RegisterAndLogout />} />
-        <Route path="/evento" element={<EventDescription />} />
-        <Route path="/evento/:eventId" element={<EventDescription />} />
-        <Route path="/inscricao/:eventId" element={<EventInscription />} />
-        <Route path="/transferir-inscricao" element={
-          <ProtectedRoute>
-            <SolicitarTransferencia />
-          </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/ofertas-transferencia"
-          element={
-            <ProtectedRoute>
-              <AceitarOferta />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/inscricao-realizada/:registrationId"
-          element={
-            <ProtectedRoute>
-              <RegistrationSuccess />
-            </ProtectedRoute>
-          }
-        />
+          {/* Check-in */}
+          <Route
+            path="/checkin/:id"
+            element={
+              <ProtectedRoute>
+                <Checkin />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="*" element={<NotFound />} />
+          {/* Transferências */}
+          <Route
+            path="/transferir-inscricao"
+            element={
+              <ProtectedRoute>
+                <SolicitarTransferencia />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ofertas-transferencia"
+            element={
+              <ProtectedRoute>
+                <AceitarOferta />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="/checkin/:id" element={<Checkin />} />
+          {/* Perfil */}
+          <Route
+            path="/perfil"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/perfil/editar"
+            element={
+              <ProtectedRoute>
+                <EditProfile />
+              </ProtectedRoute>
+            }
+          />
 
+          {/* Favoritos */}
+          <Route
+            path="/heart"
+            element={
+              <ProtectedRoute>
+                <HeartPage />
+              </ProtectedRoute>
+            }
+          />
 
-      </Routes>
-    </BrowserRouter>
-
-        <Route
-          path="/heart"
-          element={
-            <ProtectedRoute>
-              <HeartPage />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route 
-          path="/perfil" 
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/perfil/editar" 
-          element={
-            <ProtectedRoute>
-              <EditProfile />
-            </ProtectedRoute>
-          } 
-        />
-        <Route path="*" element={<NotFound />}></Route>
-      </Routes>
-    </BrowserRouter>
+          {/* Página 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
     </FavoritesProvider>
   );
 }
