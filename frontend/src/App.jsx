@@ -8,6 +8,8 @@ import EventDescription from "./pages/EventDescription"
 import RegistrationSuccess from "./pages/RegistrationSuccess"
 import EventInscription from "./pages/EventInscription"
 import TitleUpdater from "./components/TitleUpdater";
+import PublicRoute from "./components/PublicRoute";
+import Checkin from "./components/Checkin.jsx"
 
 function Logout() {
   localStorage.clear()
@@ -22,7 +24,7 @@ function RegisterAndLogout() {
 function App() {
   return (
     <BrowserRouter>
-        <TitleUpdater />
+      <TitleUpdater />
       <Routes>
         <Route
           path="/"
@@ -32,25 +34,46 @@ function App() {
             </ProtectedRoute>
           }
         />
-  <Route path="/login" element={<Login />} />
-  <Route path="/logout" element={<Logout />} />
-  <Route path="/register" element={<RegisterAndLogout />} />
-  <Route path="/evento" element={<EventDescription />} />
-  <Route path="/evento/:eventId" element={<EventDescription />} />
-  <Route path="/inscricao/:eventId" element={<EventInscription />} />
 
-  <Route 
-    path="/inscricao-realizada/:registrationId" 
-    element={
-      <ProtectedRoute>
-        <RegistrationSuccess />
-      </ProtectedRoute>
-    } 
-  />
-  <Route path="*" element={<NotFound />}></Route>
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <RegisterAndLogout />
+            </PublicRoute>
+          }
+        />
+
+        <Route path="/logout" element={<Logout />} />
+        <Route path="/evento/:eventId" element={<EventDescription />} />
+        <Route path="/inscricao/:eventId" element={<EventInscription />} />
+
+        <Route
+          path="/inscricao-realizada/:registrationId"
+          element={
+            <ProtectedRoute>
+              <RegistrationSuccess />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="*" element={<NotFound />} />
+
+        <Route path="/checkin/:id" element={<Checkin />} />
+
+
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
 export default App

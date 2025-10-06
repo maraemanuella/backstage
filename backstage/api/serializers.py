@@ -218,7 +218,10 @@ class InscricaoCreateSerializer(serializers.ModelSerializer):
 class InscricaoSerializer(serializers.ModelSerializer):
     """Serializer completo para visualizar inscrições"""
 
-    # Dados do evento
+    # Retorna o id do evento
+    evento_id = serializers.UUIDField(source='evento.id', read_only=True)
+
+    # Dados do evento resumidos
     evento_titulo = serializers.CharField(source='evento.titulo', read_only=True)
     evento_data = serializers.DateTimeField(source='evento.data_evento', read_only=True)
     evento_endereco = serializers.CharField(source='evento.endereco', read_only=True)
@@ -248,7 +251,9 @@ class InscricaoSerializer(serializers.ModelSerializer):
             'aceita_termos',
             'created_at',
             'updated_at',
-            # Dados do evento
+            # ID do evento
+            'evento_id',
+            # Dados do evento resumidos
             'evento_titulo',
             'evento_data',
             'evento_endereco',
@@ -262,9 +267,8 @@ class InscricaoSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             'id', 'status', 'valor_original', 'desconto_aplicado',
-            'valor_final', 'qr_code', 'created_at', 'updated_at'
+            'valor_final', 'qr_code', 'created_at', 'updated_at', 'evento_id'
         ]
 
     def get_reembolso_estimado(self, obj):
-        """Calcula o valor estimado de reembolso"""
         return obj.calcular_reembolso_estimado()
