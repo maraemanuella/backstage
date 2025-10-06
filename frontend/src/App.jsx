@@ -17,6 +17,8 @@ import Checkin from "./components/Checkin.jsx";
 import HeartPage from "./pages/HeartPage";
 import SolicitarTransferencia from "./pages/SolicitarTransferencia";
 import AceitarOferta from "./pages/AceitarOferta";
+import ProximosEventos from "./pages/ProximosEventos";
+import EventosPassados from "./pages/EventosPassados";
 
 function Logout() {
   localStorage.clear();
@@ -138,6 +140,24 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+          path="/proximos"
+          element={
+            <ProtectedRoute>
+              <ProximosEventos />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/passados"
+          element={
+            <ProtectedRoute>
+              <EventosPassados />
+            </ProtectedRoute>
+          }
+        />
 
           {/* Página 404 */}
           <Route path="*" element={<NotFound />} />
