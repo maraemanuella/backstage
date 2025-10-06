@@ -131,11 +131,19 @@ class InscricaoCreateView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        inscricao = serializer.save()
+        try:
+            inscricao = serializer.save()
+        except Exception as e:
+            # Erro na hora de salvar a inscrição (ex: problemas relacionados a signals, geração de qr, etc.)
+            return Response({'error': 'Erro ao criar inscrição', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         # Retorna os dados completos da inscrição criada
-        response_serializer = InscricaoSerializer(inscricao)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        try:
+            response_serializer = InscricaoSerializer(inscricao)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            # Se ocorrer erro ao serializar a resposta, devolve uma mensagem útil
+            return Response({'error': 'Inscrição criada, porém falha ao montar resposta', 'details': str(e), 'id': str(inscricao.id)}, status=status.HTTP_201_CREATED)
 
 
 class MinhasInscricoesView(generics.ListAPIView):
@@ -152,13 +160,9 @@ def evento_resumo_inscricao(request, evento_id):
     evento = get_object_or_404(Evento, id=evento_id, status='publicado')
     usuario = request.user
 
-    # Verifica se já está inscrito
+    # Verifica se já está inscrito - retornamos um flag em vez de erro para permitir
+    # que o frontend mostre a tela de resumo mesmo quando o usuário já tiver inscrição.
     ja_inscrito = Inscricao.objects.filter(usuario=usuario, evento=evento).exists()
-
-    if ja_inscrito:
-        return Response({
-            'error': 'Você já está inscrito neste evento'
-        }, status=status.HTTP_400_BAD_REQUEST)
         
     itens_incluidos = [
         item.strip() 
@@ -206,6 +210,8 @@ def evento_resumo_inscricao(request, evento_id):
             'telefone': usuario.telefone,
         }
     }
+    # Flag indicando se o usuário já possui inscrição neste evento
+    data['ja_inscrito'] = ja_inscrito
 
     return Response(data)
 

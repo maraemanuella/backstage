@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Avaliacao, Evento, Inscricao, CustomUser, TransferRequest, Favorite
+from io import BytesIO
+import base64
 
 User = get_user_model()
 
@@ -222,6 +224,10 @@ class InscricaoSerializer(serializers.ModelSerializer):
     evento_data = serializers.DateTimeField(source='evento.data_evento', read_only=True)
     evento_endereco = serializers.CharField(source='evento.endereco', read_only=True)
     evento_local_especifico = serializers.CharField(source='evento.local_especifico', read_only=True)
+    # Id do evento e informações do organizador para facilitar o frontend
+    evento_id = serializers.UUIDField(source='evento.id', read_only=True)
+    organizador_nome = serializers.CharField(source='evento.organizador.get_full_name', read_only=True)
+    organizador_telefone = serializers.CharField(source='evento.organizador.telefone', read_only=True)
 
     # Dados do usuário
     usuario_nome = serializers.CharField(source='usuario.get_full_name', read_only=True)
@@ -230,6 +236,8 @@ class InscricaoSerializer(serializers.ModelSerializer):
 
     # Valor do reembolso estimado
     reembolso_estimado = serializers.SerializerMethodField()
+    # Gera uma imagem PNG do QR code como data URI para uso direto no frontend
+    qr_code_image = serializers.SerializerMethodField()
 
     class Meta:
         model = Inscricao
@@ -244,14 +252,19 @@ class InscricaoSerializer(serializers.ModelSerializer):
             'checkin_realizado',
             'data_checkin',
             'qr_code',
+            'qr_code_image',
             'aceita_termos',
             'created_at',
             'updated_at',
             # Dados do evento
             'evento_titulo',
             'evento_data',
+            'evento_id',
             'evento_endereco',
             'evento_local_especifico',
+            # Organizador
+            'organizador_nome',
+            'organizador_telefone',
             # Dados do usuário
             'usuario_nome',
             'usuario_username',
@@ -261,12 +274,35 @@ class InscricaoSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             'id', 'status', 'valor_original', 'desconto_aplicado',
-            'valor_final', 'qr_code', 'created_at', 'updated_at'
+            'valor_final', 'qr_code', 'qr_code_image', 'created_at', 'updated_at'
         ]
 
     def get_reembolso_estimado(self, obj):
         """Calcula o valor estimado de reembolso"""
         return obj.calcular_reembolso_estimado()
+
+    def get_qr_code_image(self, obj):
+        """Gera uma imagem PNG do qr_code do objeto e retorna como data URI"""
+        try:
+            # Import dinâmico para evitar ImportError em tempo de importação do módulo
+            try:
+                import qrcode
+            except Exception:
+                return None
+
+            qr_text = obj.qr_code or str(obj.id)
+            qr = qrcode.QRCode(version=1, box_size=10, border=4)
+            qr.add_data(qr_text)
+            qr.make(fit=True)
+            img = qr.make_image(fill_color="black", back_color="white")
+
+            buffered = BytesIO()
+            img.save(buffered, format="PNG")
+            img_bytes = buffered.getvalue()
+            b64 = base64.b64encode(img_bytes).decode('utf-8')
+            return f"data:image/png;base64,{b64}"
+        except Exception:
+            return None
 
 
 class FavoriteSerializer(serializers.ModelSerializer):

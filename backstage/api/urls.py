@@ -48,6 +48,8 @@ urlpatterns = [
     path('inscricoes/', InscricaoCreateView.as_view(), name='inscricao-create'),
     path('inscricoes/minhas/', MinhasInscricoesView.as_view(), name='minhas-inscricoes'),
     path('inscricoes/<uuid:inscricao_id>/', inscricao_detalhes, name='inscricao-detail'),
+    # Rotas compatíveis em inglês (frontend utiliza /api/registrations/)
+    path('registrations/<uuid:inscricao_id>/', inscricao_detalhes, name='registration-detail'),
 
     # Avaliações
     path('eventos/<uuid:evento_id>/avaliacoes/', AvaliacaoListView.as_view(), name='avaliacao-list'),
