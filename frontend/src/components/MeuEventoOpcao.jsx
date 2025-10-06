@@ -7,13 +7,13 @@ function MeuEventoOpcao({ openMeuEvento }) {
       <div className="bg-gray-200 w-[280px] h-[120px] flex flex-col rounded-b-lg justify-center ">
         <ul className="flex flex-col gap-2 ml-2 text-lg">
           <li className="hover:bg-lime-300 pl-1 rounded w-[260px] cursor-pointer hover:text-black/60 transition-colors duration-300">
-            <Link to="#" className="flex gap-1 items-center">
+            <Link to="/proximos" className="flex gap-1 items-center">
               <CircleArrowRight className="h-5 w-5" /> Proximos
             </Link>
           </li>
 
           <li className="hover:bg-sky-300 pl-1 rounded w-[260px] cursor-pointer  hover:text-black/60 transition-colors duration-300">
-            <Link to="#" className="flex gap-1 items-center">
+            <Link to="/passados" className="flex gap-1 items-center">
               <CircleArrowLeft className="h-5 w-5" /> Passados
             </Link>
           </li>

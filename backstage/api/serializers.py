@@ -230,6 +230,8 @@ class InscricaoSerializer(serializers.ModelSerializer):
     evento_data = serializers.DateTimeField(source='evento.data_evento', read_only=True)
     evento_endereco = serializers.CharField(source='evento.endereco', read_only=True)
     evento_local_especifico = serializers.CharField(source='evento.local_especifico', read_only=True)
+    evento_foto_capa = serializers.ImageField(source='evento.foto_capa', read_only=True)  # ⬅️ ADICIONE
+
     # Id do evento e informações do organizador para facilitar o frontend
     evento_id = serializers.UUIDField(source='evento.id', read_only=True)
     organizador_nome = serializers.CharField(source='evento.organizador.get_full_name', read_only=True)
@@ -270,6 +272,7 @@ class InscricaoSerializer(serializers.ModelSerializer):
             'evento_id',
             'evento_endereco',
             'evento_local_especifico',
+            'evento_foto_capa',
             # Organizador
             'organizador_nome',
             'organizador_telefone',
