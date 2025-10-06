@@ -1,17 +1,13 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import api from "../api.js";
-import { GoogleMap, LoadScript } from "@react-google-maps/api";
 import {
   FaMapMarkerAlt,
   FaClock,
   FaCalendarAlt,
   FaUser,
   FaStar,
-  FaInstagram,
-  FaFacebook,
-  FaLinkedin,
   FaArrowLeft,
   FaUsers,
   FaCheckCircle,
@@ -47,7 +43,6 @@ function EventDescription() {
   const [error, setError] = useState(null);
   const [registering, setRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
-  // Avaliação
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [comentario, setComentario] = useState("");
   const [nota, setNota] = useState(0);
@@ -64,6 +59,7 @@ function EventDescription() {
       .get(`api/eventos/${eventId}/`)
       .then((res) => {
         setEvent(res.data);
+        console.log(res.data);
         setLoading(false);
       })
       .catch((err) => {
@@ -75,34 +71,93 @@ function EventDescription() {
         setLoading(false);
       });
 
-    // Buscar avaliações do evento
     api
       .get(`api/eventos/${eventId}/avaliacoes/`)
-      .then((res) => {
-        setAvaliacoes(res.data);
-      })
-      .catch((err) => {
-        setAvaliacoes([]);
-      });
+      .then((res) => setAvaliacoes(res.data))
+      .catch(() => setAvaliacoes([]));
 
-    // Em vez de uma checagem separada, usamos o resumo de inscrição que fornece
-    // informações completas, incluindo se o usuário já está inscrito.
     const fetchResumo = async () => {
       try {
-        const token = localStorage.getItem('access')
-        if (!token) return
-        const res = await api.get(`/api/eventos/${eventId}/resumo-inscricao/`, { headers: { Authorization: `Bearer ${token}` } })
-        // O backend agora retorna a flag 'ja_inscrito'
-        if (res.data && typeof res.data.ja_inscrito !== 'undefined') {
-          setIsRegistered(!!res.data.ja_inscrito)
+        const token = localStorage.getItem("access");
+        if (!token) return;
+        const res = await api.get(`/api/eventos/${eventId}/resumo-inscricao/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data && typeof res.data.ja_inscrito !== "undefined") {
+          setIsRegistered(!!res.data.ja_inscrito);
         }
-      } catch (err) {
-        // ignore — manterá como não inscrito
-      }
-    }
+      } catch {}
+    };
     fetchResumo();
   }, [eventId]);
-  // Enviar avaliação
+
+  // ---------- Inscrição ----------
+  const handleRegister = async () => {
+    if (isRegistered) {
+      toast.info("Você já está inscrito neste evento!");
+      return;
+    }
+    if (event.esta_lotado || event.vagas_disponiveis <= 0) {
+      toast.error("Evento lotado! Não há mais vagas disponíveis.");
+      return;
+    }
+    const token = localStorage.getItem("access");
+    if (!token) {
+      toast.info("Você precisa estar logado para se inscrever");
+      navigate("/login");
+      return;
+    }
+    navigate(`/inscricao/${eventId}`);
+  };
+
+  // ---------- Lista de Espera ----------
+  const handleWaitlist = () => {
+    const isLotado =
+      event && (event.esta_lotado === true || Number(event.vagas_disponiveis) <= 0);
+    if (!isLotado) {
+      toast.info("Ainda há vagas — você pode se inscrever normalmente.");
+      return navigate(`/inscricao/${eventId}`);
+    }
+    navigate(`/evento/${eventId}/waitlist`);
+  };
+
+  // ---------- Check-in ----------
+  const handleCheckin = async () => {
+    try {
+      const token = localStorage.getItem("access");
+      if (!token) {
+        toast.error("Você precisa estar logado para fazer check-in.");
+        navigate("/login");
+        return;
+      }
+
+      const res = await api.get("/api/inscricoes/minhas/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.data || res.data.length === 0) {
+        toast.error("Nenhuma inscrição encontrada.");
+        return;
+      }
+
+      const inscricaoEvento = res.data.find(
+        (i) => i.evento_id === event.id
+      );
+
+      if (!inscricaoEvento) {
+        toast.error("Inscrição correspondente a este evento não encontrada.");
+        return;
+      }
+
+      toast.success("Check-in iniciado com sucesso!");
+      navigate(`/checkin/${inscricaoEvento.id}`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao processar o check-in.");
+    }
+  };
+
+  // ---------- Avaliações ----------
   const handleAvaliacaoSubmit = async (e) => {
     e.preventDefault();
     if (!comentario || nota < 0 || nota > 5) {
@@ -111,8 +166,7 @@ function EventDescription() {
     }
     setEnviandoAvaliacao(true);
     try {
-      // Recupera o token JWT do localStorage
-      const token = localStorage.getItem('access');
+      const token = localStorage.getItem("access");
       if (!token) {
         toast.error("Você precisa estar logado para avaliar.");
         setEnviandoAvaliacao(false);
@@ -126,66 +180,25 @@ function EventDescription() {
       toast.success("Avaliação enviada!");
       setComentario("");
       setNota(0);
-      // Atualizar lista de avaliações
       const res = await api.get(`api/eventos/${eventId}/avaliacoes/`);
       setAvaliacoes(res.data);
     } catch (err) {
       let errorMessage = "Erro ao enviar avaliação.";
       if (err.response?.data) {
-        if (typeof err.response.data === 'string') {
+        if (typeof err.response.data === "string") {
           errorMessage = err.response.data;
         } else if (err.response.data.error) {
           errorMessage = err.response.data.error;
         } else if (Array.isArray(err.response.data)) {
-          errorMessage = err.response.data.join(' ');
+          errorMessage = err.response.data.join(" ");
         } else {
-          errorMessage = Object.values(err.response.data).join(' ');
+          errorMessage = Object.values(err.response.data).join(" ");
         }
       }
       toast.error(errorMessage);
     } finally {
       setEnviandoAvaliacao(false);
     }
-  };
-
-  // ...existing code continues...
-
-  const handleRegister = async () => {
-    // Redirect to the full inscription form instead of calling a non-existing endpoint
-    if (isRegistered) {
-      toast.info("Você já está inscrito neste evento!");
-      return;
-    }
-
-    if (event.esta_lotado || event.vagas_disponiveis <= 0) {
-      toast.error("Evento lotado! Não há mais vagas disponíveis.");
-      return;
-    }
-
-    // Verifica se o usuário está autenticado antes de navegar para o formulário
-    const token = localStorage.getItem('access');
-    if (!token) {
-      toast.info("Você precisa estar logado para se inscrever");
-      navigate('/login');
-      return;
-    }
-
-    // Navega para a página de inscrição onde o usuário preencherá o formulário
-    navigate(`/inscricao/${eventId}`);
-  };
-
-  const handleWaitlist = () => {
-    // Decisão robusta: usa event.esta_lotado quando disponível, caso contrário verifica vagas_disponiveis
-    const isLotado = event && (event.esta_lotado === true || Number(event.vagas_disponiveis) <= 0);
-
-    if (!isLotado) {
-      // Ainda há vagas: ir para inscrição normal
-      toast.info("Ainda há vagas — você pode se inscrever normalmente.");
-      return navigate(`/inscricao/${eventId}`);
-    }
-
-    // Evento está lotado ou sem informação de vagas: abrir a tela de lista de espera
-    navigate(`/evento/${eventId}/waitlist`);
   };
 
   const handleBack = () => navigate("/");
@@ -203,7 +216,7 @@ function EventDescription() {
     <div className="bg-gray-50 min-h-screen py-6 px-2 md:px-0">
       <ToastContainer />
       <div className="max-w-7xl mx-auto bg-white rounded-xl shadow p-6 md:p-14">
-        {/* Foto/Capa do Evento */}
+        {/* Banner */}
         <div className="w-full h-48 md:h-56 bg-gray-200 rounded-lg mb-6 flex items-center justify-center overflow-hidden">
           {event.foto_capa ? (
             <img src={event.foto_capa} alt="Capa do Evento" className="object-cover w-full h-full" />
@@ -212,6 +225,7 @@ function EventDescription() {
           )}
         </div>
 
+        {/* Voltar */}
         <div className="flex items-center mb-4">
           <EventButton
             className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 flex items-center gap-2 px-3 py-1 text-sm mr-2"
@@ -221,10 +235,10 @@ function EventDescription() {
           </EventButton>
         </div>
 
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-          {event.titulo}
-        </h1>
+        {/* Título */}
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{event.titulo}</h1>
 
+        {/* Infos */}
         <div className="flex flex-col gap-2 mt-4 mb-6">
           <InfoItem icon={<FaCalendarAlt />}>
             {event.data_evento ? new Date(event.data_evento).toLocaleDateString("pt-BR") : ""}
@@ -235,17 +249,19 @@ function EventDescription() {
           <InfoItem icon={<FaMapMarkerAlt />}>{event.endereco}</InfoItem>
         </div>
 
-        {/* Informações do organizador */}
+        {/* Organizador */}
         <section className="mt-4 mb-6 flex items-center gap-4">
           <div className="flex items-center gap-2">
             <FaUser className="text-gray-600" />
-            <span className="font-semibold text-gray-800">{event.organizador_nome || event.organizador_username || "Organizador"}</span>
+            <span className="font-semibold text-gray-800">
+              {event.organizador_nome || event.organizador_username || "Organizador"}
+            </span>
             <FaStar className="text-yellow-400 ml-2" />
             <span className="text-gray-700">{event.organizador_score || "5.0"}</span>
           </div>
         </section>
 
-        {/* Capacidade do evento */}
+        {/* Capacidade */}
         <div className="mt-2 mb-6">
           <div className="w-full h-2 bg-gray-200 rounded-full mb-1">
             <div
@@ -254,96 +270,133 @@ function EventDescription() {
             ></div>
           </div>
           <span className="text-sm text-gray-600">
-            {event.inscritos_count}/{event.capacidade_maxima} inscritos — {event.vagas_disponiveis} vagas restantes
+            {event.inscritos_count}/{event.capacidade_maxima} inscritos —{" "}
+            {event.vagas_disponiveis} vagas restantes
           </span>
         </div>
 
-        {/* Valores do evento */}
+        {/* Valores */}
         <section className="mb-6">
           <h3 className="font-semibold mb-2">Valores</h3>
           <div className="flex gap-4 items-center">
-            <span className="text-gray-700">Depósito original: <b>R$ {event.valor_deposito || "0,00"}</b></span>
-            <span className="text-green-700">Com desconto: <b>R$ {event.valor_com_desconto || "0,00"}</b></span>
+            <span className="text-gray-700">
+              Depósito original: <b>R$ {event.valor_deposito || "0,00"}</b>
+            </span>
+            <span className="text-green-700">
+              Com desconto: <b>R$ {event.valor_com_desconto || "0,00"}</b>
+            </span>
           </div>
         </section>
 
-        {/* Botões de ação */}
-        <div className="flex gap-4 mt-4 mb-6">
+        {/* Ações */}
+        <div className="flex flex-wrap gap-4 mt-4 mb-6">
           <EventButton
-            className="bg-green-600 text-white hover:bg-green-700 flex items-center gap-2 px-8 py-3"
-            onClick={handleRegister}
-            disabled={registering || isRegistered || event.esta_lotado || event.vagas_disponiveis <= 0}
+              onClick={handleRegister}
+              disabled={registering || isRegistered || event.esta_lotado || event.vagas_disponiveis <= 0}
+              className={`
+                flex items-center gap-2 px-8 py-3
+                ${
+                  registering || isRegistered || event.esta_lotado || event.vagas_disponiveis <= 0
+                    ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                    : "bg-green-600 text-white hover:bg-green-700 cursor-pointer"
+                }
+              `}
+            >
+              <FaCheckCircle />
+              {isRegistered
+                ? "Já inscrito"
+                : event.esta_lotado || event.vagas_disponiveis <= 0
+                ? "Lotado"
+                : "Se inscrever"}
+            </EventButton>
+
+          <EventButton
+            className="bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-2 px-8 py-3"
+            onClick={handleWaitlist}
           >
-            <FaCheckCircle />
-            {isRegistered
-              ? "Já inscrito"
-              : event.esta_lotado || event.vagas_disponiveis <= 0
-              ? "Lotado"
-              : "Se inscrever"}
-          </EventButton>
-          <EventButton className="bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-2 px-8 py-3" onClick={handleWaitlist}>
             <FaUsers /> Lista de espera
           </EventButton>
+
           <EventButton className="bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-2 px-8 py-3">
             <FaShareAlt /> Compartilhar
           </EventButton>
-          <EventButton className="bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-2 px-8 py-3">
-            <FaStar /> Favoritar
-          </EventButton>
+
+          {/* Só mostra Check-in se inscrito */}
+          {isRegistered && (
+            <EventButton
+              className="bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2 px-8 py-3 hover:cursor-pointer"
+              onClick={handleCheckin}
+            >
+              <FaStar /> Check-in
+            </EventButton>
+          )}
         </div>
 
-        {/* Descrição completa do evento */}
+        {/* Descrição */}
         <section className="mt-6">
           <h2 className="text-lg font-semibold mb-2">Sobre o Evento</h2>
           <p className="text-gray-700">{event.descricao}</p>
         </section>
 
-        {/* Mapa interativo */}
-        <section className="mt-6">
-          <h3 className="font-semibold mb-2">Localização</h3>
-          <div className="w-full h-56 rounded-lg overflow-hidden">
-            <LoadScript
-              googleMapsApiKey={
-                import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "SUA_CHAVE_AQUI"
-              }
-            >
-              <GoogleMap
-                mapContainerStyle={{ width: "100%", height: "100%" }}
-                center={{ lat: -23.5962, lng: -46.6823 }}
-                zoom={14}
+        {/* Mapa */}
+        {event.latitude && event.longitude && (
+          <section className="mt-6">
+            <h3 className="font-semibold mb-2">Localização</h3>
+            <div className="w-full h-56 rounded-lg overflow-hidden">
+              <iframe
+                src={`https://www.google.com/maps/embed/v1/view?zoom=19&center=${event.latitude},${event.longitude}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Localização do evento"
+                className="rounded-b-lg"
               />
-            </LoadScript>
-          </div>
-        </section>
+            </div>
+          </section>
+        )}
 
-        {/* Política de cancelamento */}
+        {/* Política de Cancelamento */}
         <section className="mt-6">
           <h3 className="font-semibold mb-2">Política de Cancelamento</h3>
-          <p className="text-gray-700">{event.politica_cancelamento || "Cancelamento permitido até 24h antes do evento."}</p>
+          <p className="text-gray-700">
+            {event.politica_cancelamento || "Cancelamento permitido até 24h antes do evento."}
+          </p>
         </section>
 
-        {/* Avaliações do Evento */}
+        {/* Avaliações */}
         <section className="mt-6">
           <h3 className="font-semibold mb-2">Avaliações do Evento</h3>
           <div className="space-y-2 mb-4">
             {avaliacoes.length > 0 ? (
               avaliacoes.map((review, idx) => (
                 <div key={idx} className="bg-gray-100 rounded p-2">
-                  <span className="font-semibold">{review.usuario_nome || review.usuario || "Usuário"}</span>: {review.comentario}
-                  <span className="ml-2 text-yellow-500"><FaStar /> {review.nota}</span>
+                  <span className="font-semibold">
+                    {review.usuario_nome || review.usuario || "Usuário"}
+                  </span>
+                  : {review.comentario}
+                  <span className="ml-2 text-yellow-500">
+                    <FaStar /> {review.nota}
+                  </span>
                 </div>
               ))
             ) : (
               <span className="text-gray-500">Nenhuma avaliação disponível.</span>
             )}
           </div>
-          {/* Formulário de avaliação */}
-          <form onSubmit={handleAvaliacaoSubmit} className="bg-gray-50 p-4 rounded shadow flex flex-col gap-2">
+
+          {/* Formulário */}
+          <form
+            onSubmit={handleAvaliacaoSubmit}
+            className="bg-gray-50 p-4 rounded shadow flex flex-col gap-2"
+          >
             <label className="font-semibold">Deixe sua avaliação:</label>
             <textarea
               className="border rounded p-2"
               value={comentario}
-              onChange={e => setComentario(e.target.value)}
+              onChange={(e) => setComentario(e.target.value)}
               placeholder="Escreva seu comentário..."
               rows={3}
               required
@@ -353,16 +406,15 @@ function EventDescription() {
               <select
                 id="nota"
                 value={nota}
-                onChange={e => setNota(Number(e.target.value))}
+                onChange={(e) => setNota(Number(e.target.value))}
                 className="border rounded p-1"
                 required
               >
-                <option value={0}>0</option>
-                <option value={1}>1</option>
-                <option value={2}>2</option>
-                <option value={3}>3</option>
-                <option value={4}>4</option>
-                <option value={5}>5</option>
+                {[0, 1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
               </select>
               <FaStar className="text-yellow-500" />
             </div>

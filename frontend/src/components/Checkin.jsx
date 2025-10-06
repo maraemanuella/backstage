@@ -106,6 +106,7 @@ const Checkin = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setEvento(eventoRes.data);
+        console.log(eventoRes.data);
       } catch (err) {
         console.error("Erro ao buscar inscrição ou evento:", err);
         setError("Não foi possível carregar inscrição ou evento.");
@@ -261,19 +262,21 @@ const Checkin = () => {
                 <CardTitle>Localização do Evento</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="relative h-64 lg:h-96">
-                  <iframe
-                    src={`https://www.google.com/maps/embed/v1/view?zoom=19&center=${evento.latitude},${evento.longitude}&key=${api_key}`}
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="Localização do evento"
-                    className="rounded-b-lg"
-                  />
-                </div>
+                {evento.latitude && evento.longitude && (
+                  <div className="relative h-64 lg:h-96 mt-6">
+                    <iframe
+                      src={`https://www.google.com/maps/embed/v1/view?zoom=19&center=${evento.latitude},${evento.longitude}&key=${api_key}`}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Localização do evento"
+                      className="rounded-b-lg"
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
 
