@@ -306,6 +306,11 @@ class TransferRequestDetailView(generics.RetrieveUpdateAPIView):
             inscricao = transfer_request.inscricao
             inscricao.usuario = transfer_request.to_user
             inscricao.status = 'transferida'
+            # Atualiza os dados da inscrição com os dados do novo usuário
+            inscricao.nome_completo_inscricao = transfer_request.to_user.get_full_name() or transfer_request.to_user.username
+            inscricao.cpf_inscricao = transfer_request.to_user.cpf
+            inscricao.telefone_inscricao = transfer_request.to_user.telefone
+            inscricao.email_inscricao = transfer_request.to_user.email
             inscricao.save()
             
         transfer_request.save()

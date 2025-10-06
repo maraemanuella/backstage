@@ -16,7 +16,7 @@ function SolicitarTransferencia() {
         const res = await api.post("/api/transfer-requests/create/", {
         inscricao_id: selectedInscricao,
         to_user_id: selectedUsuario,
-        // mensagem: mensagem, // implementar depois no backend
+        mensagem: mensagem,
         });
         alert("Solicitação enviada com sucesso!");
         // Redirecionar ou limpar o formulário
@@ -25,11 +25,17 @@ function SolicitarTransferencia() {
         setMensagem("");
         setExpandir(false);
     } catch (err) {
-        alert(
-        err.response?.data?.detail ||
-        err.response?.data?.error ||
-        "Erro ao enviar solicitação."
-        );
+        const data = err.response?.data;
+        let msg =
+          Array.isArray(data) ? data[0] :
+          data?.detail ||
+          data?.error ||
+          (Array.isArray(data?.non_field_errors) ? data.non_field_errors[0] : null) ||
+          (data && typeof data === "object"
+            ? Object.values(data).find(v => Array.isArray(v) && v.length > 0)?.[0]
+            : null) ||
+          "Erro ao enviar solicitação.";
+        alert(msg);
       }
     };
 
