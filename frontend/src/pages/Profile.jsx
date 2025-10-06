@@ -33,16 +33,29 @@ function Profile() {
     try {
       const token = localStorage.getItem('access');
       if (!token) {
+        console.log('Token não encontrado, redirecionando para login');
         navigate('/login');
         return;
       }
 
+      console.log('Fazendo requisição para /api/user/me/');
       const response = await api.get('api/user/me/', {
         headers: { Authorization: `Bearer ${token}` }
       });
       console.log('User data:', response.data); // Debug log
+      console.log('Profile photo path:', response.data.profile_photo); // Debug específico para foto
       setUser(response.data);
     } catch (err) {
+      console.error('Erro ao carregar perfil:', err);
+      
+      // Se o token expirou ou é inválido
+      if (err.response?.status === 401) {
+        localStorage.removeItem('access');
+        localStorage.removeItem('refresh');
+        navigate('/login');
+        return;
+      }
+      
       setError('Erro ao carregar perfil do usuário');
       toast.error('Erro ao carregar perfil');
     } finally {
@@ -172,17 +185,23 @@ function Profile() {
                       : `http://127.0.0.1:8000${user.profile_photo}`
                     } 
                     alt="Foto do perfil" 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover rounded-full"
+                    onLoad={() => console.log('Imagem carregada com sucesso:', user.profile_photo)}
                     onError={(e) => {
                       console.log('Erro ao carregar imagem:', e.target.src);
+                      console.log('Profile photo do user:', user.profile_photo);
+                      // Se der erro, mostra o ícone padrão
                       e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
                     }}
                   />
-                ) : null}
-                <div className={`w-full h-full flex items-center justify-center ${user.profile_photo ? 'hidden' : ''}`}>
+                ) : (
                   <FaUser className="text-gray-400 text-3xl" />
-                </div>
+                )}
+                
+                {/* Ícone padrão - só mostra se não tiver foto ou se der erro */}
+                {!user.profile_photo && (
+                  <FaUser className="text-gray-400 text-3xl" />
+                )}
               </div>
             </div>
 
