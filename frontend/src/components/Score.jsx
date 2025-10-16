@@ -1,18 +1,28 @@
-import { CircleStar } from "lucide-react";
+import { Medal } from "lucide-react";
 
 function Score({ user }) {
   return (
-    <div className="w-[50%] bg-linear-to-r from-orange-600 to-orange-400 ml-auto mr-auto rounded-2xl mt-[15px] flex justify-center items-center border-amber-700 p-2">
-      <div className="flex flex-row gap-2 justify-center items-center">
-        <CircleStar className="text-orange-200 bg-orange-600 rounded-2xl size-8" />
-        <span className="ml-auto mr-[20px] text-white font-[600]">
-          BRONZE
-        </span>
-      </div>
+    <div className="w-full px-4 mt-6 md:mt-8">
+      <div className="max-w-6xl mx-auto bg-gradient-to-r from-gray-400 to-gray-500 rounded-2xl p-4 md:p-5 shadow-md">
+        <div className="flex items-center justify-between">
+          {/* Left side - Medal and tier */}
+          <div className="flex items-center gap-3">
+            <div className="bg-gray-600 rounded-full p-2">
+              <Medal className="text-white" size={24} />
+            </div>
+            <div className="text-white">
+              <p className="text-xs md:text-sm opacity-90">Seu Score Atual</p>
+              <p className="text-lg md:text-xl font-bold">Prata</p>
+            </div>
+          </div>
 
-      <div className="ml-auto mr-[20px] text-white font-[600] flex flex-col justify-center items-center">
-        <span>Score Atual</span>
-        {user ? <span>{user.score}</span> : <span>Carregando...</span>}
+          {/* Right side - Score points */}
+          <div className="text-white text-right">
+            <p className="text-2xl md:text-3xl font-bold">
+              {user ? `${user.score} pts` : "..."}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

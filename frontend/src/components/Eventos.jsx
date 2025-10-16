@@ -1,4 +1,4 @@
-import { Heart, MapPin } from "lucide-react";
+import { Heart, MapPin, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { FavoritesContext } from "../contexts/FavoritesContext";
@@ -8,54 +8,111 @@ function Eventos({ eventos }) {
   const navigate = useNavigate();
   const { favorites = [], setFavorites } = useContext(FavoritesContext);
 
-  if (!eventos || !Array.isArray(eventos)) return null;
+  if (!eventos || !Array.isArray(eventos) || eventos.length === 0) {
+    return (
+      <div className="w-full px-4 mt-6 md:mt-8 pb-12">
+        <div className="max-w-6xl mx-auto text-center py-12">
+          <p className="text-gray-500 text-lg">Nenhum evento disponível no momento.</p>
+        </div>
+      </div>
+    );
+  }
 
   const toggleFavorite = async (eventoId) => {
-  console.log("Evento ID:", eventoId);
-  try {
-    const res = await api.post(`/api/favorites/toggle/${eventoId}/`);
-    console.log(res.data);
-    if (res.data.favorito) {
-      setFavorites([...favorites, eventoId]);
-    } else {
-      setFavorites(favorites.filter((id) => id !== eventoId));
+    try {
+      const res = await api.post(`/api/favorites/toggle/${eventoId}/`);
+      if (res.data.favorito) {
+        setFavorites([...favorites, eventoId]);
+      } else {
+        setFavorites(favorites.filter((id) => id !== eventoId));
+      }
+    } catch (error) {
+      console.error("Erro ao alternar favorito:", error);
     }
-  } catch (error) {
-    console.error("Erro ao alternar favorito:", error);
-  }
-};
+  };
+
+  const getImageUrl = (imagem) => {
+    if (!imagem) return null;
+    return imagem.startsWith('http') ? imagem : `http://localhost:8000${imagem}`;
+  };
 
   return (
-    <div className="grid grid-cols-3 gap-4 w-[100vh] ml-auto mr-auto">
-      {eventos.map((evento) => (
-        <div key={evento.id} className="relative w-[300px] h-[300px] shadow-7xl rounded-2xl flex flex-col gap-1 cursor-pointer hover:duration-200 hover:scale-105">
-          <div
-            onClick={() => toggleFavorite(evento.id)}
-            className={`absolute h-8 w-8 top-1 right-1 m-3 hover:bg-red-500/90 rounded-2xl p-1 hover:text-white/90 cursor-pointer transition-colors duration-100
-              ${favorites.includes(evento.id) ? "bg-red-500/90 text-white/90" : "bg-white/90 text-black/60"}`}
-          >
-            <Heart />
-          </div>
-          <div className="w-[300px] h-[200px] flex justify-center items-center bg-gray-400/20 rounded-t-2xl">
-            <img src="#" alt="event_img" />
-          </div>
-          <h1 className="font-[500] ml-[10px]">{evento.titulo}</h1>
-          <div className="ml-[10px] flex gap-2">
-            <span className="text-black/60 flex gap-1"><MapPin className="w-3" /> {evento.endereco}</span>
-            <span className="text-red-500">{evento.data_evento}</span>
-          </div>
-          <div>
-            <span className="ml-[10px] text-black/60">R${evento.valor_deposito}</span>
-            <span className="bg-green-300/40 p-1 rounded-2xl text-green-900 ml-2">{evento.valor_deposito}% OFF</span>
-          </div>
-          <button
-            className="bg-black rounded-b-2xl text-white mt-[10px] hover:bg-sky-700 hover:duration-200 hover:scale-105"
-            onClick={() => navigate(`/evento/${evento.id}`)}
-          >
-            Ver detalhes
-          </button>
+    <div className="w-full px-4 mt-6 md:mt-8 pb-12">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {eventos.map((evento) => (
+            <div
+              key={evento.id}
+              className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer"
+            >
+              <div className="relative w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300">
+                {getImageUrl(evento.imagem) ? (
+                  <img
+                    src={getImageUrl(evento.imagem)}
+                    alt={evento.titulo}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    onError={(e) => e.target.style.display = "none"}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-gray-400 text-sm">Sem imagem</span>
+                  </div>
+                )}
+                
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(evento.id);
+                  }}
+                  className={`absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${
+                    favorites.includes(evento.id)
+                      ? "bg-red-500 text-white"
+                      : "bg-white/90 text-gray-600 hover:bg-red-500 hover:text-white"
+                  }`}
+                >
+                  <Heart
+                    size={18}
+                    fill={favorites.includes(evento.id) ? "currentColor" : "none"}
+                  />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-4">
+                {/* Title */}
+                <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-1">
+                  {evento.titulo}
+                </h3>
+
+                {/* Date and location */}
+                <div className="flex flex-col gap-1 mb-3">
+                  <div className="flex items-center gap-2 text-sm text-red-500">
+                    <span className="font-medium">{evento.data_evento}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-sm text-gray-500">
+                    <MapPin size={14} />
+                    <span className="line-clamp-1">{evento.endereco}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-green-600 font-semibold text-lg">
+                    R$ {evento.valor_deposito}
+                  </span>
+                </div>
+
+                <button
+                  onClick={() => navigate(`/evento/${evento.id}`)}
+                  className="w-full bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors duration-200"
+                >
+                  Ver detalhes
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   );
 }
