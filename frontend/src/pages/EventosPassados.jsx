@@ -2,155 +2,173 @@ import { useState, useEffect } from 'react'
 import { Calendar, MapPin, ChevronDown, Eye, Award, Download } from 'lucide-react'
 import api from '../api'
 import Modal from '../components/Modal'
-import MeuEvento from '../components/MeuEvento'
+import Header from '../components/Header'
 
 export default function EventosPassados() {
   const [inscricoes, setInscricoes] = useState([])
   const [loading, setLoading] = useState(true)
-  const [modalAberto, setModalAberto] = useState(false)
+  const [openModal, setOpenModal] = useState(false)
   const [user, setUser] = useState(null)
 
-  const fetchEventos = async () => {
-    setLoading(true)
-    try {
-      const response = await api.get('/api/inscricoes/minhas/')
-      const eventosPassados = response.data.filter(i => new Date(i.evento_data) < new Date())
-      setInscricoes(eventosPassados)
-    } catch (error) {
-      console.error('Erro ao buscar eventos:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchUser = async () => {
-    try {
-      const response = await api.get('/api/user/me/')
-      setUser(response.data)
-    } catch (error) {
-      console.error('Erro ao buscar usuário:', error)
-    }
-  }
-
   useEffect(() => {
-    fetchEventos()
-    fetchUser()
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        const [userRes, inscricoesRes] = await Promise.allSettled([
+          api.get("api/user/me/"),
+          api.get('/api/inscricoes/minhas/')
+        ]);
+
+        if (userRes.status === 'fulfilled') {
+          setUser(userRes.value.data);
+        }
+
+        if (inscricoesRes.status === 'fulfilled') {
+          const eventosPassados = inscricoesRes.value.data.filter(i => 
+            new Date(i.evento_data) < new Date()
+          );
+          setInscricoes(eventosPassados);
+        } else {
+          setInscricoes([]);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [])
 
-  if (loading) return <div className="p-8">Carregando...</div>
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando eventos...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <div className="flex h-screen">
-      <aside className="w-[293px] bg-white border-r border-gray-300 shadow-lg flex flex-col">
-        <div className="p-6">
-          <h1 className="text-[27px] font-script">BACKSTAGE</h1>
+    <main className="min-h-screen bg-gray-50">
+      <Modal isOpen={openModal} setOpenModal={setOpenModal} user={user} />
+      <Header user={user} setOpenModal={setOpenModal} />
+      
+      <div className="px-6 md:px-12 lg:px-24 py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Meus Eventos</h1>
+          <h2 className="text-xl md:text-2xl font-semibold text-gray-700">Passados</h2>
+          <div className="mt-4 h-px bg-gray-200"></div>
         </div>
-        <nav className="px-4 flex-1">
-          <MeuEvento />
-        </nav>
-        {user && (
-          <div className="p-4 border-t">
-            <div className="flex items-center gap-3">
-              <img src={user.profile_photo || '/default-avatar.png'} alt="Profile" className="w-10 h-10 rounded-full" />
-              <div className="flex-1">
-                <p className="text-sm font-semibold">{user.username}</p>
-                <p className="text-xs text-gray-600">{user.email}</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </aside>
-
-      <main className="flex-1 overflow-auto bg-white p-8">
-        <div className="flex justify-between items-center mb-6 border-b border-gray-300 pb-4">
-            <h1 className="text-[34px] font-semibold">Meus Eventos</h1>
-            <button
-                onClick={fetchEventos}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-                Atualizar
-             </button>
-        </div>
-
-  <h2 className="text-[24px] font-semibold text-black/80 mb-6">Passados</h2>
-
 
         {inscricoes.length === 0 ? (
-          <p className="text-gray-500">Nenhum evento passado</p>
+          <div className="text-center py-16">
+            <div className="text-6xl mb-4">🎭</div>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">Nenhum evento passado</h3>
+            <p className="text-gray-500">Quando você participar de eventos, eles aparecerão aqui.</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-7xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
             {inscricoes.map(inscricao => (
               <EventCard key={inscricao.id} inscricao={inscricao} />
             ))}
           </div>
         )}
-      </main>
-
-      <Modal isOpen={modalAberto} setOpenModal={setModalAberto} user={user} />
-    </div>
+      </div>
+    </main>
   )
 }
 
 function EventCard({ inscricao }) {
   const [expandido, setExpandido] = useState(false)
 
+  const formatarData = (data) => {
+    return new Date(data).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'short'
+    }).replace('.', '').toUpperCase()
+  }
+
+  const formatarEndereco = (endereco) => {
+    return endereco && endereco.length > 20 ? endereco.substring(0, 20) + '...' : endereco
+  }
+
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden">
-      {/* Imagem */}
-      <div className="h-48 relative bg-gray-200">
+    <div className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 h-fit">
+      <div className="relative h-48 overflow-hidden">
         {inscricao.evento_foto_capa ? (
-          <img src={inscricao.evento_foto_capa} alt={inscricao.evento_titulo} className="w-full h-full object-cover" />
+          <img 
+            src={inscricao.evento_foto_capa} 
+            alt={inscricao.evento_titulo} 
+            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105 grayscale"
+          />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-purple-400 to-blue-500" />
+          <div className="w-full h-full bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center">
+            <span className="text-white text-lg font-semibold">Evento finalizado</span>
+          </div>
         )}
 
-        <button onClick={() => setExpandido(!expandido)} className="absolute top-3 left-3 bg-white rounded-full p-1.5 shadow-md hover:bg-gray-100">
-          <ChevronDown size={18} className={`transition-transform ${expandido ? 'rotate-180' : ''}`} />
+        <button 
+          onClick={() => setExpandido(!expandido)} 
+          className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-colors"
+        >
+          <ChevronDown 
+            size={18} 
+            className={`transition-transform duration-200 ${expandido ? 'rotate-180' : ''}`} 
+          />
         </button>
+
+        <div className="absolute top-3 left-3">
+          <span className="inline-flex items-center px-3 py-1 bg-gray-500 text-white text-xs font-semibold rounded-full">
+            FINALIZADO
+          </span>
+        </div>
       </div>
 
-      {/* Conteúdo */}
-      <div className="p-4">
-        {/* Título*/}
-        <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-base font-semibold">{inscricao.evento_titulo}</h3>
-          <span className="px-3 py-1 bg-white text-red-600 text-xs font-semibold rounded-full border border-red-600 whitespace-nowrap">
-            EVENTO ENCERRADO
+      <div className="p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2">
+          {inscricao.evento_titulo}
+        </h3>
+
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+            <Calendar className="w-4 h-4 mr-1" />
+            {formatarData(inscricao.evento_data)}
+          </span>
+          
+          <span className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+            <MapPin className="w-4 h-4 mr-1" />
+            {formatarEndereco(inscricao.evento_endereco)}
           </span>
         </div>
 
-        {/* Info em linha horizontal */}
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="px-3 py-1 bg-white border border-black rounded-full">
-            {new Date(inscricao.evento_data).toLocaleDateString('pt-BR', {
-              day: '2-digit',
-              month: 'short'
-            }).replace('.', '').toUpperCase()}
-          </span>
-          
-          <span className="px-3 py-1 bg-white border border-black rounded-full truncate flex-1">
-            {inscricao.evento_endereco}
-          </span>
-          
-          <span className={`px-3 py-1 rounded-full font-medium border ${
+        <div className="mb-4">
+          <span className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-lg ${
             inscricao.checkin_realizado
-              ? 'bg-green-50 text-green-700 border-green-600'
-              : 'bg-red-50 text-red-700 border-red-600'
+              ? 'bg-green-50 text-green-700 border border-green-200'
+              : 'bg-red-50 text-red-700 border border-red-200'
           }`}>
-            {inscricao.checkin_realizado ? 'Reembolsado' : 'Não reembolsado'}
+            {inscricao.checkin_realizado ? '✅ Reembolsado' : '❌ Não reembolsado'}
           </span>
         </div>
 
         {expandido && (
-          <div className="mt-4 pt-4 border-t space-y-2">
-            <button className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded-lg flex items-center gap-2 text-sm">
-              <Eye size={16} /> Ver Detalhes
+          <div className="mt-4 pt-4 border-t border-gray-100 space-y-2 animate-in slide-in-from-top duration-200">
+            <button className="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors">
+              <Eye size={18} className="text-blue-600" /> 
+              Ver Detalhes
             </button>
-            <button className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded-lg flex items-center gap-2 text-sm">
-              <Award size={16} /> Avaliar
+            <button className="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors">
+              <Award size={18} className="text-orange-600" /> 
+              Avaliar
             </button>
-            <button className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded-lg flex items-center gap-2 text-sm">
-              <Download size={16} /> Certificado
+            <button className="w-full text-left px-4 py-3 hover:bg-gray-50 rounded-lg flex items-center gap-3 text-sm font-medium transition-colors">
+              <Download size={18} className="text-purple-600" /> 
+              Certificado
             </button>
           </div>
         )}

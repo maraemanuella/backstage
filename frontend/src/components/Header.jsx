@@ -40,34 +40,34 @@ function Header({ user, setOpenModal }) {
 
   return (
     <header className="flex justify-between items-center w-full border-b border-gray-200 h-[80px] px-6 md:px-12 lg:px-24">
-      <h1 className="font-script text-3xl md:text-4xl font-bold">
-        BACKSTAGE
-      </h1>
+      <div className="flex items-center gap-4">
+        {user && setOpenModal && (
+          <button
+            className="flex items-center justify-center hover:bg-gray-100 p-2 rounded-lg transition-colors"
+            onClick={handleMenuClick}
+            aria-label="Menu"
+          >
+            <FaBars className="text-xl text-gray-600" />
+          </button>
+        )}
+        
+        <h1 className="font-script text-3xl md:text-4xl font-bold">
+          BACKSTAGE
+        </h1>
+      </div>
 
       <div className="flex items-center gap-4">
         {user && (
-          <>
-            {setOpenModal && (
-              <button
-                className="flex items-center justify-center hover:bg-gray-100 p-2 rounded-lg transition-colors md:hidden"
-                onClick={handleMenuClick}
-                aria-label="Menu"
-              >
-                <FaBars className="text-xl text-gray-600" />
-              </button>
-            )}
-
-            <button
-              className="flex items-center gap-3 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors"
-              onClick={handleProfileClick}
-              aria-label="Ver Perfil"
-            >
-              {renderProfilePhoto()}
-              <span className="font-medium text-sm text-gray-800 hidden sm:inline">
-                {user.username}
-              </span>
-            </button>
-          </>
+          <button
+            className="flex items-center gap-3 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors"
+            onClick={handleProfileClick}
+            aria-label="Ver Perfil"
+          >
+            {renderProfilePhoto()}
+            <span className="font-medium text-sm text-gray-800 hidden sm:inline">
+              {user.username}
+            </span>
+          </button>
         )}
       </div>
     </header>
