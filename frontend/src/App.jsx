@@ -19,6 +19,7 @@ import SolicitarTransferencia from "./pages/SolicitarTransferencia";
 import AceitarOferta from "./pages/AceitarOferta";
 import ProximosEventos from "./pages/ProximosEventos";
 import EventosPassados from "./pages/EventosPassados";
+import DashboardOrganizador from "./pages/DashboardOrganizador";
 
 function Logout() {
   localStorage.clear();
@@ -158,6 +159,16 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+          {/* Dashboard do Organizador */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardOrganizador />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Página 404 */}
           <Route path="*" element={<NotFound />} />

@@ -406,3 +406,295 @@ def update_user_profile(request):
             {'error': 'Erro interno do servidor.'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+# VIEWS PARA DASHBOARD DO ORGANIZADOR
+from django.db.models import Count, Avg, Sum, Q
+from django.utils import timezone
+from datetime import datetime, timedelta
+from django.db.models.functions import TruncMonth, TruncDate
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_metricas(request):
+    """
+    Retorna métricas gerais para o dashboard do organizador
+    """
+    user = request.user
+    
+    # Eventos do organizador
+    eventos_organizador = Evento.objects.filter(organizador=user)
+    
+    # Métricas básicas
+    total_inscricoes = Inscricao.objects.filter(evento__organizador=user).count()
+    
+    # Taxa de comparecimento (eventos finalizados)
+    eventos_finalizados = eventos_organizador.filter(status='finalizado')
+    total_inscritos_finalizados = Inscricao.objects.filter(
+        evento__in=eventos_finalizados
+    ).count()
+    total_presentes = Inscricao.objects.filter(
+        evento__in=eventos_finalizados,
+        checkin_realizado=True
+    ).count()
+    
+    taxa_comparecimento = 0
+    if total_inscritos_finalizados > 0:
+        taxa_comparecimento = round((total_presentes / total_inscritos_finalizados) * 100, 1)
+    
+    # Receita total (inscrições pagas)
+    receita_total = Inscricao.objects.filter(
+        evento__organizador=user,
+        status_pagamento='aprovado'
+    ).aggregate(total=Sum('valor_final'))['total'] or 0
+    
+    # Score médio dos eventos
+    score_medio = Avaliacao.objects.filter(
+        evento__organizador=user
+    ).aggregate(media=Avg('nota'))['media'] or 0
+    
+    return Response({
+        'total_inscricoes': total_inscricoes,
+        'taxa_comparecimento': taxa_comparecimento,
+        'receita_total': float(receita_total),
+        'score_medio': round(float(score_medio), 1)
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_eventos_proximos(request):
+    """
+    Retorna próximos eventos do organizador
+    """
+    user = request.user
+    agora = timezone.now()
+    
+    proximos_eventos = Evento.objects.filter(
+        organizador=user,
+        data_evento__gt=agora
+    ).order_by('data_evento')[:10]
+    
+    eventos_data = []
+    for evento in proximos_eventos:
+        inscricoes_count = evento.inscricoes.filter(status='confirmada').count()
+        eventos_data.append({
+            'id': str(evento.id),
+            'titulo': evento.titulo,
+            'data': evento.data_evento.isoformat(),
+            'inscricoes': inscricoes_count,
+            'local': evento.endereco,
+            'status': evento.status.title()
+        })
+    
+    return Response(eventos_data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_eventos_anteriores(request):
+    """
+    Retorna eventos anteriores do organizador
+    """
+    user = request.user
+    agora = timezone.now()
+    
+    eventos_anteriores = Evento.objects.filter(
+        organizador=user,
+        data_evento__lt=agora
+    ).order_by('-data_evento')[:10]
+    
+    eventos_data = []
+    for evento in eventos_anteriores:
+        inscricoes = evento.inscricoes.filter(status='confirmada')
+        inscricoes_count = inscricoes.count()
+        comparecimento_count = inscricoes.filter(checkin_realizado=True).count()
+        
+        # Receita do evento
+        receita_evento = inscricoes.filter(
+            status_pagamento='aprovado'
+        ).aggregate(total=Sum('valor_final'))['total'] or 0
+        
+        # Score médio do evento
+        score_evento = Avaliacao.objects.filter(
+            evento=evento
+        ).aggregate(media=Avg('nota'))['media'] or 0
+        
+        eventos_data.append({
+            'id': str(evento.id),
+            'titulo': evento.titulo,
+            'data': evento.data_evento.isoformat(),
+            'inscricoes': inscricoes_count,
+            'comparecimento': comparecimento_count,
+            'receita': float(receita_evento),
+            'score': round(float(score_evento), 1) if score_evento else 0
+        })
+    
+    return Response(eventos_data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_notificacoes(request):
+    """
+    Retorna notificações importantes para o organizador
+    """
+    user = request.user
+    agora = timezone.now()
+    notificacoes = []
+    
+    # Eventos com inscrições encerrando em 3 dias
+    eventos_encerrando = Evento.objects.filter(
+        organizador=user,
+        data_evento__gt=agora,
+        data_evento__lte=agora + timedelta(days=3),
+        status='publicado'
+    )
+    
+    for evento in eventos_encerrando:
+        notificacoes.append({
+            'id': f'prazo_{evento.id}',
+            'tipo': 'warning',
+            'titulo': 'Prazo de inscrição',
+            'mensagem': f'{evento.titulo} encerra inscrições em breve',
+            'tempo': '1 dia atrás'  # Mockado por simplicidade
+        })
+    
+    # Eventos que atingiram capacidade máxima
+    eventos_lotados = Evento.objects.filter(
+        organizador=user,
+        status='publicado'
+    ).annotate(
+        inscricoes_count=Count('inscricoes', filter=Q(inscricoes__status='confirmada'))
+    ).filter(inscricoes_count__gte=models.F('capacidade_maxima'))
+    
+    for evento in eventos_lotados:
+        notificacoes.append({
+            'id': f'lotado_{evento.id}',
+            'tipo': 'success',
+            'titulo': 'Meta atingida',
+            'mensagem': f'{evento.titulo} atingiu capacidade máxima',
+            'tempo': '2 horas atrás'  # Mockado por simplicidade
+        })
+    
+    # Novos eventos criados recentemente
+    eventos_recentes = Evento.objects.filter(
+        organizador=user,
+        created_at__gte=agora - timedelta(days=7)
+    ).order_by('-created_at')[:3]
+    
+    for evento in eventos_recentes:
+        notificacoes.append({
+            'id': f'novo_{evento.id}',
+            'tipo': 'info',
+            'titulo': 'Novo evento criado',
+            'mensagem': f'{evento.titulo} foi publicado com sucesso',
+            'tempo': '2 horas atrás'  # Mockado por simplicidade
+        })
+    
+    return Response(notificacoes[:10])  # Limita a 10 notificações
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_graficos(request):
+    """
+    Retorna dados para os gráficos do dashboard
+    """
+    user = request.user
+    agora = timezone.now()
+    
+    # Gráfico 1: Comparecimento mensal (últimos 6 meses)
+    seis_meses_atras = agora - timedelta(days=180)
+    
+    comparecimento_mensal = []
+    for i in range(6):
+        mes_inicio = agora.replace(day=1) - timedelta(days=30*i)
+        mes_fim = (mes_inicio + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        
+        eventos_mes = Evento.objects.filter(
+            organizador=user,
+            data_evento__gte=mes_inicio,
+            data_evento__lte=mes_fim,
+            status='finalizado'
+        )
+        
+        total_inscritos = Inscricao.objects.filter(
+            evento__in=eventos_mes,
+            status='confirmada'
+        ).count()
+        
+        total_presentes = Inscricao.objects.filter(
+            evento__in=eventos_mes,
+            status='confirmada',
+            checkin_realizado=True
+        ).count()
+        
+        taxa = 0
+        if total_inscritos > 0:
+            taxa = round((total_presentes / total_inscritos) * 100)
+        
+        comparecimento_mensal.append({
+            'mes': mes_inicio.strftime('%b'),
+            'comparecimento': taxa
+        })
+    
+    comparecimento_mensal.reverse()  # Ordem cronológica
+    
+    # Gráfico 2: Score médio por evento (últimos 5 eventos)
+    ultimos_eventos = Evento.objects.filter(
+        organizador=user,
+        status='finalizado'
+    ).order_by('-data_evento')[:5]
+    
+    score_medio = []
+    for evento in ultimos_eventos:
+        score = Avaliacao.objects.filter(
+            evento=evento
+        ).aggregate(media=Avg('nota'))['media'] or 0
+        
+        score_medio.append({
+            'evento': evento.titulo[:15] + '...' if len(evento.titulo) > 15 else evento.titulo,
+            'score': round(float(score), 1)
+        })
+    
+    # Gráfico 3: Status dos eventos (distribuição percentual)
+    total_eventos = Evento.objects.filter(organizador=user).count()
+    
+    if total_eventos > 0:
+        finalizados = Evento.objects.filter(organizador=user, status='finalizado').count()
+        em_andamento = Evento.objects.filter(
+            organizador=user, 
+            status__in=['publicado', 'em_andamento']
+        ).count()
+        cancelados = Evento.objects.filter(organizador=user, status='cancelado').count()
+        
+        desempenho_eventos = [
+            {
+                'name': 'Completos',
+                'value': round((finalizados / total_eventos) * 100),
+                'color': '#10B981'
+            },
+            {
+                'name': 'Em andamento',
+                'value': round((em_andamento / total_eventos) * 100),
+                'color': '#F59E0B'
+            },
+            {
+                'name': 'Cancelados',
+                'value': round((cancelados / total_eventos) * 100),
+                'color': '#EF4444'
+            }
+        ]
+    else:
+        desempenho_eventos = [
+            {'name': 'Completos', 'value': 0, 'color': '#10B981'},
+            {'name': 'Em andamento', 'value': 0, 'color': '#F59E0B'},
+            {'name': 'Cancelados', 'value': 0, 'color': '#EF4444'}
+        ]
+    
+    return Response({
+        'comparecimento_mensal': comparecimento_mensal,
+        'score_medio': score_medio,
+        'desempenho_eventos': desempenho_eventos
+    })

@@ -24,6 +24,12 @@ from .views import (
     TransferRequestListView,
     TransferRequestDetailView,
     update_user_profile,
+    # Views do Dashboard
+    dashboard_metricas,
+    dashboard_eventos_proximos,
+    dashboard_eventos_anteriores,
+    dashboard_notificacoes,
+    dashboard_graficos,
 )
 
 urlpatterns = [
@@ -70,4 +76,11 @@ urlpatterns += [
     path('waitlist/<uuid:event_id>/join/', waitlist_join, name='waitlist-join'),
     path('waitlist/<uuid:event_id>/leave/', waitlist_leave, name='waitlist-leave'),
     path('waitlist/<uuid:event_id>/suggestions/', waitlist_suggestions, name='waitlist-suggestions'),
+
+    # Dashboard do Organizador
+    path('dashboard/metricas/', dashboard_metricas, name='dashboard-metricas'),
+    path('dashboard/eventos-proximos/', dashboard_eventos_proximos, name='dashboard-eventos-proximos'),
+    path('dashboard/eventos-anteriores/', dashboard_eventos_anteriores, name='dashboard-eventos-anteriores'),
+    path('dashboard/notificacoes/', dashboard_notificacoes, name='dashboard-notificacoes'),
+    path('dashboard/graficos/', dashboard_graficos, name='dashboard-graficos'),
 ]

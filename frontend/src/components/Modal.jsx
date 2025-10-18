@@ -27,6 +27,13 @@ function Modal({ isOpen, setOpenModal, user }) {
     navigate('/perfil');
   };
 
+  const handleDashboardClick = () => {
+    // Fecha o modal
+    setOpenModal(false);
+    // Redireciona para o dashboard
+    navigate('/dashboard');
+  };
+
   if (isOpen) {
     return (
       <div
@@ -54,10 +61,13 @@ function Modal({ isOpen, setOpenModal, user }) {
             </li>
 
             <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
-              <a href="#" className="flex gap-3 items-center">
+              <button 
+                onClick={handleDashboardClick}
+                className="flex gap-3 items-center w-full text-left"
+              >
                 <LayoutDashboard className="h-5 w-5" /> 
                 <span>DashBoard</span>
-              </a>
+              </button>
             </li>
 
             <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
