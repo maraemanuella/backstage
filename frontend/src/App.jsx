@@ -20,6 +20,8 @@ import AceitarOferta from "./pages/AceitarOferta";
 import ProximosEventos from "./pages/ProximosEventos";
 import EventosPassados from "./pages/EventosPassados";
 import DashboardOrganizador from "./pages/DashboardOrganizador";
+import ManageEvent from "./pages/ManageEvent";
+import EditEvent from "./pages/EditEvent.jsx";
 
 function Logout() {
   localStorage.clear();
@@ -132,6 +134,26 @@ function App() {
             }
           />
 
+          {/* Gerenciamento */}
+          <Route
+            path="/gerenciar"
+            element={
+              <ProtectedRoute>
+                <ManageEvent />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Editar Eventos */}
+          <Route
+            path="/gerenciar/editar/:id"
+            element={
+              <ProtectedRoute>
+                <EditEvent />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Favoritos */}
           <Route
             path="/heart"
@@ -143,22 +165,22 @@ function App() {
           />
 
           <Route
-          path="/proximos"
-          element={
-            <ProtectedRoute>
-              <ProximosEventos />
-            </ProtectedRoute>
-          }
-        />
+            path="/proximos"
+            element={
+              <ProtectedRoute>
+                <ProximosEventos />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/passados"
-          element={
-            <ProtectedRoute>
-              <EventosPassados />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/passados"
+            element={
+              <ProtectedRoute>
+                <EventosPassados />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Dashboard do Organizador */}
           <Route

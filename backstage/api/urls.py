@@ -30,6 +30,9 @@ from .views import (
     dashboard_eventos_anteriores,
     dashboard_notificacoes,
     dashboard_graficos,
+    # Gerenciar Evento
+    ManageEventosView,
+    EventoRetrieveUpdateView,
 )
 
 urlpatterns = [
@@ -70,6 +73,10 @@ urlpatterns = [
     path('transfer-requests/', TransferRequestListView.as_view(), name='transfer-request-list'),
     path('transfer-requests/create/', TransferRequestCreateView.as_view(), name='transfer-request-create'),
     path('transfer-requests/<int:pk>/', TransferRequestDetailView.as_view(), name='transfer-request-detail'),
+    
+    # Gerenciar eventos
+    path('manage/', ManageEventosView.as_view(), name='manage-eventos'),
+    path('manage/eventos/<uuid:id>/', EventoRetrieveUpdateView.as_view(), name='manage-evento-detail'),
 ]
 urlpatterns += [
     path('waitlist/<uuid:event_id>/status/', waitlist_status, name='waitlist-status'),

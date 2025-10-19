@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404
 from .serializers import FavoriteSerializer
 from .models import Evento, Favorite, TransferRequest, Inscricao, Avaliacao
 from django.http import JsonResponse
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.db import models
 
 User = get_user_model()
@@ -698,3 +699,36 @@ def dashboard_graficos(request):
         'score_medio': score_medio,
         'desempenho_eventos': desempenho_eventos
     })
+    
+class ManageEventosView(generics.ListAPIView):
+    """
+    Retorna uma lista de todos os eventos (publicados ou não)
+    criados pelo usuário autenticado (o organizador).
+    """
+    serializer_class = EventoSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Pega o usuário que está fazendo a request
+        user = self.request.user 
+        
+        # Filtra os eventos onde o 'organizador' é este usuário
+        # Diferente de EventoListView, não filtramos por status='publicado'
+        # pois o organizador precisa ver seus rascunhos.
+        return Evento.objects.filter(organizador=user).order_by('-created_at') 
+    
+class EventoRetrieveUpdateView(generics.RetrieveUpdateAPIView):
+    """
+    View para buscar (GET) e atualizar (PATCH/PUT) um evento específico
+    criado pelo usuário logado.
+    """
+    parser_classes = (MultiPartParser, FormParser)
+    
+    serializer_class = EventoSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        # Garante que um usuário só pode ver/editar os próprios eventos.
+        return Evento.objects.filter(organizador=self.request.user)
+

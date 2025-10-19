@@ -7,6 +7,7 @@ import {
   X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import MeuEvento from "./MeuEvento";
 import profile from "../assets/profile.png"; // Adjust the path as necessary
 
@@ -17,21 +18,21 @@ function Modal({ isOpen, setOpenModal, user }) {
     // Limpa todos os dados do localStorage
     localStorage.clear();
     // Redireciona para a página de login
-    navigate('/login');
+    navigate("/login");
   };
 
   const handleProfileClick = () => {
     // Fecha o modal
     setOpenModal(false);
     // Redireciona para a página de perfil
-    navigate('/perfil');
+    navigate("/perfil");
   };
 
   const handleDashboardClick = () => {
     // Fecha o modal
     setOpenModal(false);
     // Redireciona para o dashboard
-    navigate('/dashboard');
+    navigate("/dashboard");
   };
 
   if (isOpen) {
@@ -61,34 +62,33 @@ function Modal({ isOpen, setOpenModal, user }) {
             </li>
 
             <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
-              <button 
+              <button
                 onClick={handleDashboardClick}
                 className="flex gap-3 items-center w-full text-left"
               >
-                <LayoutDashboard className="h-5 w-5" /> 
+                <LayoutDashboard className="h-5 w-5" />
                 <span>DashBoard</span>
               </button>
             </li>
 
             <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
               <a href="#" className="flex gap-3 items-center">
-                <TicketCheck className="h-5 w-5" /> 
+                <TicketCheck className="h-5 w-5" />
                 <span>Check-in</span>
               </a>
             </li>
 
             <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
               <a href="#" className="flex gap-3 items-center">
-                <ChartNoAxesColumn className="h-5 w-5" /> 
+                <ChartNoAxesColumn className="h-5 w-5" />
                 <span>Painel Financeiro</span>
               </a>
             </li>
 
-            <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
-              <a href="#" className="flex gap-3 items-center">
-                <Settings className="h-5 w-5" /> 
-                <span>Configurações</span>
-              </a>
+            <li className="ml-2 text-black p-1 rounded w-[280px] shadow-7xl cursor-pointer mt-4 hover:bg-black  hover:text-white transition-colors duration-300">
+              <Link to="/gerenciar" className="flex gap-1 items-center">
+                <Settings className="h-5 w-5 ml-2" /> Gerenciar eventos
+              </Link>
             </li>
           </ul>
 
@@ -104,27 +104,27 @@ function Modal({ isOpen, setOpenModal, user }) {
                   alt="Foto de perfil"
                   className="w-10 h-10 rounded-full object-cover"
                   onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "flex";
                   }}
                 />
               ) : null}
-              
-              <div 
+
+              <div
                 className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
-                style={{ display: user?.profile_photo ? 'none' : 'flex' }}
+                style={{ display: user?.profile_photo ? "none" : "flex" }}
               >
                 <span className="text-gray-500 text-sm font-semibold">
-                  {user?.username?.charAt(0)?.toUpperCase() || 'U'}
+                  {user?.username?.charAt(0)?.toUpperCase() || "U"}
                 </span>
               </div>
 
               <span className="ml-3 text-sm font-medium text-gray-700">
-                {user?.username || 'Usuário'}
+                {user?.username || "Usuário"}
               </span>
             </button>
 
-            <button 
+            <button
               onClick={handleLogout}
               className="p-2 hover:bg-red-50 hover:text-red-600 rounded-full transition-colors duration-300"
               aria-label="Logout"
