@@ -12,57 +12,78 @@ function Home() {
   const [user, setUser] = useState(null);
   const [eventos, setEventos] = useState([]);
   const [busca, setBusca] = useState("");
-  const [filtroAtivo, setFiltroAtivo] = useState("todos");
+  const [filtroAtivo, setFiltroAtivo] = useState("Todos");
   const [openModal, setOpenModal] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { favorites, setFavorites } = useContext(FavoritesContext);
 
   useEffect(() => {
-    // Busca dados do usuário
-    api.get("api/user/me/")
-      .then(res => setUser(res.data))
-      .catch(console.error);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        const [userRes, eventosRes, favoritesRes] = await Promise.allSettled([
+          api.get("api/user/me/"),
+          api.get("/api/eventos/"),
+          api.get("/api/favorites/")
+        ]);
 
-    // Busca eventos
-    api.get("/api/eventos/")
-      .then(res => setEventos(res.data))
-      .catch(() => setEventos([]));
+        if (userRes.status === 'fulfilled') {
+          setUser(userRes.value.data);
+        }
 
-    // Busca favoritos do usuário
-    api.get("/api/favorites/")
-      .then(res => {
-        // Ajuste: salvar apenas os IDs no contexto
-        const ids = res.data.map(f => String(f.evento.id));
-        setFavorites(ids);
-      })
-      .catch(() => setFavorites([]));
-  }, []);
+        if (eventosRes.status === 'fulfilled') {
+          setEventos(eventosRes.value.data);
+        } else {
+          setEventos([]);
+        }
 
-  // Filtra os eventos de acordo com busca e filtro
+        if (favoritesRes.status === 'fulfilled') {
+          const ids = favoritesRes.value.data.map(f => String(f.evento.id));
+          setFavorites(ids);
+        } else {
+          setFavorites([]);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [setFavorites]);
+
   const eventosFiltrados = eventos.filter(evento => {
-    const filtroTipo =
-      filtroAtivo.toLowerCase() === "todos" ||
-      evento.categoria?.toLowerCase() === filtroAtivo.toLowerCase();
-
-    const filtroBusca =
-      !busca ||
-      evento.titulo?.toLowerCase().includes(busca.toLowerCase()) ||
-      evento.endereco?.toLowerCase().includes(busca.toLowerCase());
+    const filtroTipo = filtroAtivo.toLowerCase() === "todos" || 
+                       evento.categoria?.toLowerCase() === filtroAtivo.toLowerCase();
+    
+    const filtroBusca = !busca || 
+                        evento.titulo?.toLowerCase().includes(busca.toLowerCase()) ||
+                        evento.endereco?.toLowerCase().includes(busca.toLowerCase());
 
     return filtroTipo && filtroBusca;
   });
 
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando eventos...</p>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main>
+    <main className="min-h-screen bg-gray-50">
       <Modal isOpen={openModal} setOpenModal={setOpenModal} user={user} />
       <Header user={user} setOpenModal={setOpenModal} />
       <Busca busca={busca} setBusca={setBusca} />
       <Score user={user} />
       <Filtro filtroAtivo={filtroAtivo} setFiltroAtivo={setFiltroAtivo} />
-      <Eventos
-        eventos={eventosFiltrados}
-        favorites={favorites}
-        setFavorites={setFavorites}
-      />
+      <Eventos eventos={eventosFiltrados} />
     </main>
   );
 }

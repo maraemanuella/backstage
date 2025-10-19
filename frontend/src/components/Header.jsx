@@ -1,73 +1,73 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaBars, FaUser } from "react-icons/fa";
-import api from "../api";
 
 function Header({ user, setOpenModal }) {
   const navigate = useNavigate();
 
   const handleProfileClick = () => {
-    // Sempre navegar para o perfil em vez de abrir modal
     navigate('/perfil');
   };
 
   const handleMenuClick = () => {
-    // Abrir modal/sidebar se a função for fornecida
     if (setOpenModal) {
       setOpenModal(true);
     }
   };
 
+  const getProfilePhotoUrl = (photo) => {
+    if (!photo) return null;
+    return photo.startsWith('http') ? photo : `http://localhost:8000${photo}`;
+  };
+
+  const renderProfilePhoto = () => {
+    if (user?.profile_photo) {
+      return (
+        <img
+          src={getProfilePhotoUrl(user.profile_photo)}
+          alt="Foto de perfil"
+          className="w-10 h-10 rounded-full object-cover border-2 border-gray-100"
+          loading="eager"
+          onError={(e) => e.target.src = ''}
+        />
+      );
+    }
+    return (
+      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border-2 border-gray-100">
+        <FaUser className="text-gray-400 text-lg" />
+      </div>
+    );
+  };
+
   return (
-    <header className="flex flex-row w-auto border-b-2 border-black/10 h-[80px]">
-      <h1 className="flex flex-row justify-center items-center ml-[150px] gap-2 font-script text-[25px]">
-        BACKSTAGE
-      </h1>
+    <header className="flex justify-between items-center w-full border-b border-gray-200 h-[80px] px-6 md:px-12 lg:px-24">
+      <div className="flex items-center gap-4">
+        {user && setOpenModal && (
+          <button
+            className="flex items-center justify-center hover:bg-gray-100 p-2 rounded-lg transition-colors"
+            onClick={handleMenuClick}
+            aria-label="Menu"
+          >
+            <FaBars className="text-xl text-gray-600" />
+          </button>
+        )}
+        
+        <h1 className="font-script text-3xl md:text-4xl font-bold">
+          BACKSTAGE
+        </h1>
+      </div>
 
-      <div
-        id="profile"
-        className="flex flex-col justify-center items-center gap-2 ml-auto mr-[200px]"
-      >
+      <div className="flex items-center gap-4">
         {user && (
-          <div className="flex items-center gap-4">
-            {/* Botão do Menu/Sidebar */}
-            {setOpenModal && (
-              <button
-                className="cursor-pointer flex items-center justify-center hover:bg-gray-100 p-2 rounded-lg transition-colors"
-                onClick={handleMenuClick}
-                title="Menu"
-              >
-                <FaBars className="text-xl text-gray-600" />
-              </button>
-            )}
-
-            {/* Botão do Perfil */}
-            <button
-              className="cursor-pointer flex flex-col items-center hover:bg-gray-100 p-2 rounded-lg transition-colors"
-              onClick={handleProfileClick}
-              title="Ver Perfil"
-            >
-              {user.profile_photo ? (
-                <img
-                  src={user.profile_photo.startsWith('http') 
-                    ? user.profile_photo 
-                    : `http://localhost:8000${user.profile_photo}`
-                  }
-                  alt="Foto de perfil"
-                  className="w-[50px] h-[50px] rounded-full object-cover"
-                  onError={(e) => {
-                    // Se der erro, substitui por ícone padrão
-                    e.target.style.display = 'none';
-                  }}
-                />
-              ) : (
-                <div className="w-[50px] h-[50px] rounded-full bg-gray-200 flex items-center justify-center">
-                  <FaUser className="text-gray-400 text-xl" />
-                </div>
-              )}
-              <span className="mt-[0.5]">{user.username}</span>
-            </button>
-          </div>
+          <button
+            className="flex items-center gap-3 hover:bg-gray-50 px-3 py-2 rounded-lg transition-colors"
+            onClick={handleProfileClick}
+            aria-label="Ver Perfil"
+          >
+            {renderProfilePhoto()}
+            <span className="font-medium text-sm text-gray-800 hidden sm:inline">
+              {user.username}
+            </span>
+          </button>
         )}
       </div>
     </header>
