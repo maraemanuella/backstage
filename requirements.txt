@@ -10,3 +10,7 @@ psycopg2-binary
 python-dotenv
 pillow
 qrcode[pil]
+channels
+channels-redis
+daphne
+django-sslserver

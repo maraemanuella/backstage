@@ -182,8 +182,8 @@ function Profile() {
                   <img 
                     src={user.profile_photo.startsWith('http') 
                       ? user.profile_photo 
-                      : `http://127.0.0.1:8000${user.profile_photo}`
-                    } 
+                      : `${import.meta.env.VITE_API_URL}${user.profile_photo}`
+                    }
                     alt="Foto do perfil" 
                     className="w-full h-full object-cover rounded-full"
                     onLoad={() => console.log('Imagem carregada com sucesso:', user.profile_photo)}
