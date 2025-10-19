@@ -16,7 +16,8 @@ function Header({ user, setOpenModal }) {
 
   const getProfilePhotoUrl = (photo) => {
     if (!photo) return null;
-    return photo.startsWith('http') ? photo : `http://localhost:8000${photo}`;
+    const baseURL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+    return photo.startsWith('http') ? photo : `${baseURL}${photo}`;
   };
 
   const renderProfilePhoto = () => {
