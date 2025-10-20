@@ -40,6 +40,24 @@ class CustomUser(AbstractUser):
         blank=True,
         null=True,
     )
+    tipo_documento = models.CharField(
+        max_length=10, 
+        choices=[('cpf', 'CPF'), ('cnpj', 'CNPJ')], 
+        blank=True, 
+        null=True
+    )
+    numero_documento = models.CharField(max_length=20, blank=True, null=True)
+    documento_foto = models.ImageField(upload_to='documentos/', blank=True, null=True)
+    documento_verificado = models.CharField(
+        max_length=20,
+        choices=[
+            ('pendente', 'Pendente'),
+            ('verificando', 'Verificando'),
+            ('aprovado', 'Aprovado'),
+            ('rejeitado', 'Rejeitado'),
+        ],
+        default='pendente'
+    )
 
     objects = CustomUserManager()
 

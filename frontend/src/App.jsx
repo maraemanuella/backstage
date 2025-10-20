@@ -20,6 +20,7 @@ import AceitarOferta from "./pages/AceitarOferta";
 import ProximosEventos from "./pages/ProximosEventos";
 import EventosPassados from "./pages/EventosPassados";
 import DashboardOrganizador from "./pages/DashboardOrganizador";
+import VerificarDocumento from "./pages/VerificarDocumento";
 
 function Logout() {
   localStorage.clear();
@@ -123,11 +124,22 @@ function App() {
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/perfil/editar"
             element={
               <ProtectedRoute>
                 <EditProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Verificação de Documento */}
+          <Route
+            path="/verificar-documento"
+            element={
+              <ProtectedRoute>
+                <VerificarDocumento />
               </ProtectedRoute>
             }
           />

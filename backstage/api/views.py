@@ -9,6 +9,7 @@ from .serializers import FavoriteSerializer
 from .models import Evento, Favorite, TransferRequest, Inscricao, Avaliacao
 from django.http import JsonResponse
 from django.db import models
+import time, random
 
 User = get_user_model()
 
@@ -22,6 +23,7 @@ from .serializers import (
     TransferRequestSerializer,
     EventoSerializer,
     InscricaoCreateSerializer,
+    DocumentoVerificacaoSerializer,
 )
 
 from .models import Evento, Inscricao, Avaliacao
@@ -697,4 +699,46 @@ def dashboard_graficos(request):
         'comparecimento_mensal': comparecimento_mensal,
         'score_medio': score_medio,
         'desempenho_eventos': desempenho_eventos
+    })
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def verificar_documento(request):
+    user = request.user
+    
+    # Se já foi aprovado, não permite reenvio
+    if user.documento_verificado == 'aprovado':
+        return Response(
+            {'error': 'Seu documento já foi verificado e aprovado.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    serializer = DocumentoVerificacaoSerializer(user, data=request.data, partial=True)
+    
+    if serializer.is_valid():
+        # Salva dados e marca como verificando
+        serializer.save(documento_verificado='verificando')
+        
+        # Simula processamento de 7 segundos
+        time.sleep(7)
+        
+        # Marca como aprovado sempre
+        user.documento_verificado = 'aprovado'
+        user.save()
+        return Response({
+            'status': 'aprovado',
+            'mensagem': 'Documento verificado com sucesso! Você já pode criar eventos.'
+        })
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def status_documento(request):
+    user = request.user
+    return Response({
+        'tipo_documento': user.tipo_documento,
+        'numero_documento': user.numero_documento,
+        'documento_verificado': user.documento_verificado
     })
