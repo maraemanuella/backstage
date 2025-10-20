@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { FaArrowLeft, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaHistory, FaKeyboard } from 'react-icons/fa';
 import { FiMonitor, FiSmartphone } from 'react-icons/fi';
 import axios from 'axios';
 
@@ -65,6 +65,11 @@ const ScanCheckin = () => {
   const [isMobile, setIsMobile] = useState(true);
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
+  const [manualInput, setManualInput] = useState('');
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [checkinHistory, setCheckinHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const scannerRef = useRef(null);
   const html5QrcodeScannerRef = useRef(null);
 
@@ -189,6 +194,69 @@ const ScanCheckin = () => {
     setScanning(true);
   };
 
+  const handleManualInput = async () => {
+    setShowManualInput(false);
+    setScanning(false);
+    setScanResult(null);
+
+    try {
+      // Fazer requisição para realizar o checkin
+      const token = localStorage.getItem("access");
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/checkin/${manualInput}/`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setScanResult({
+        success: true,
+        message: "Check-in realizado com sucesso!",
+        participante: response.data.participante || "Participante",
+        evento: response.data.evento || "Evento",
+        data_checkin: response.data.data_checkin,
+        email: response.data.email,
+      });
+    } catch (err) {
+      console.error("Erro ao realizar checkin:", err);
+      setScanResult({
+        success: false,
+        message: err.response?.data?.error || "Erro ao realizar check-in. Tente novamente.",
+      });
+    }
+  };
+
+  const fetchCheckinHistory = async () => {
+    setLoadingHistory(true);
+    setCheckinHistory([]);
+
+    try {
+      const token = localStorage.getItem("access");
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/historico-checkin/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setCheckinHistory(response.data);
+    } catch (err) {
+      console.error("Erro ao buscar histórico de check-ins:", err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  const handleShowHistory = () => {
+    setShowHistoryModal(true);
+    fetchCheckinHistory();
+  };
+
+  const handleCloseHistory = () => {
+    setShowHistoryModal(false);
+  };
+
   // Se não for dispositivo móvel, mostrar aviso
   if (!isMobile) {
     return (
@@ -247,6 +315,26 @@ const ScanCheckin = () => {
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Scanner de Check-in</h1>
           <p className="text-gray-600">Escaneie o QR Code do participante para realizar o check-in</p>
+        </div>
+
+        {/* Botões de Ação */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <Button
+            variant="outline"
+            onClick={() => setShowManualInput(true)}
+            className="flex items-center justify-center gap-2"
+          >
+            <FaKeyboard />
+            Entrada Manual
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleShowHistory}
+            className="flex items-center justify-center gap-2"
+          >
+            <FaHistory />
+            Histórico
+          </Button>
         </div>
 
         {/* Resultado do Scan */}
@@ -420,6 +508,140 @@ const ScanCheckin = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de Entrada Manual */}
+      {showManualInput && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-white/30">
+          <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Entrada Manual de Check-in
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Insira o código de check-in manualmente abaixo:
+            </p>
+            <input
+              type="text"
+              value={manualInput}
+              onChange={(e) => setManualInput(e.target.value)}
+              className="w-full p-3 mb-4 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-500"
+              placeholder="Código de Check-in"
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                onClick={() => setShowManualInput(false)}
+                variant="outline"
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleManualInput}
+                variant="default"
+                className="flex-1"
+                disabled={!manualInput.trim()}
+              >
+                Confirmar Check-in
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Histórico de Check-ins */}
+      {showHistoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-white/30">
+          <div className="w-full max-w-lg max-h-[80vh] overflow-y-auto p-6 bg-white rounded-lg shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Histórico de Check-ins
+              </h3>
+              <button
+                onClick={handleCloseHistory}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {loadingHistory ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-12 w-12 animate-spin text-gray-600 mb-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                <p className="text-gray-600">Carregando histórico...</p>
+              </div>
+            ) : (
+              <div>
+                {checkinHistory.length === 0 ? (
+                  <div className="py-8 text-center text-gray-500">
+                    <FaHistory className="mx-auto text-4xl mb-3 text-gray-400" />
+                    <p>Nenhum check-in encontrado no histórico.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {checkinHistory.map((item, index) => (
+                      <div
+                        key={item.id || index}
+                        className="p-4 bg-gray-50 rounded-lg shadow-sm border border-gray-200 hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-gray-900 mb-1">
+                              {item.participante}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              {item.email}
+                            </p>
+                          </div>
+                          <FaCheckCircle className="text-green-500 text-lg ml-2" />
+                        </div>
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                            {item.evento}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {new Date(item.data_checkin).toLocaleString('pt-BR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
