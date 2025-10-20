@@ -134,26 +134,6 @@ function App() {
             }
           />
 
-          {/* Gerenciamento */}
-          <Route
-            path="/gerenciar"
-            element={
-              <ProtectedRoute>
-                <ManageEvent />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Editar Eventos */}
-          <Route
-            path="/gerenciar/editar/:id"
-            element={
-              <ProtectedRoute>
-                <EditEvent />
-              </ProtectedRoute>
-            }
-          />
-
           {/* Favoritos */}
           <Route
             path="/heart"
@@ -191,7 +171,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-
           
           {/* Criar Evento */}
           <Route
@@ -212,7 +191,26 @@ function App() {
               </ProtectedRoute>
             }
           />
+          
+          {/* Gerenciamento */}
+          <Route
+            path="/gerenciar"
+            element={
+              <ProtectedRoute>
+                <ManageEvent />
+              </ProtectedRoute>
+            }
+          />
 
+          {/* Editar Eventos */}
+          <Route
+            path="/gerenciar/editar/:id"
+            element={
+              <ProtectedRoute>
+                <EditEvent />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Página 404 */}
           <Route path="*" element={<NotFound />} />
