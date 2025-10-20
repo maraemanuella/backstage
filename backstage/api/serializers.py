@@ -134,7 +134,17 @@ class EventoSerializer(serializers.ModelSerializer):
             'vagas_disponiveis',
             'esta_lotado',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = [
+            'id', 'created_at', 'updated_at',
+            'inscritos_count', 'vagas_disponiveis', 'esta_lotado',
+            'organizador_nome', 'organizador_username', 'organizador_score'
+        ]
+
+    def create(self, validated_data):
+        """Define automaticamente o organizador como o usuário logado"""
+        evento = Evento.objects.create(**validated_data)
+        return evento
+        
 
     def to_representation(self, instance):
         """Customiza a representação do evento para incluir valor com desconto"""
