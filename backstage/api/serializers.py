@@ -399,6 +399,25 @@ class TransferRequestSerializer(serializers.ModelSerializer):
             status='sent'
         )
         return transfer_request
+    
+
+class DocumentoVerificacaoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['tipo_documento', 'numero_documento', 'documento_foto', 'documento_verificado']
+        read_only_fields = ['documento_verificado']
+    
+    def validate_numero_documento(self, value):
+        # Remove pontuação
+        value = value.replace('.', '').replace('-', '').replace('/', '').replace(' ', '')
+        tipo = self.initial_data.get('tipo_documento')
+        
+        if tipo == 'cpf' and len(value) != 11:
+            raise serializers.ValidationError("CPF deve ter 11 dígitos.")
+        if tipo == 'cnpj' and len(value) != 14:
+            raise serializers.ValidationError("CNPJ deve ter 14 dígitos.")
+        
+        return value
 
 
 # ===========================

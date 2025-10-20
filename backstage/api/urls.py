@@ -32,6 +32,8 @@ from .views import (
     dashboard_eventos_anteriores,
     dashboard_notificacoes,
     dashboard_graficos,
+    verificar_documento,
+    status_documento,
     # Gerenciar Evento
     ManageEventosView,
     EventoRetrieveUpdateView,
@@ -76,6 +78,10 @@ urlpatterns = [
     path('transfer-requests/', TransferRequestListView.as_view(), name='transfer-request-list'),
     path('transfer-requests/create/', TransferRequestCreateView.as_view(), name='transfer-request-create'),
     path('transfer-requests/<int:pk>/', TransferRequestDetailView.as_view(), name='transfer-request-detail'),
+
+    # Verificação de documento
+    path('verificar-documento/', verificar_documento, name='verificar-documento'),
+    path('status-documento/', status_documento, name='status-documento'),
     
     # Gerenciar eventos
     path('manage/', ManageEventosView.as_view(), name='manage-eventos'),
