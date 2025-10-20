@@ -27,18 +27,6 @@ python manage.py collectstatic --noinput
 python manage.py migrate
 ```
 
-**Dependências principais instaladas:**
-- Django
-- Django REST Framework
-- Channels (WebSocket)
-- Daphne (Servidor ASGI)
-- Pillow (Imagens)
-- PostgreSQL Driver
-- JWT Authentication
-- CORS Headers
-
----
-
 ### 2️⃣ Instalar Dependências do Node.js (Frontend)
 
 ```bash
@@ -48,16 +36,6 @@ cd E:\repositorios\backstage\frontend
 # Instalar as dependências do Node.js
 npm install
 ```
-
-**Dependências principais instaladas:**
-- React
-- Vite
-- Axios
-- React Router
-- Tailwind CSS
-- React Toastify
-- QR Code Generator
-
 ---
 
 ## 🌐 Configuração de IP
@@ -73,8 +51,6 @@ DB_USER=seu_usuario
 DB_PASSWORD=sua_senha
 DB_HOST=localhost
 DB_PORT=5432
-
-# Outras configurações (se houver)
 ```
 
 ⚠️ **Nota:** O backend permite conexões de qualquer IP (`ALLOWED_HOSTS = ["*"]`)
@@ -391,20 +367,6 @@ npm run build
 # Preview do build
 npm run preview
 ```
-
-### Banco de Dados (PostgreSQL):
-
-```bash
-# Conectar ao PostgreSQL
-psql -U seu_usuario -d seu_banco
-
-# Listar tabelas
-\dt
-
-# Sair do psql
-\q
-```
-
 ---
 
 ## 🔍 Verificar se Está Funcionando

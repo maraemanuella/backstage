@@ -14,6 +14,7 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaHome,
+  FaQrcode,
 } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -135,6 +136,10 @@ function Profile() {
   const handleCreateEvents = () => {
     // TODO: Implementar navegação para criação de eventos
     toast.info('Criação de eventos em desenvolvimento');
+  };
+
+  const handleCheckinScan = () => {
+    navigate('/checkin/scan');
   };
 
   if (loading) {
@@ -338,6 +343,17 @@ function Profile() {
             </button>
 
             <button
+              onClick={handleCheckinScan}
+              className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-2xl hover:bg-gray-50 hover:scale-105 transition-all duration-200"
+            >
+              <FaQrcode className="text-blue-500 text-xl" />
+              <div className="text-left">
+                <div className="font-[500]">Check-in por QR Code</div>
+                <div className="text-sm text-black/60">Escanear para fazer check-in</div>
+              </div>
+            </button>
+
+            <button
               onClick={handleLogout}
               className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-2xl hover:bg-red-50 hover:scale-105 transition-all duration-200"
             >
@@ -356,3 +372,4 @@ function Profile() {
 }
 
 export default Profile;
+
