@@ -4,7 +4,6 @@ import api from "../api.js";
 import Eventos from "../components/Eventos";
 import Header from "../components/Header.jsx";
 import Modal from "../components/Modal";
-import { HeartCrack, LoaderCircle } from "lucide-react";
 
 function HeartPage() {
   const { favorites, setFavorites } = useContext(FavoritesContext);

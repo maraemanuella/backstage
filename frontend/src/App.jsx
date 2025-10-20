@@ -21,6 +21,8 @@ import ProximosEventos from "./pages/ProximosEventos";
 import EventosPassados from "./pages/EventosPassados";
 import DashboardOrganizador from "./pages/DashboardOrganizador";
 import VerificarDocumento from "./pages/VerificarDocumento";
+import ManageEvent from "./pages/ManageEvent";
+import EditEvent from "./pages/EditEvent.jsx";
 import CriarEvento from "./pages/CriarEvento";
 import EventoAnalytics from "./pages/EventoAnalytics";
 
@@ -180,6 +182,46 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardOrganizador />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Criar Evento */}
+          <Route
+            path="/criar-evento"
+            element={
+              <ProtectedRoute>
+                <CriarEvento />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Analytics do Evento */}
+          <Route
+            path="/evento/:eventoId/analytics"
+            element={
+              <ProtectedRoute>
+                <EventoAnalytics />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Gerenciamento */}
+          <Route
+            path="/gerenciar"
+            element={
+              <ProtectedRoute>
+                <ManageEvent />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Editar Eventos */}
+          <Route
+            path="/gerenciar/editar/:id"
+            element={
+              <ProtectedRoute>
+                <EditEvent />
               </ProtectedRoute>
             }
           />

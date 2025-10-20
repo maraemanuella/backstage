@@ -34,6 +34,9 @@ from .views import (
     dashboard_graficos,
     verificar_documento,
     status_documento,
+    # Gerenciar Evento
+    ManageEventosView,
+    EventoRetrieveUpdateView,
 )
 
 urlpatterns = [
@@ -79,6 +82,10 @@ urlpatterns = [
     # Verificação de documento
     path('verificar-documento/', verificar_documento, name='verificar-documento'),
     path('status-documento/', status_documento, name='status-documento'),
+    
+    # Gerenciar eventos
+    path('manage/', ManageEventosView.as_view(), name='manage-eventos'),
+    path('manage/eventos/<uuid:id>/', EventoRetrieveUpdateView.as_view(), name='manage-evento-detail'),
 ]
 urlpatterns += [
     path('waitlist/<uuid:event_id>/status/', waitlist_status, name='waitlist-status'),
