@@ -20,6 +20,7 @@ import AceitarOferta from "./pages/AceitarOferta";
 import ProximosEventos from "./pages/ProximosEventos";
 import EventosPassados from "./pages/EventosPassados";
 import DashboardOrganizador from "./pages/DashboardOrganizador";
+import EventoAnalytics from "./pages/EventoAnalytics";
 
 function Logout() {
   localStorage.clear();
@@ -166,6 +167,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardOrganizador />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Analytics do Evento */}
+          <Route
+            path="/evento/:eventoId/analytics"
+            element={
+              <ProtectedRoute>
+                <EventoAnalytics />
               </ProtectedRoute>
             }
           />
