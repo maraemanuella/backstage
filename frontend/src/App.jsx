@@ -22,6 +22,8 @@ import EventosPassados from "./pages/EventosPassados";
 import DashboardOrganizador from "./pages/DashboardOrganizador";
 import ManageEvent from "./pages/ManageEvent";
 import EditEvent from "./pages/EditEvent.jsx";
+import CriarEvento from "./pages/CriarEvento";
+import EventoAnalytics from "./pages/EventoAnalytics";
 
 function Logout() {
   localStorage.clear();
@@ -188,6 +190,26 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardOrganizador />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Criar Evento */}
+          <Route
+            path="/criar-evento"
+            element={
+              <ProtectedRoute>
+                <CriarEvento />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Analytics do Evento */}
+          <Route
+            path="/evento/:eventoId/analytics"
+            element={
+              <ProtectedRoute>
+                <EventoAnalytics />
               </ProtectedRoute>
             }
           />

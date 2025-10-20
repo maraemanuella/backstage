@@ -1,7 +1,10 @@
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import Avaliacao, Evento, Inscricao, CustomUser, TransferRequest, Favorite
+from .models import (
+    Avaliacao, Evento, Inscricao, CustomUser, TransferRequest, Favorite,
+    EventoAnalytics, InteracaoSimulador, VisualizacaoEvento
+)
 from django.utils import timezone
 from datetime import timedelta
 from io import BytesIO
@@ -131,7 +134,17 @@ class EventoSerializer(serializers.ModelSerializer):
             'vagas_disponiveis',
             'esta_lotado',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = [
+            'id', 'created_at', 'updated_at',
+            'inscritos_count', 'vagas_disponiveis', 'esta_lotado',
+            'organizador_nome', 'organizador_username', 'organizador_score'
+        ]
+
+    def create(self, validated_data):
+        """Define automaticamente o organizador como o usuário logado"""
+        evento = Evento.objects.create(**validated_data)
+        return evento
+        
 
     def to_representation(self, instance):
         """Customiza a representação do evento para incluir valor com desconto"""
@@ -386,3 +399,70 @@ class TransferRequestSerializer(serializers.ModelSerializer):
             status='sent'
         )
         return transfer_request
+
+
+# ===========================
+# ANALYTICS SERIALIZERS
+# ===========================
+
+class EventoAnalyticsSerializer(serializers.ModelSerializer):
+    """Serializer para dados analíticos do evento"""
+    
+    evento_titulo = serializers.CharField(source='evento.titulo', read_only=True)
+    
+    class Meta:
+        model = EventoAnalytics
+        fields = [
+            'evento',
+            'evento_titulo',
+            'custo_total',
+            'receita_total',
+            'roi',
+            'total_visualizacoes',
+            'total_interacoes_simulador',
+            'updated_at',
+        ]
+        read_only_fields = ['evento', 'updated_at']
+
+
+class InteracaoSimuladorSerializer(serializers.ModelSerializer):
+    """Serializer para interações com simuladores"""
+    
+    usuario_nome = serializers.CharField(source='usuario.username', read_only=True)
+    evento_titulo = serializers.CharField(source='evento.titulo', read_only=True)
+    
+    class Meta:
+        model = InteracaoSimulador
+        fields = [
+            'id',
+            'evento',
+            'evento_titulo',
+            'usuario',
+            'usuario_nome',
+            'tipo_simulador',
+            'duracao_segundos',
+            'concluiu',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'created_at']
+
+
+class VisualizacaoEventoSerializer(serializers.ModelSerializer):
+    """Serializer para visualizações de eventos"""
+    
+    usuario_nome = serializers.CharField(source='usuario.username', read_only=True)
+    evento_titulo = serializers.CharField(source='evento.titulo', read_only=True)
+    
+    class Meta:
+        model = VisualizacaoEvento
+        fields = [
+            'id',
+            'evento',
+            'evento_titulo',
+            'usuario',
+            'usuario_nome',
+            'ip_address',
+            'user_agent',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'created_at']
