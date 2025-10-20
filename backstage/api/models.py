@@ -4,6 +4,9 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 import uuid
 from decimal import Decimal
 
+# Importa modelos de analytics de arquivo separado
+from .analytics_models import EventoAnalytics, InteracaoSimulador, VisualizacaoEvento
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
         if not email:
