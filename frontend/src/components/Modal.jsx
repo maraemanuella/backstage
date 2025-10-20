@@ -40,8 +40,10 @@ function Modal({ isOpen, setOpenModal, user }) {
   };
 
   const handleCriarEvento = () => {
-    
-    if (!user?.documento_verificado) {
+    const status = user?.documento_verificado;
+    const isVerified = status === "aprovado";
+
+    if (!isVerified) {
       setShowAlert(true); 
       return;
     }
@@ -87,7 +89,7 @@ function Modal({ isOpen, setOpenModal, user }) {
                       onClick={() => {
                         setShowAlert(false);
                         setOpenModal(false);
-                        navigate('/credenciamento');
+                        navigate('/verificar-documento');
                       }}
                       className="px-3 py-1.5 bg-amber-600 text-white text-xs font-medium rounded hover:bg-amber-700 transition-colors"
                     >
