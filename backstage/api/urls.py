@@ -4,9 +4,11 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .views import toggle_favorite, list_favorites
 from .waitlist_views import waitlist_status, waitlist_join, waitlist_leave, waitlist_suggestions
+from .analytics_urls import urlpatterns as analytics_urls
 
 from .views import (
     CreateUserView,
+    EventoCreateView,
     CustomTokenObtainView,
     ListUsersView,
     RetrieveUpdateUserView,
@@ -38,6 +40,7 @@ urlpatterns = [
     # Eventos
     path('eventos/', EventoListView.as_view(), name='evento-list'),
     path('eventos/<uuid:id>/', EventoDetailView.as_view(), name='evento-detail'),
+    path('eventos/criar/', EventoCreateView.as_view(), name='criar-evento'),
 
     # Registro de usuário
     path('user/register/', CreateUserView.as_view(), name='register'),
@@ -90,3 +93,6 @@ urlpatterns += [
     path('dashboard/notificacoes/', dashboard_notificacoes, name='dashboard-notificacoes'),
     path('dashboard/graficos/', dashboard_graficos, name='dashboard-graficos'),
 ]
+
+# Analytics URLs
+urlpatterns += analytics_urls

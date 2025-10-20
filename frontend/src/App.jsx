@@ -21,6 +21,8 @@ import ProximosEventos from "./pages/ProximosEventos";
 import EventosPassados from "./pages/EventosPassados";
 import DashboardOrganizador from "./pages/DashboardOrganizador";
 import VerificarDocumento from "./pages/VerificarDocumento";
+import CriarEvento from "./pages/CriarEvento";
+import EventoAnalytics from "./pages/EventoAnalytics";
 
 function Logout() {
   localStorage.clear();
@@ -155,22 +157,22 @@ function App() {
           />
 
           <Route
-          path="/proximos"
-          element={
-            <ProtectedRoute>
-              <ProximosEventos />
-            </ProtectedRoute>
-          }
-        />
+            path="/proximos"
+            element={
+              <ProtectedRoute>
+                <ProximosEventos />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/passados"
-          element={
-            <ProtectedRoute>
-              <EventosPassados />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/passados"
+            element={
+              <ProtectedRoute>
+                <EventosPassados />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Dashboard do Organizador */}
           <Route
@@ -178,6 +180,26 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardOrganizador />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Criar Evento */}
+          <Route
+            path="/criar-evento"
+            element={
+              <ProtectedRoute>
+                <CriarEvento />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Analytics do Evento */}
+          <Route
+            path="/evento/:eventoId/analytics"
+            element={
+              <ProtectedRoute>
+                <EventoAnalytics />
               </ProtectedRoute>
             }
           />
