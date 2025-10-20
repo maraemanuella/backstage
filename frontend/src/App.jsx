@@ -192,6 +192,28 @@ function App() {
             }
           />
 
+          
+          {/* Criar Evento */}
+          <Route
+            path="/criar-evento"
+            element={
+              <ProtectedRoute>
+                <CriarEvento />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Analytics do Evento */}
+          <Route
+            path="/evento/:eventoId/analytics"
+            element={
+              <ProtectedRoute>
+                <EventoAnalytics />
+              </ProtectedRoute>
+            }
+          />
+
+
           {/* Página 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
