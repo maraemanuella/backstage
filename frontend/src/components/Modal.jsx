@@ -5,13 +5,17 @@ import {
   Settings,
   TicketCheck,
   X,
+  PlusCircle,
+  AlertCircle
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MeuEvento from "./MeuEvento";
+import { useState } from 'react';
 import profile from "../assets/profile.png"; // Adjust the path as necessary
 
 function Modal({ isOpen, setOpenModal, user }) {
   const navigate = useNavigate();
+  const [showAlert, setShowAlert] = useState(false);
 
   const handleLogout = () => {
     // Limpa todos os dados do localStorage
@@ -32,6 +36,17 @@ function Modal({ isOpen, setOpenModal, user }) {
     setOpenModal(false);
     // Redireciona para o dashboard
     navigate('/dashboard');
+  };
+
+  const handleCriarEvento = () => {
+    
+    if (!user?.documento_verificado) {
+      setShowAlert(true); 
+      return;
+    }
+    
+    setOpenModal(false);
+    navigate('/criar-evento');
   };
 
   if (isOpen) {
@@ -55,9 +70,54 @@ function Modal({ isOpen, setOpenModal, user }) {
             </button>
           </div>
 
+          {showAlert && (
+            <div className="mx-4 mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg animate-in slide-in-from-top duration-300">
+              <div className="flex gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-amber-900 text-sm mb-1">
+                    Credenciamento Necessário
+                  </h3>
+                  <p className="text-xs text-amber-800 leading-relaxed mb-3">
+                    Para criar eventos, você precisa fazer o credenciamento com o CNPJ da sua empresa ou CPF.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setShowAlert(false);
+                        setOpenModal(false);
+                        navigate('/credenciamento');
+                      }}
+                      className="px-3 py-1.5 bg-amber-600 text-white text-xs font-medium rounded hover:bg-amber-700 transition-colors"
+                    >
+                      Fazer Agora
+                    </button>
+                    <button
+                      onClick={() => setShowAlert(false)}
+                      className="px-3 py-1.5 bg-white border border-amber-300 text-amber-700 text-xs font-medium rounded hover:bg-amber-50 transition-colors"
+                    >
+                      Depois
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <ul className="px-2">
             <li className="relative mb-4">
               <MeuEvento />
+            </li>
+
+            <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-black hover:text-white transition-colors duration-300 mb-2">
+              <button 
+                onClick={handleCriarEvento}
+                className="flex gap-3 items-center w-full text-left"
+
+              >
+                <PlusCircle className="h-5 w-5" /> 
+                <span>Criar Evento</span>
+              </button>
             </li>
 
             <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">

@@ -20,6 +20,7 @@ import AceitarOferta from "./pages/AceitarOferta";
 import ProximosEventos from "./pages/ProximosEventos";
 import EventosPassados from "./pages/EventosPassados";
 import DashboardOrganizador from "./pages/DashboardOrganizador";
+import CriarEvento from "./pages/CriarEvento";
 
 function Logout() {
   localStorage.clear();
@@ -166,6 +167,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardOrganizador />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/criar-evento"
+            element={
+             <ProtectedRoute>
+                <CriarEvento />
               </ProtectedRoute>
             }
           />

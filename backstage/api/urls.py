@@ -7,6 +7,7 @@ from .waitlist_views import waitlist_status, waitlist_join, waitlist_leave, wait
 
 from .views import (
     CreateUserView,
+    EventoCreateView,
     CustomTokenObtainView,
     ListUsersView,
     RetrieveUpdateUserView,
@@ -36,6 +37,7 @@ urlpatterns = [
     # Eventos
     path('eventos/', EventoListView.as_view(), name='evento-list'),
     path('eventos/<uuid:id>/', EventoDetailView.as_view(), name='evento-detail'),
+    path('eventos/criar/', EventoCreateView.as_view(), name='criar-evento'),
 
     # Registro de usuário
     path('user/register/', CreateUserView.as_view(), name='register'),

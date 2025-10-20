@@ -30,6 +30,19 @@ import qrcode
 from io import BytesIO
 import base64
 
+class EventoCreateView(generics.CreateAPIView):
+    """
+    View para criar eventos.
+    """
+    queryset = Evento.objects.all()
+    serializer_class = EventoSerializer
+    permission_classes = [IsAuthenticated]  
+
+    def perform_create(self, serializer):
+        serializer.save(
+            organizador=self.request.user,
+            status='publicado'  
+        )
 
 # Listar avaliações de um evento
 class AvaliacaoListView(generics.ListAPIView):
