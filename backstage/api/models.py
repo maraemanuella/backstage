@@ -4,6 +4,9 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 import uuid
 from decimal import Decimal
 
+# Importa modelos de analytics de arquivo separado
+from .analytics_models import EventoAnalytics, InteracaoSimulador, VisualizacaoEvento
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
         if not email:
@@ -39,6 +42,24 @@ class CustomUser(AbstractUser):
         choices=[("M", "Masculino"), ("F", "Feminino"), ("O", "Outro")],
         blank=True,
         null=True,
+    )
+    tipo_documento = models.CharField(
+        max_length=10, 
+        choices=[('cpf', 'CPF'), ('cnpj', 'CNPJ')], 
+        blank=True, 
+        null=True
+    )
+    numero_documento = models.CharField(max_length=20, blank=True, null=True)
+    documento_foto = models.ImageField(upload_to='documentos/', blank=True, null=True)
+    documento_verificado = models.CharField(
+        max_length=20,
+        choices=[
+            ('pendente', 'Pendente'),
+            ('verificando', 'Verificando'),
+            ('aprovado', 'Aprovado'),
+            ('rejeitado', 'Rejeitado'),
+        ],
+        default='pendente'
     )
 
     objects = CustomUserManager()

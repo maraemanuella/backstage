@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Calendar,
   Users,
@@ -12,7 +13,8 @@ import {
   Clock,
   Star,
   Award,
-  Activity
+  Activity,
+  BarChart3
 } from 'lucide-react';
 import {
   BarChart,
@@ -33,6 +35,7 @@ import Modal from '../components/Modal';
 import api from '../api';
 
 function DashboardOrganizador() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -247,6 +250,13 @@ function DashboardOrganizador() {
       </div>
 
       <div className="flex gap-2 mt-4">
+        <button 
+          onClick={() => navigate(`/evento/${evento.id}/analytics`)}
+          className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors"
+        >
+          <BarChart3 className="h-4 w-4" />
+          Analytics
+        </button>
         <button className="flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">
           <Eye className="h-4 w-4" />
           Ver

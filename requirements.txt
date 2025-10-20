@@ -14,3 +14,4 @@ channels
 channels-redis
 daphne
 django-sslserver
+reportlab

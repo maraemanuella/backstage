@@ -4,9 +4,11 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .views import toggle_favorite, list_favorites
 from .waitlist_views import waitlist_status, waitlist_join, waitlist_leave, waitlist_suggestions
+from .analytics_urls import urlpatterns as analytics_urls
 
 from .views import (
     CreateUserView,
+    EventoCreateView,
     CustomTokenObtainView,
     ListUsersView,
     RetrieveUpdateUserView,
@@ -31,12 +33,18 @@ from .views import (
     dashboard_notificacoes,
     dashboard_graficos,
     realizar_checkin,
+    verificar_documento,
+    status_documento,
+    # Gerenciar Evento
+    ManageEventosView,
+    EventoRetrieveUpdateView,
 )
 
 urlpatterns = [
     # Eventos
     path('eventos/', EventoListView.as_view(), name='evento-list'),
     path('eventos/<uuid:id>/', EventoDetailView.as_view(), name='evento-detail'),
+    path('eventos/criar/', EventoCreateView.as_view(), name='criar-evento'),
 
     # Registro de usuário
     path('user/register/', CreateUserView.as_view(), name='register'),
@@ -71,6 +79,14 @@ urlpatterns = [
     path('transfer-requests/', TransferRequestListView.as_view(), name='transfer-request-list'),
     path('transfer-requests/create/', TransferRequestCreateView.as_view(), name='transfer-request-create'),
     path('transfer-requests/<int:pk>/', TransferRequestDetailView.as_view(), name='transfer-request-detail'),
+
+    # Verificação de documento
+    path('verificar-documento/', verificar_documento, name='verificar-documento'),
+    path('status-documento/', status_documento, name='status-documento'),
+    
+    # Gerenciar eventos
+    path('manage/', ManageEventosView.as_view(), name='manage-eventos'),
+    path('manage/eventos/<uuid:id>/', EventoRetrieveUpdateView.as_view(), name='manage-evento-detail'),
 ]
 urlpatterns += [
     path('waitlist/<uuid:event_id>/status/', waitlist_status, name='waitlist-status'),
@@ -88,3 +104,6 @@ urlpatterns += [
     # Check-in
     path('checkin/<uuid:inscricao_id>/', realizar_checkin, name='realizar-checkin'),
 ]
+
+# Analytics URLs
+urlpatterns += analytics_urls

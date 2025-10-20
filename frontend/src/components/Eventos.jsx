@@ -58,6 +58,30 @@ function Eventos({ eventos }) {
     return `${formattedDate} às ${formattedTime}`;
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR', { 
+        day: '2-digit', 
+        month: 'short', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  const formatPrice = (price) => {
+    if (!price) return '0,00';
+    return Number(price).toLocaleString('pt-BR', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    });
+  };
+
   return (
     <div className="w-full px-4 mt-6 md:mt-8 pb-12">
       <div className="max-w-6xl mx-auto">
@@ -68,9 +92,9 @@ function Eventos({ eventos }) {
               className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group cursor-pointer"
             >
               <div className="relative w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300">
-                {getImageUrl(evento.imagem) ? (
+                {getImageUrl(evento.foto_capa) ? (
                   <img
-                    src={getImageUrl(evento.imagem)}
+                    src={getImageUrl(evento.foto_capa)}
                     alt={evento.titulo}
                     className="w-full h-full object-cover"
                     loading="lazy"
@@ -102,6 +126,13 @@ function Eventos({ eventos }) {
 
               {/* Content */}
               <div className="p-4">
+                {/* Category badge */}
+                {evento.categoria && (
+                  <span className="inline-block px-3 py-1 bg-purple-100 text-purple-600 text-xs font-medium rounded-full mb-2">
+                    {evento.categoria}
+                  </span>
+                )}
+
                 {/* Title */}
                 <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-1">
                   {evento.titulo}
@@ -109,8 +140,8 @@ function Eventos({ eventos }) {
 
                 {/* Date and location */}
                 <div className="flex flex-col gap-1 mb-3">
-                  <div className="flex items-center gap-2 text-sm text-gray-900">
-                    <span className="font-medium">{formatDateTime(evento.data_evento)}</span>
+                  <div className="flex items-center gap-2 text-sm text-red-500">
+                    <span className="font-medium">{formatDate(evento.data_evento)}</span>
                   </div>
                   <div className="flex items-center gap-1 text-sm text-gray-500">
                     <MapPin size={14} />
@@ -118,10 +149,26 @@ function Eventos({ eventos }) {
                   </div>
                 </div>
 
+                {/* Capacity info */}
+                <div className="flex items-center gap-2 mb-3 text-sm text-gray-600">
+                  <Users size={16} />
+                  <span>
+                    {evento.inscritos_count || 0}/{evento.capacidade_maxima} inscritos
+                  </span>
+                  {evento.esta_lotado && (
+                    <span className="ml-auto text-red-500 font-medium text-xs">LOTADO</span>
+                  )}
+                </div>
+
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-green-600 font-semibold text-lg">
-                    R$ {evento.valor_deposito}
+                    R$ {formatPrice(evento.valor_deposito)}
                   </span>
+                  {evento.valor_com_desconto && evento.valor_com_desconto < evento.valor_deposito && (
+                    <span className="text-xs text-gray-500 line-through">
+                      R$ {formatPrice(evento.valor_deposito)}
+                    </span>
+                  )}
                 </div>
 
                 <button

@@ -14,6 +14,10 @@ function Header({ user, setOpenModal }) {
     }
   };
 
+  const handleLogoClick = () => {
+    navigate('/');
+  };
+
   const getProfilePhotoUrl = (photo) => {
     if (!photo) return null;
     const baseURL = import.meta.env.VITE_API_URL;
@@ -52,9 +56,12 @@ function Header({ user, setOpenModal }) {
           </button>
         )}
         
-        <h1 className="font-script text-3xl md:text-4xl font-bold">
+        <button
+          onClick={handleLogoClick}
+          className="font-script text-3xl md:text-4xl font-bold hover:opacity-80 transition-opacity"
+        >
           BACKSTAGE
-        </h1>
+        </button>
       </div>
 
       <div className="flex items-center gap-4">
