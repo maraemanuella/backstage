@@ -17,3 +17,6 @@ __pycache__/
 # Node modules
 frontend/node_modules/
 frontend/.env
+
+backstage/staticfiles/
+backstage/api/migrations/__pycache__/*

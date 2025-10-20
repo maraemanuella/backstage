@@ -19,8 +19,6 @@ SECRET_KEY = 'django-insecure-ax5q&y*#=so_$#tpx7o2ar!97kz(b0qa)3t8t)s&0meri*!qyl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
-
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -59,6 +57,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "api",
     "corsheaders",
+    "channels",
+    "sslserver",
     # 'users',
 ]
 
@@ -142,7 +142,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -151,6 +152,47 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
+    "http://192.168.100.34:5173",
+    "http://127.0.0.1:5173",
+    "https://localhost:5173",
+    "https://192.168.100.34:5173",
+    "https://127.0.0.1:5173",
 ]
+
+# Permitir todas as origens na rede local (desenvolvimento)
+ALLOWED_HOSTS = ["*"]
+
+# Configuração adicional para CORS
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Permitir métodos HTTP necessários
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
+# Channels Configuration
+ASGI_APPLICATION = 'backstage.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
+}

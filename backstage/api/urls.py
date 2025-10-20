@@ -32,6 +32,7 @@ from .views import (
     dashboard_eventos_anteriores,
     dashboard_notificacoes,
     dashboard_graficos,
+    realizar_checkin,
     verificar_documento,
     status_documento,
     # Gerenciar Evento
@@ -99,6 +100,9 @@ urlpatterns += [
     path('dashboard/eventos-anteriores/', dashboard_eventos_anteriores, name='dashboard-eventos-anteriores'),
     path('dashboard/notificacoes/', dashboard_notificacoes, name='dashboard-notificacoes'),
     path('dashboard/graficos/', dashboard_graficos, name='dashboard-graficos'),
+
+    # Check-in
+    path('checkin/<uuid:inscricao_id>/', realizar_checkin, name='realizar-checkin'),
 ]
 
 # Analytics URLs

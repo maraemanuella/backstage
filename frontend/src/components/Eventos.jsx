@@ -33,7 +33,29 @@ function Eventos({ eventos }) {
 
   const getImageUrl = (imagem) => {
     if (!imagem) return null;
-    return imagem.startsWith('http') ? imagem : `http://localhost:8000${imagem}`;
+    return imagem.startsWith('http') ? imagem : `${import.meta.env.VITE_API_URL}${imagem}`;
+  };
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+
+    const dateOptions = {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    };
+
+    const timeOptions = {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    };
+
+    const formattedDate = date.toLocaleDateString('pt-BR', dateOptions);
+    const formattedTime = date.toLocaleTimeString('pt-BR', timeOptions);
+
+    return `${formattedDate} às ${formattedTime}`;
   };
 
   const formatDate = (dateString) => {

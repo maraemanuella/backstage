@@ -29,10 +29,10 @@ export const preloadImage = (src) => {
 /**
  * Constrói URL completa da imagem
  * @param {string} path - Caminho da imagem
- * @param {string} baseUrl - URL base (padrão: localhost:8000)
+ * @param {string} baseUrl - URL base (padrão: variável de ambiente)
  * @returns {string} - URL completa
  */
-export const getImageUrl = (path, baseUrl = 'http://localhost:8000') => {
+export const getImageUrl = (path, baseUrl = import.meta.env.VITE_API_URL) => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
   return `${baseUrl}${path}`;

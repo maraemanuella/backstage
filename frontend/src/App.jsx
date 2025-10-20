@@ -20,11 +20,13 @@ import AceitarOferta from "./pages/AceitarOferta";
 import ProximosEventos from "./pages/ProximosEventos";
 import EventosPassados from "./pages/EventosPassados";
 import DashboardOrganizador from "./pages/DashboardOrganizador";
+import ScanCheckin from "./pages/ScanChekin.jsx";
 import VerificarDocumento from "./pages/VerificarDocumento";
 import ManageEvent from "./pages/ManageEvent";
 import EditEvent from "./pages/EditEvent.jsx";
 import CriarEvento from "./pages/CriarEvento";
 import EventoAnalytics from "./pages/EventoAnalytics";
+
 
 function Logout() {
   localStorage.clear();
@@ -97,6 +99,15 @@ function App() {
             element={
               <ProtectedRoute>
                 <Checkin />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/checkin/scan/:eventoId?"
+            element={
+              <ProtectedRoute>
+                <ScanCheckin />
               </ProtectedRoute>
             }
           />

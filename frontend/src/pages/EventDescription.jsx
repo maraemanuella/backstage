@@ -73,8 +73,15 @@ function EventDescription() {
 
     api
       .get(`api/eventos/${eventId}/avaliacoes/`)
-      .then((res) => setAvaliacoes(res.data))
-      .catch(() => setAvaliacoes([]));
+      .then((res) => {
+        // Ensure we always set an array
+        const data = Array.isArray(res.data) ? res.data : [];
+        setAvaliacoes(data);
+      })
+      .catch((err) => {
+        console.error("Erro ao carregar avaliações:", err);
+        setAvaliacoes([]);
+      });
 
     const fetchResumo = async () => {
       try {
@@ -86,7 +93,10 @@ function EventDescription() {
         if (res.data && typeof res.data.ja_inscrito !== "undefined") {
           setIsRegistered(!!res.data.ja_inscrito);
         }
-      } catch {}
+      } catch (err) {
+        console.error("Erro ao buscar resumo da inscrição:", err);
+        console.error("Detalhes:", err.response?.data);
+      }
     };
     fetchResumo();
   }, [eventId]);

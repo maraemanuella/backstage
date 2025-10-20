@@ -14,6 +14,7 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaHome,
+  FaQrcode,
 } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -137,6 +138,10 @@ function Profile() {
     toast.info('Criação de eventos em desenvolvimento');
   };
 
+  const handleCheckinScan = () => {
+    navigate('/checkin/scan');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -182,8 +187,8 @@ function Profile() {
                   <img 
                     src={user.profile_photo.startsWith('http') 
                       ? user.profile_photo 
-                      : `http://127.0.0.1:8000${user.profile_photo}`
-                    } 
+                      : `${import.meta.env.VITE_API_URL}${user.profile_photo}`
+                    }
                     alt="Foto do perfil" 
                     className="w-full h-full object-cover rounded-full"
                     onLoad={() => console.log('Imagem carregada com sucesso:', user.profile_photo)}
@@ -338,6 +343,17 @@ function Profile() {
             </button>
 
             <button
+              onClick={handleCheckinScan}
+              className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-2xl hover:bg-gray-50 hover:scale-105 transition-all duration-200"
+            >
+              <FaQrcode className="text-blue-500 text-xl" />
+              <div className="text-left">
+                <div className="font-[500]">Check-in por QR Code</div>
+                <div className="text-sm text-black/60">Escanear para fazer check-in</div>
+              </div>
+            </button>
+
+            <button
               onClick={handleLogout}
               className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-2xl hover:bg-red-50 hover:scale-105 transition-all duration-200"
             >
@@ -356,3 +372,4 @@ function Profile() {
 }
 
 export default Profile;
+
