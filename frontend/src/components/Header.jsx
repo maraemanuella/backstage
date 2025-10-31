@@ -8,6 +8,10 @@ function Header({ user, setOpenModal }) {
     navigate('/perfil');
   };
 
+  const handleUserManagementClick = () => {
+    navigate('/user-management');
+  };
+
   const handleMenuClick = () => {
     if (setOpenModal) {
       setOpenModal(true);
@@ -75,6 +79,16 @@ function Header({ user, setOpenModal }) {
             <span className="font-medium text-sm text-gray-800 hidden sm:inline">
               {user.username}
             </span>
+          </button>
+        )}
+        {/* Show user management link for staff/superuser */}
+        {user && (user.is_superuser || user.is_staff) && (
+          <button
+            className="ml-2 text-sm bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg transition-colors"
+            onClick={handleUserManagementClick}
+            aria-label="Gestão de Usuários"
+          >
+            Gestão de Usuários
           </button>
         )}
       </div>

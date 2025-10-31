@@ -12,28 +12,34 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='registration',
-            name='event',
+        # Drop legacy tables if they exist (we already have Evento/Inscricao in the DB)
+        migrations.RunSQL(
+            """
+            DROP TABLE IF EXISTS api_registration CASCADE;
+            DROP TABLE IF EXISTS api_event CASCADE;
+            """
         ),
-        migrations.AlterUniqueTogether(
-            name='registration',
-            unique_together=None,
+        # Ensure latitude and longitude exist (no-op if already present)
+        migrations.RunSQL(
+            """
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name='api_evento' AND column_name='latitude'
+                ) THEN
+                    ALTER TABLE api_evento ADD COLUMN latitude double precision;
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name='api_evento' AND column_name='longitude'
+                ) THEN
+                    ALTER TABLE api_evento ADD COLUMN longitude double precision;
+                END IF;
+            END$$;
+            """
         ),
-        migrations.RemoveField(
-            model_name='registration',
-            name='user',
-        ),
-        migrations.AddField(
-            model_name='evento',
-            name='latitude',
-            field=models.FloatField(blank=True, null=True),
-        ),
-        migrations.AddField(
-            model_name='evento',
-            name='longitude',
-            field=models.FloatField(blank=True, null=True),
-        ),
+        # Try to alter categoria choices if necessary; this is safe to run even if the choices are equal
         migrations.AlterField(
             model_name='evento',
             name='categoria',
@@ -52,6 +58,14 @@ class Migration(migrations.Migration):
                 'unique_together': {('user', 'evento')},
             },
         ),
+        # Ensure legacy tables exist (no-op if already present) so DeleteModel can run cleanly
+        migrations.RunSQL(
+            """
+            CREATE TABLE IF NOT EXISTS api_event (id bigint PRIMARY KEY);
+            CREATE TABLE IF NOT EXISTS api_registration (id bigint PRIMARY KEY);
+            """
+        ),
+        # Keep DeleteModel operations so migration state reflects removal of legacy models
         migrations.DeleteModel(
             name='Event',
         ),
