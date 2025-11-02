@@ -43,14 +43,22 @@ class UserSerializer(serializers.ModelSerializer):
             "sexo",
             "is_staff",
             "is_superuser",
+            "is_active",
             "password",
             "score",
-            "profile_photo"
+            "profile_photo",
+            "tipo_documento",
+            "numero_documento",
+            "documento_foto",
+            "documento_verificado",
+            "get_full_name"
         )
         extra_kwargs = {
             "password": {"write_only": True},
             "is_staff": {"read_only": True},
             "is_superuser": {"read_only": True},
+            "is_active": {"read_only": True},
+            "get_full_name": {"read_only": True},
         }
 
     def create(self, validated_data):
