@@ -1,0 +1,10 @@
+Django>=5.2.7
+django-cors-headers
+djangorestframework
+djangorestframework-simplejwt
+asgiref
+PyJWT
+pytz
+sqlparse
+psycopg2-binary
+python-dotenv
