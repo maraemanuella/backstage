@@ -26,12 +26,8 @@ from .views import (
     TransferRequestListView,
     TransferRequestDetailView,
     update_user_profile,
-    # Views do Dashboard
+    # Views do Dashboard (apenas métricas mantidas aqui)
     dashboard_metricas,
-    dashboard_eventos_proximos,
-    dashboard_eventos_anteriores,
-    dashboard_notificacoes,
-    dashboard_graficos,
     realizar_checkin,
     verificar_documento,
     status_documento,
@@ -96,10 +92,6 @@ urlpatterns += [
 
     # Dashboard do Organizador
     path('dashboard/metricas/', dashboard_metricas, name='dashboard-metricas'),
-    path('dashboard/eventos-proximos/', dashboard_eventos_proximos, name='dashboard-eventos-proximos'),
-    path('dashboard/eventos-anteriores/', dashboard_eventos_anteriores, name='dashboard-eventos-anteriores'),
-    path('dashboard/notificacoes/', dashboard_notificacoes, name='dashboard-notificacoes'),
-    path('dashboard/graficos/', dashboard_graficos, name='dashboard-graficos'),
 
     # Check-in
     path('checkin/<uuid:inscricao_id>/', realizar_checkin, name='realizar-checkin'),
@@ -107,3 +99,8 @@ urlpatterns += [
 
 # Analytics URLs
 urlpatterns += analytics_urls
+
+# User management sub-urls (keeps this file small)
+urlpatterns += [
+    path('user-management/', include('api.user_management.urls')),
+]

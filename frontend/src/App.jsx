@@ -26,6 +26,7 @@ import ManageEvent from "./pages/ManageEvent";
 import EditEvent from "./pages/EditEvent.jsx";
 import CriarEvento from "./pages/CriarEvento";
 import EventoAnalytics from "./pages/EventoAnalytics";
+import UserManagement from "./pages/UserManagement";
 
 
 function Logout() {
@@ -223,6 +224,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <ManageEvent />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Gestão de Usuários (apenas para administradores) */}
+          <Route
+            path="/user-management"
+            element={
+              <ProtectedRoute>
+                <UserManagement />
               </ProtectedRoute>
             }
           />
