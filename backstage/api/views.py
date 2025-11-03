@@ -44,6 +44,12 @@ class EventoCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]  
 
     def perform_create(self, serializer):
+        if self.request.user.documento_verificado != 'aprovado':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied({
+                'error': 'Você precisa verificar seu documento antes de criar eventos.',
+                'status_verificacao': self.request.user.documento_verificado
+            })
         serializer.save(
             organizador=self.request.user,
             status='publicado'  
@@ -535,6 +541,12 @@ class ManageEventosView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user 
+        if user.documento_verificado != 'aprovado':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied({
+                'error': 'Você precisa verificar seu documento antes de gerenciar eventos.',
+                'status_verificacao': user.documento_verificado
+            })
         return Evento.objects.filter(organizador=user).order_by('-created_at') 
 
 
@@ -549,4 +561,229 @@ class EventoRetrieveUpdateView(generics.RetrieveUpdateAPIView):
     lookup_field = 'id'
 
     def get_queryset(self):
+        if self.request.user.documento_verificado != 'aprovado':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied({
+                'error': 'Você precisa verificar seu documento antes de gerenciar eventos.',
+                'status_verificacao': self.request.user.documento_verificado
+            })
         return Evento.objects.filter(organizador=self.request.user)
+    
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_metricas_globais(request):
+    """Retorna métricas globais do sistema - apenas para admins"""
+    
+    if not request.user.is_staff:
+        return Response(
+            {'error': 'Acesso negado. Apenas administradores podem acessar este recurso.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    usuarios_ativos = User.objects.filter(
+        last_login__gte=timezone.now() - timedelta(days=30)
+    ).count()
+    
+    eventos_realizados = Evento.objects.filter(
+        data_evento__lt=timezone.now()
+    ).count()
+    
+    revenue_total = Inscricao.objects.filter(
+        status_pagamento='aprovado'
+    ).aggregate(total=Sum('valor_final'))['total'] or 0
+    
+    hoje = timezone.now()
+    ultimos_30 = User.objects.filter(
+        date_joined__gte=hoje - timedelta(days=30)
+    ).count()
+    anteriores_30 = User.objects.filter(
+        date_joined__gte=hoje - timedelta(days=60),
+        date_joined__lt=hoje - timedelta(days=30)
+    ).count()
+    
+    if anteriores_30 > 0:
+        taxa_crescimento = ((ultimos_30 - anteriores_30) / anteriores_30) * 100
+    else:
+        taxa_crescimento = 100 if ultimos_30 > 0 else 0
+    
+    data = {
+        'usuarios_ativos': usuarios_ativos,
+        'eventos_realizados': eventos_realizados,
+        'revenue_total': float(revenue_total),
+        'taxa_crescimento': round(taxa_crescimento, 2)
+    }
+    
+    from .serializers import DashboardMetricasSerializer
+    serializer = DashboardMetricasSerializer(data)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_organizadores(request):
+    """Retorna comparativo de organizadores verificados vs não verificados"""
+    
+    if not request.user.is_staff:
+        return Response(
+            {'error': 'Acesso negado. Apenas administradores podem acessar este recurso.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    # Conta todos os usuários que criaram eventos
+    total_organizadores = User.objects.filter(
+        eventos_organizados__isnull=False
+    ).distinct().count()
+    
+    verificados = User.objects.filter(
+        eventos_organizados__isnull=False,
+        documento_verificado='aprovado'
+    ).distinct().count()
+    
+    nao_verificados = total_organizadores - verificados
+    
+    eventos_verificados = Evento.objects.filter(
+        organizador__documento_verificado='aprovado'
+    ).count()
+    
+    eventos_nao_verificados = Evento.objects.exclude(
+        organizador__documento_verificado='aprovado'
+    ).count()
+    
+    data = {
+        'total_organizadores': total_organizadores,
+        'verificados': verificados,
+        'nao_verificados': nao_verificados,
+        'eventos_verificados': eventos_verificados,
+        'eventos_nao_verificados': eventos_nao_verificados,
+        'percentual_verificados': round((verificados / total_organizadores * 100), 2) if total_organizadores > 0 else 0
+    }
+    
+    from .serializers import DashboardOrganizadoresSerializer
+    serializer = DashboardOrganizadoresSerializer(data)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_verificacoes(request):
+    """Retorna estatísticas de verificações de documento"""
+    
+    if not request.user.is_staff:
+        return Response(
+            {'error': 'Acesso negado. Apenas administradores podem acessar este recurso.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    # Conta apenas usuários que tentaram se verificar
+    total_pendentes = User.objects.filter(
+        documento_verificado='pendente'
+    ).exclude(tipo_documento__isnull=True).count()
+    
+    total_verificando = User.objects.filter(
+        documento_verificado='verificando'
+    ).count()
+    
+    total_aprovados = User.objects.filter(
+        documento_verificado='aprovado'
+    ).count()
+    
+    total_rejeitados = User.objects.filter(
+        documento_verificado='rejeitado'
+    ).count()
+    
+    ultimos_7_dias = User.objects.filter(
+        documento_verificado='aprovado',
+        updated_at__gte=timezone.now() - timedelta(days=7)
+    ).count()
+    
+    ultimos_30_dias = User.objects.filter(
+        documento_verificado='aprovado',
+        updated_at__gte=timezone.now() - timedelta(days=30)
+    ).count()
+    
+    data = {
+        'pendentes': total_pendentes,
+        'verificando': total_verificando,
+        'aprovados': total_aprovados,
+        'rejeitados': total_rejeitados,
+        'ultimos_7_dias': ultimos_7_dias,
+        'ultimos_30_dias': ultimos_30_dias
+    }
+    
+    from .serializers import DashboardVerificacoesSerializer
+    serializer = DashboardVerificacoesSerializer(data)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_performance(request):
+    """Retorna métricas de performance do sistema"""
+    
+    if not request.user.is_staff:
+        return Response(
+            {'error': 'Acesso negado. Apenas administradores podem acessar este recurso.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    inscricoes_mes = Inscricao.objects.filter(
+        created_at__gte=timezone.now() - timedelta(days=30)
+    ).count()
+    
+    total_inscricoes = Inscricao.objects.count()
+    inscricoes_aprovadas = Inscricao.objects.filter(status_pagamento='aprovado').count()
+    taxa_conversao = (inscricoes_aprovadas / total_inscricoes * 100) if total_inscricoes > 0 else 0
+    
+    eventos_populares = list(Evento.objects.annotate(
+        total_inscricoes=Count('inscricoes')
+    ).order_by('-total_inscricoes')[:5].values('titulo', 'total_inscricoes'))
+    
+    data = {
+        'inscricoes_mes': inscricoes_mes,
+        'taxa_conversao': round(taxa_conversao, 2),
+        'eventos_populares': eventos_populares
+    }
+    
+    from .serializers import DashboardPerformanceSerializer
+    serializer = DashboardPerformanceSerializer(data)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def dashboard_logs(request):
+    """Retorna logs de atividade recente"""
+    
+    if not request.user.is_staff:
+        return Response(
+            {'error': 'Acesso negado. Apenas administradores podem acessar este recurso.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    ultimas_inscricoes = list(Inscricao.objects.select_related(
+        'usuario', 'evento'
+    ).order_by('-created_at')[:10].values(
+        'id',
+        'usuario__username',
+        'evento__titulo',
+        'created_at',
+        'status_pagamento'
+    ))
+    
+    ultimas_transferencias = list(TransferRequest.objects.select_related(
+        'from_user', 'to_user', 'inscricao__evento'
+    ).order_by('-created_at')[:10].values(
+        'id',
+        'from_user__username',
+        'to_user__username',
+        'inscricao__evento__titulo',
+        'status',
+        'created_at'
+    ))
+    
+    return Response({
+        'ultimas_inscricoes': ultimas_inscricoes,
+        'ultimas_transferencias': ultimas_transferencias
+    })

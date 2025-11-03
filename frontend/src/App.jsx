@@ -27,7 +27,7 @@ import EditEvent from "./pages/EditEvent.jsx";
 import CriarEvento from "./pages/CriarEvento";
 import EventoAnalytics from "./pages/EventoAnalytics";
 import UserManagement from "./pages/UserManagement";
-
+import DashboardAdmin from "./pages/DashboardAdmin";
 
 function Logout() {
   localStorage.clear();
@@ -264,6 +264,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <EventoAnalytics />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Dashboard Admin */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardAdmin />
               </ProtectedRoute>
             }
           />

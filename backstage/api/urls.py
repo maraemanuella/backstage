@@ -34,6 +34,12 @@ from .views import (
     # Gerenciar Evento
     ManageEventosView,
     EventoRetrieveUpdateView,
+    # Dashboard Admin
+    dashboard_metricas_globais,
+    dashboard_organizadores,
+    dashboard_verificacoes,
+    dashboard_performance,
+    dashboard_logs,
 )
 
 urlpatterns = [
@@ -103,4 +109,25 @@ urlpatterns += analytics_urls
 # User management sub-urls (keeps this file small)
 urlpatterns += [
     path('user-management/', include('api.user_management.urls')),
+]
+
+#Dashboard do Admin
+urlpatterns += [
+    path('waitlist/<uuid:event_id>/status/', waitlist_status, name='waitlist-status'),
+    path('waitlist/<uuid:event_id>/join/', waitlist_join, name='waitlist-join'),
+    path('waitlist/<uuid:event_id>/leave/', waitlist_leave, name='waitlist-leave'),
+    path('waitlist/<uuid:event_id>/suggestions/', waitlist_suggestions, name='waitlist-suggestions'),
+
+    # Dashboard do Organizador
+    path('dashboard/metricas/', dashboard_metricas, name='dashboard-metricas'),
+
+    # Dashboard Admin
+    path('admin/dashboard/metricas/', dashboard_metricas_globais, name='admin-dashboard-metricas'),
+    path('admin/dashboard/organizadores/', dashboard_organizadores, name='admin-dashboard-organizadores'),
+    path('admin/dashboard/verificacoes/', dashboard_verificacoes, name='admin-dashboard-verificacoes'),
+    path('admin/dashboard/performance/', dashboard_performance, name='admin-dashboard-performance'),
+    path('admin/dashboard/logs/', dashboard_logs, name='admin-dashboard-logs'),
+
+    # Check-in
+    path('checkin/<uuid:inscricao_id>/', realizar_checkin, name='realizar-checkin'),
 ]

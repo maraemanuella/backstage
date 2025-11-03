@@ -41,7 +41,10 @@ function Modal({ isOpen, setOpenModal, user }) {
 
   const handleCriarEvento = () => {
     
-    if (!user?.documento_verificado) {
+    const status = user?.documento_verificado;
+    const isVerified = status === "aprovado";
+
+    if (!isVerified) {
       setShowAlert(true); 
       return;
     }
@@ -87,7 +90,7 @@ function Modal({ isOpen, setOpenModal, user }) {
                       onClick={() => {
                         setShowAlert(false);
                         setOpenModal(false);
-                        navigate('/credenciamento');
+                        navigate('/verificar-documento');
                       }}
                       className="px-3 py-1.5 bg-amber-600 text-white text-xs font-medium rounded hover:bg-amber-700 transition-colors"
                     >
@@ -144,6 +147,21 @@ function Modal({ isOpen, setOpenModal, user }) {
                 <span>Painel Financeiro</span>
               </a>
             </li>
+
+            {user?.is_staff && (
+              <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
+                <button
+                  onClick={() => {
+                    navigate('/admin/dashboard');
+                    setOpenModal(false);
+                  }}
+                  className="flex gap-3 items-center w-full text-left"
+                >
+                  <Settings className="h-5 w-5" />
+                  <span>Dashboard Admin</span>
+                </button>
+              </li>
+            )}
 
             <li className="ml-2 text-black p-1 rounded w-[280px] shadow-7xl cursor-pointer mt-4 hover:bg-black  hover:text-white transition-colors duration-300">
               <Link to="/gerenciar" className="flex gap-1 items-center">

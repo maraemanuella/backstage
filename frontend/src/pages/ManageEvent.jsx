@@ -51,45 +51,61 @@ function ManageEvent() {
   ];
 
   useEffect(() => {
-    const fetchMeusEventos = () => {
-      api
-        .get("/api/manage/")
-        .then((response) => {
-          const eventos = response.data;
-          setMeusEventos(eventos);
-
-          const totalEvents = eventos.length;
-          const totalInscriptions = eventos.reduce(
-            (sum, evento) => sum + (evento.inscritos_count || 0),
-            0
-          );
-          const totalCheckins = eventos.reduce(
-            (sum, evento) => sum + (evento.checkins_count || 0),
-            0
-          );
-
-          setStats({
-            events: totalEvents,
-            inscriptions: totalInscriptions,
-            checkins: totalCheckins,
-          });
-        })
-        .catch((err) => {
-          if (err.response && err.response.status === 401) {
-            setError("Sua sessão expirou. Por favor, faça login novamente.");
-          } else {
-            setError(
-              "Não foi possível carregar seus eventos. Tente novamente mais tarde."
-            );
-          }
-          console.error("Erro ao buscar eventos gerenciados:", err);
-        })
-        .finally(() => {
+    // PRIMEIRO: Buscar dados do usuário
+    api.get("/api/user/me/")
+      .then((userResponse) => {
+        setUser(userResponse.data);
+        
+        // VERIFICAR se está aprovado
+        if (userResponse.data.documento_verificado !== 'aprovado') {
+          alert('Você precisa verificar seu documento antes de gerenciar eventos.');
+          navigate('/verificar-documento');
           setIsLoading(false);
+          return; // Interrompe aqui se não estiver aprovado
+        }
+        
+        // SE ESTIVER APROVADO: Buscar eventos
+        return api.get("/api/manage/");
+      })
+      .then((response) => {
+        if (!response) return; // Se não passou na verificação, não continua
+        
+        const eventos = response.data;
+        setMeusEventos(eventos);
+
+        const totalEvents = eventos.length;
+        const totalInscriptions = eventos.reduce(
+          (sum, evento) => sum + (evento.inscritos_count || 0),
+          0
+        );
+        const totalCheckins = eventos.reduce(
+          (sum, evento) => sum + (evento.checkins_count || 0),
+          0
+        );
+
+        setStats({
+          events: totalEvents,
+          inscriptions: totalInscriptions,
+          checkins: totalCheckins,
         });
-    };
-    fetchMeusEventos();
-  }, []);
+      })
+      .catch((err) => {
+        if (err.response && err.response.status === 401) {
+          setError("Sua sessão expirou. Por favor, faça login novamente.");
+        } else if (err.response && err.response.status === 403) {
+          setError("Você precisa verificar seu documento para acessar esta área.");
+          navigate('/verificar-documento');
+        } else {
+          setError(
+            "Não foi possível carregar seus eventos. Tente novamente mais tarde."
+          );
+        }
+        console.error("Erro ao buscar eventos gerenciados:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [navigate]);
 
   if (isLoading) {
     return (
