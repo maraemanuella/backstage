@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, get_user_model
+from .validators import validate_password_strength
 
 User = get_user_model()
 
@@ -37,6 +38,12 @@ class UserSerializer(serializers.ModelSerializer):
             "is_active": {"read_only": True},
             "get_full_name": {"read_only": True},
         }
+
+    def validate_password(self, value):
+        errors = validate_password_strength(value)
+        if errors:
+            raise serializers.ValidationError(errors)
+        return value
 
     def create(self, validated_data):
         password = validated_data.pop("password", None)
