@@ -4,6 +4,7 @@ from api.registrations.views import (
     MinhasInscricoesView,
     inscricao_detalhes,
     realizar_checkin,
+    historico_checkin,
 )
 
 urlpatterns = [
@@ -11,4 +12,5 @@ urlpatterns = [
     path('minhas/', MinhasInscricoesView.as_view(), name='minhas-inscricoes'),
     path('<uuid:inscricao_id>/', inscricao_detalhes, name='inscricao-detail'),
     path('checkin/<uuid:inscricao_id>/', realizar_checkin, name='realizar-checkin'),
+    path('historico-checkin/', historico_checkin, name='historico-checkin'),
 ]

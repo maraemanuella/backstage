@@ -114,7 +114,7 @@ const ScanCheckin = () => {
     };
   }, [scanning, isMobile]);
 
-  const onScanSuccess = async (decodedText, _decodedResult) => {
+  const onScanSuccess = async (decodedText) => {
     console.log("QR Code detectado:", decodedText);
 
     // Parar o scanner
@@ -132,7 +132,7 @@ const ScanCheckin = () => {
       // Fazer requisição para realizar o checkin
       const token = localStorage.getItem("access");
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/checkin/${inscricaoId}/`,
+        `${import.meta.env.VITE_API_URL}/api/inscricoes/checkin/${inscricaoId}/`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -203,7 +203,7 @@ const ScanCheckin = () => {
       // Fazer requisição para realizar o checkin
       const token = localStorage.getItem("access");
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/checkin/${manualInput}/`,
+        `${import.meta.env.VITE_API_URL}/api/inscricoes/checkin/${manualInput}/`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -234,7 +234,7 @@ const ScanCheckin = () => {
     try {
       const token = localStorage.getItem("access");
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/historico-checkin/`,
+        `${import.meta.env.VITE_API_URL}/api/inscricoes/historico-checkin/`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

@@ -235,8 +235,22 @@ CORS_ALLOW_METHODS = [
 # Channels Configuration
 ASGI_APPLICATION = 'settings.asgi.application'
 
+# Channel Layers - Para WebSocket (Check-in em tempo real)
+# Usa Redis em produção para melhor performance
+# Fallback para InMemory em desenvolvimento se Redis não estiver disponível
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer'
-    }
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
 }
+
+# Se Redis não estiver disponível, use InMemory (apenas para desenvolvimento)
+# Descomente a linha abaixo se não tiver Redis instalado:
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels.layers.InMemoryChannelLayer'
+#     }
+# }

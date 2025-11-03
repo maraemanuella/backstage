@@ -21,3 +21,4 @@ backstage/staticfiles/
 backstage/api/migrations/__pycache__/*
 
 staticfiles
+changes

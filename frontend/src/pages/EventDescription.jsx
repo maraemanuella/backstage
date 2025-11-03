@@ -106,16 +106,34 @@ function EventDescription() {
         if (!token) return
         const res = await api.get(`/api/eventos/${eventId}/resumo-inscricao/`, { headers: { Authorization: `Bearer ${token}` } })
 
-        if (res.data && typeof res.data.ja_inscrito !== 'undefined') {
-          setIsRegistered(!!res.data.ja_inscrito)
+        console.log('Resumo de inscrição (raw):', res.data)
 
-          // Capturar o ID da inscrição se existir
-          if (res.data.inscricao_id) {
-            setInscricaoId(res.data.inscricao_id)
+        // Compatibilidade com diferentes formatos de resposta
+        const resumo = res.data || {}
+        const ja_inscrito = typeof resumo.ja_inscrito !== 'undefined' ? resumo.ja_inscrito : (resumo.registered ?? resumo.is_registered ?? false)
+        setIsRegistered(!!ja_inscrito)
+
+        // Capturar o ID da inscrição se existir
+        if (resumo.inscricao_id) {
+          setInscricaoId(resumo.inscricao_id)
+        } else if (ja_inscrito) {
+          // Fallback: buscar nas inscrições do usuário para encontrar a inscrição deste evento
+          try {
+            const inscricaoRes = await api.get('/api/inscricoes/minhas/', { headers: { Authorization: `Bearer ${token}` } })
+            console.log('Inscrições do usuário (fallback):', inscricaoRes.data)
+            const inscricao = inscricaoRes.data.find(i => i.evento === eventId || i.evento?.id === eventId)
+            if (inscricao) {
+              setInscricaoId(inscricao.id)
+              console.log('Inscrição encontrada via fallback:', inscricao.id)
+            } else {
+              console.warn('Usuário marcado como inscrito, mas nenhuma inscrição encontrada no fallback')
+            }
+          } catch (err) {
+            console.error('Erro ao buscar inscrições no fallback:', err)
           }
         }
       } catch (err) {
-        console.error('Erro ao buscar resumo de inscrição:', err);
+        console.error('Erro ao buscar resumo de inscrição:', err)
       }
     }
     fetchResumo();
@@ -140,9 +158,19 @@ function EventDescription() {
         const token = localStorage.getItem('access');
         if (!token) return;
         const res = await api.get(`/api/waitlist/${eventId}/status/`, { headers: { Authorization: `Bearer ${token}` } });
-        if (res.data.na_waitlist) {
+        console.log('Waitlist status (raw):', res.data)
+
+        // Compatibilidade: backend pode retornar { na_waitlist: true, posicao: X } ou { state: 'fila'|'vaga', position: X }
+        const data = res.data || {}
+        const inWaitlist = (typeof data.na_waitlist !== 'undefined' ? data.na_waitlist : (data.state === 'fila'))
+        const position = (typeof data.posicao !== 'undefined' ? data.posicao : (data.position ?? null))
+
+        if (inWaitlist) {
           setIsInWaitlist(true);
-          setWaitlistPosition(res.data.posicao);
+          setWaitlistPosition(position);
+        } else {
+          setIsInWaitlist(false);
+          setWaitlistPosition(null);
         }
       } catch (err) {
         console.error('Erro ao verificar waitlist:', err);

@@ -1,0 +1,58 @@
+{% extends 'admin/base_site.html' %}
+{% load static %}
+
+{% block title %}Gerar Dados de Teste - Backstage Admin{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:900px; margin:20px auto;">
+    <a href="{% url 'admin:index' %}" class="back-link" style="display:inline-block;margin-bottom:12px;">← Voltar ao Admin</a>
+
+    <h1>🎲 Gerador de Dados de Teste</h1>
+    <p class="subtitle">Gere usuários, eventos, inscrições e avaliações aleatórias para desenvolvimento</p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}" style="padding:10px; margin:10px 0; border-radius:4px;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="form-row" style="margin-bottom:12px;">
+            <label for="num_users">👥 Número de Usuários</label><br>
+            <input type="number" id="num_users" name="num_users" min="1" max="100" value="10" required>
+        </div>
+
+        <div class="form-row" style="margin-bottom:12px;">
+            <label for="num_events">🎉 Número de Eventos</label><br>
+            <input type="number" id="num_events" name="num_events" min="1" max="50" value="5" required>
+        </div>
+
+        <div class="form-row" style="margin-bottom:12px;">
+            <label for="num_inscricoes">📝 Número de Inscrições</label><br>
+            <input type="number" id="num_inscricoes" name="num_inscricoes" min="1" max="200" value="20" required>
+        </div>
+
+        <div class="form-row" style="margin-bottom:12px;">
+            <label for="num_avaliacoes">⭐ Número de Avaliações</label><br>
+            <input type="number" id="num_avaliacoes" name="num_avaliacoes" min="1" max="100" value="15" required>
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <label><input type="checkbox" id="clear_data" name="clear_data"> ⚠️ Limpar dados existentes antes de gerar novos</label>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+            <button type="submit" class="default">🚀 Gerar Dados</button>
+            <a href="{% url 'admin:index' %}" class="button">← Voltar</a>
+        </div>
+    </form>
+
+    <div style="margin-top:20px; color:#666; font-size:13px;">
+        Use este gerador apenas em ambiente de desenvolvimento. Em produção, desabilite a rota.
+    </div>
+</div>
+{% endblock %}

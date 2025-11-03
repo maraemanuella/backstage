@@ -1,0 +1,56 @@
+{% extends "admin/index.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .test-data-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .test-data-banner h2 {
+        margin: 0 0 10px 0;
+        font-size: 20px;
+    }
+
+    .test-data-banner p {
+        margin: 0 0 15px 0;
+        opacity: 0.9;
+    }
+
+    .test-data-banner .btn {
+        background: white;
+        color: #667eea;
+        padding: 10px 20px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: bold;
+        display: inline-block;
+        transition: all 0.3s;
+    }
+
+    .test-data-banner .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% if show_test_data_button %}
+<div class="test-data-banner">
+    <h2>🎲 Gerador de Dados de Teste</h2>
+    <p>Crie usuários, eventos, inscrições e avaliações aleatórias para desenvolvimento e testes</p>
+    <a href="{% url 'generate_test_data' %}" class="btn">
+        🚀 Gerar Dados de Teste
+    </a>
+</div>
+{% endif %}
+
+{{ block.super }}
+{% endblock %}

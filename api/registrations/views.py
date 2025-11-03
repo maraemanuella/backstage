@@ -116,3 +116,33 @@ def realizar_checkin(request, inscricao_id):
     except Exception as e:
         return Response({'error': f'Erro ao realizar check-in: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def historico_checkin(request):
+    """Retorna o histórico de check-ins realizados pelo organizador"""
+    try:
+        # Buscar eventos do organizador
+        from api.events.models import Evento
+        eventos_organizador = Evento.objects.filter(organizador=request.user)
+
+        # Buscar inscrições com check-in realizado nesses eventos
+        inscricoes_checkin = Inscricao.objects.filter(
+            evento__in=eventos_organizador,
+            checkin_realizado=True
+        ).select_related('evento', 'usuario').order_by('-data_checkin')[:50]  # Últimos 50
+
+        historico = []
+        for inscricao in inscricoes_checkin:
+            historico.append({
+                'id': str(inscricao.id),
+                'participante': inscricao.nome_completo_inscricao,
+                'email': inscricao.email_inscricao,
+                'evento': inscricao.evento.titulo,
+                'data_checkin': inscricao.data_checkin.isoformat() if inscricao.data_checkin else None,
+                'qr_code': inscricao.qr_code
+            })
+
+        return Response(historico, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({'error': f'Erro ao buscar histórico: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -3,6 +3,8 @@ from api.registrations.models import Inscricao
 import qrcode
 from io import BytesIO
 import base64
+from django.utils import timezone
+from datetime import timedelta
 
 
 class InscricaoCreateSerializer(serializers.ModelSerializer):
@@ -42,6 +44,17 @@ class InscricaoCreateSerializer(serializers.ModelSerializer):
         if len(cpf) != 11 or not cpf.isdigit():
             raise serializers.ValidationError("CPF deve ter 11 dígitos.")
         attrs['cpf_inscricao'] = cpf
+
+        # Bloqueia inscrição se já tiver passado 30 minutos desde o início do evento
+        try:
+            if evento and evento.data_evento:
+                cutoff = evento.data_evento + timedelta(minutes=30)
+                now = timezone.now()
+                if now > cutoff:
+                    raise serializers.ValidationError("Inscrições encerradas: já passaram 30 minutos desde o início do evento.")
+        except Exception:
+            # Não falhar a validação por erro de timezone, apenas assumir que não pode inscrever
+            raise serializers.ValidationError("Não foi possível validar o horário do evento. Tente novamente mais tarde.")
 
         return attrs
 
@@ -150,10 +163,17 @@ class InscricaoSerializer(serializers.ModelSerializer):
         """Gera uma imagem PNG do qr_code do objeto e retorna como data URI"""
         try:
             qr_text = obj.qr_code or str(obj.id)
-            qr = qrcode.QRCode(version=1, box_size=10, border=4)
-            qr.add_data(qr_text)
-            qr.make(fit=True)
-            img = qr.make_image(fill_color="black", back_color="white")
+            # Use getattr to avoid static analysis errors in environments where
+            # qrcode stubs don't expose QRCode. If QRCode is unavailable,
+            # fall back to qrcode.make which returns a PIL image.
+            QRClass = getattr(qrcode, 'QRCode', None)
+            if callable(QRClass):
+                qr = QRClass(version=1, box_size=10, border=4)
+                qr.add_data(qr_text)
+                qr.make(fit=True)
+                img = qr.make_image(fill_color="black", back_color="white")
+            else:
+                img = qrcode.make(qr_text)
 
             buffered = BytesIO()
             img.save(buffered, format="PNG")
@@ -162,4 +182,3 @@ class InscricaoSerializer(serializers.ModelSerializer):
             return f"data:image/png;base64,{b64}"
         except Exception:
             return None
-

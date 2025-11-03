@@ -3,11 +3,14 @@ import { useLoadScript } from "@react-google-maps/api";
 const libraries = ["places", "marker"];
 
 export function useGoogleMaps() {
-  const { isLoaded, loadError } = useLoadScript({
+  const loadResult = useLoadScript({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "",
     libraries: libraries,
   });
 
-  return { isLoaded, loadError };
-}
+  if (typeof window !== 'undefined' && window.google) {
+    return { isLoaded: true, loadError: null };
+  }
 
+  return loadResult;
+}

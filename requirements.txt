@@ -16,3 +16,4 @@ daphne
 django-sslserver
 reportlab
 cryptography>=41.0.0
+Faker>=22.0.0
