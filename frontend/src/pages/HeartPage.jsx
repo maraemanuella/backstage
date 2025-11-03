@@ -18,7 +18,7 @@ function HeartPage() {
         setLoading(true);
         
         const [userRes, favoritesRes] = await Promise.allSettled([
-          api.get("api/user/me/"),
+          api.get("/api/user/me/"),
           api.get("/api/favorites/")
         ]);
 

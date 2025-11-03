@@ -29,13 +29,13 @@ import ManageEvent from "./pages/ManageEvent";
 import EditEvent from "./pages/EditEvent.jsx";
 import CriarEvento from "./pages/CriarEvento";
 import EventoAnalytics from "./pages/EventoAnalytics";
+import Sac from "./pages/Sac.jsx";
 import UserManagement from "./pages/UserManagement";
 import PaymentPage from "./pages/PaymentPage";
 import InscriptionSuccess from "./pages/InscriptionSuccess";
 import GerenciarPagamentos from "./pages/GerenciarPagamentos";
 import DashboardAdmin from "./pages/DashboardAdmin";
 import VerificarDocumentosAdmin from "./pages/VerificarDocumentosAdmin";
-
 
 function Logout() {
   localStorage.clear();
@@ -279,6 +279,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <ManageEvent />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* SAC */}
+          <Route
+            path="/sac"
+            element={
+              <ProtectedRoute>
+                <Sac />
               </ProtectedRoute>
             }
           />
