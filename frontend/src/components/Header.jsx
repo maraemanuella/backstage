@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaBars, FaUser } from "react-icons/fa";
+import NotificationBell from "./NotificationBell";
 
 function Header({ user, setOpenModal }) {
   const navigate = useNavigate();
@@ -70,6 +71,7 @@ function Header({ user, setOpenModal }) {
       </div>
 
       <div className="flex items-center gap-1 sm:gap-2 md:gap-3 lg:gap-4 flex-shrink-0">
+        {user && <NotificationBell />}
         {user && (
           <button
             className="flex items-center gap-2 hover:bg-gray-50 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-colors"
