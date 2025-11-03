@@ -125,7 +125,20 @@ class Evento(models.Model):
 
 
     # Mídia
-    foto_capa = models.ImageField(upload_to='eventos/capas/', blank=True, null=True)
+    foto_capa = models.ImageField(
+        upload_to='eventos/capas/', 
+        blank=True, 
+        null=True,
+        help_text="Imagem de capa do evento"
+    )
+    
+    # Pagamento PIX
+    qr_code_pix = models.ImageField(
+        upload_to='eventos/qrcodes_pix/', 
+        blank=True, 
+        null=True,
+        help_text="QR Code PIX para pagamento das inscrições do evento"
+    )
 
     # Coordenadas para mapa
     latitude = models.FloatField(blank=True, null=True)
@@ -186,20 +199,20 @@ class Inscricao(models.Model):
         ('lista_espera', 'Lista de Espera'),
     ]
 
+    # Choices para método de pagamento (atualmente apenas PIX)
     METODO_PAGAMENTO_CHOICES = [
-        ('cartao_credito', 'Cartão de Crédito'),
-        ('cartao_debito', 'Cartão de Débito'),
         ('pix', 'PIX'),
     ]
 
+    # Choices para status de pagamento
     STATUS_PAGAMENTO_CHOICES = [
-        ('pendente', 'Pendente'),
-        ('aprovado', 'Aprovado'),
-        ('rejeitado', 'Rejeitado'),
-        ('reembolsado', 'Reembolsado'),
+        ('pendente', 'Pendente'),     # Aguardando pagamento
+        ('aprovado', 'Aprovado'),     # Pagamento confirmado
+        ('rejeitado', 'Rejeitado'),   # Pagamento não aprovado
+        ('reembolsado', 'Reembolsado'), # Valor reembolsado
     ]
 
-    # Identificação
+    # Identificação única da inscrição
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     # Relacionamentos (usando CustomUser existente)
@@ -228,15 +241,38 @@ class Inscricao(models.Model):
     valor_final = models.DecimalField(max_digits=10, decimal_places=2)
 
     # Dados de pagamento
-    metodo_pagamento = models.CharField(max_length=20, choices=METODO_PAGAMENTO_CHOICES)
-    status_pagamento = models.CharField(max_length=20, choices=STATUS_PAGAMENTO_CHOICES, default='pendente')
+    metodo_pagamento = models.CharField(
+        max_length=20, 
+        choices=METODO_PAGAMENTO_CHOICES, 
+        default='pix',
+        help_text="Método de pagamento utilizado (padrão: PIX)"
+    )
+    status_pagamento = models.CharField(
+        max_length=20, 
+        choices=STATUS_PAGAMENTO_CHOICES, 
+        default='pendente',
+        help_text="Status atual do pagamento da inscrição"
+    )
 
-    # Check-in
-    checkin_realizado = models.BooleanField(default=False)
-    data_checkin = models.DateTimeField(blank=True, null=True)
+    # Check-in no evento
+    checkin_realizado = models.BooleanField(
+        default=False,
+        help_text="Indica se o participante fez check-in no evento"
+    )
+    data_checkin = models.DateTimeField(
+        blank=True, 
+        null=True,
+        help_text="Data e hora do check-in realizado"
+    )
 
-    # QR Code
-    qr_code = models.CharField(max_length=100, unique=True, blank=True, null=True)
+    # QR Code único da inscrição
+    qr_code = models.CharField(
+        max_length=100, 
+        unique=True, 
+        blank=True, 
+        null=True,
+        help_text="Código QR único da inscrição para check-in"
+    )
 
     # Termos
     aceita_termos = models.BooleanField(default=False)
@@ -253,11 +289,15 @@ class Inscricao(models.Model):
         return f"{self.usuario.username} - {self.evento.titulo}"
 
     def save(self, *args, **kwargs):
-        """Override save para gerar QR code único"""
+        """
+        Override do save para gerar QR code único da inscrição.
+        Formato: BST-{8 primeiros dígitos do UUID}-{8 dígitos aleatórios}
+        """
         if not self.qr_code:
-            # Primeiro salva para gerar o ID
+            # Salva primeiro para gerar o UUID se necessário
             if not self.pk:
                 super().save(*args, **kwargs)
+            # Gera QR code único para check-in
             self.qr_code = f"BST-{str(self.id)[:8].upper()}-{uuid.uuid4().hex[:8].upper()}"
         super().save(*args, **kwargs)
 

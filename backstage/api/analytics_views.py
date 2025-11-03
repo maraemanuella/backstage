@@ -47,7 +47,7 @@ def evento_analytics_geral(request, evento_id):
     if inscricoes_confirmadas > 0:
         taxa_comparecimento = round((checkins_realizados / inscricoes_confirmadas) * 100, 1)
     
-    # Receita
+    # Receita total (apenas pagamentos aprovados)
     receita_total = inscricoes.filter(
         status_pagamento='aprovado'
     ).aggregate(total=Sum('valor_final'))['total'] or Decimal('0')

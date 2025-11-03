@@ -98,18 +98,26 @@ WSGI_APPLICATION = 'backstage.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
-        # For hosted Postgres (Supabase) require SSL
-        'OPTIONS': {
-            'sslmode': os.getenv('DB_SSLMODE', 'require')
-        }
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# # PostgreSQL Configuration (comentado temporariamente)
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv('DB_NAME'),
+#         'USER': os.getenv('DB_USER'),
+#         'PASSWORD': os.getenv('DB_PASSWORD'),
+#         'HOST': os.getenv('DB_HOST'),
+#         'PORT': os.getenv('DB_PORT'),
+#         # For hosted Postgres (Supabase) require SSL
+#         'OPTIONS': {
+#             'sslmode': os.getenv('DB_SSLMODE', 'require')
+#         }
+#     }
+# }
 
 
 # Password validation

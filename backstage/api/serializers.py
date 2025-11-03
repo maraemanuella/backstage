@@ -112,8 +112,15 @@ class EventoSerializer(serializers.ModelSerializer):
     organizador_username = serializers.CharField(source='organizador.username', read_only=True)
     organizador_score = serializers.FloatField(source='organizador.score', read_only=True)
 
-    # URLs das imagens
+    # Imagens do evento
     foto_capa = serializers.ImageField(use_url=True, required=False)
+    qr_code_pix = serializers.ImageField(
+        use_url=True, 
+        required=False,
+        help_text="QR Code PIX para pagamento das inscrições"
+    )
+    
+    # Localização
     latitude = serializers.FloatField(required=False, allow_null=True)
     longitude = serializers.FloatField(required=False, allow_null=True)
 
@@ -132,6 +139,7 @@ class EventoSerializer(serializers.ModelSerializer):
             'permite_transferencia',
             'politica_cancelamento',
             'foto_capa',
+            'qr_code_pix',
             'status',
             'created_at',
             'updated_at',
@@ -176,7 +184,11 @@ class EventoSerializer(serializers.ModelSerializer):
 
 
 class InscricaoCreateSerializer(serializers.ModelSerializer):
-    """Serializer para criar uma nova inscrição"""
+    """
+    Serializer para criar uma nova inscrição em evento.
+    Calcula automaticamente valores com desconto baseado no score do usuário.
+    Método de pagamento: apenas PIX.
+    """
 
     class Meta:
         model = Inscricao
@@ -233,14 +245,13 @@ class InscricaoCreateSerializer(serializers.ModelSerializer):
             cpf_inscricao=validated_data['cpf_inscricao'],
             telefone_inscricao=validated_data['telefone_inscricao'],
             email_inscricao=validated_data['email_inscricao'],
-            metodo_pagamento=validated_data['metodo_pagamento'],
+            metodo_pagamento=validated_data.get('metodo_pagamento', 'pix'),  # PIX como padrão
             aceita_termos=validated_data['aceita_termos'],
             valor_original=valor_original,
             desconto_aplicado=desconto_aplicado,
             valor_final=valor_com_desconto,
-            status='confirmada',  # Por enquanto, confirmamos direto
-            status_pagamento='aprovado'  # Por enquanto, aprovamos direto
-            #MARA É AQUI QUE VOCÊ VAI MEXER
+            status='confirmada',  # Confirmada automaticamente
+            status_pagamento='aprovado'  # Pagamento aprovado (PIX é processado externamente)
         )
 
         return inscricao

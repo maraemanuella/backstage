@@ -190,6 +190,11 @@ def evento_resumo_inscricao(request, evento_id):
     desconto_aplicado = valor_original - valor_com_desconto
     percentual_desconto = (desconto_aplicado / valor_original * 100) if valor_original > 0 else 0
 
+    # Gera URL absoluta do QR Code PIX para pagamento (se cadastrado)
+    qr_code_pix_url = None
+    if evento.qr_code_pix:
+        qr_code_pix_url = request.build_absolute_uri(evento.qr_code_pix.url)
+
     data = {
         'evento': {
             'id': evento.id,
@@ -205,6 +210,7 @@ def evento_resumo_inscricao(request, evento_id):
             'permite_transferencia': evento.permite_transferencia,
             'politica_cancelamento': evento.politica_cancelamento,
             'itens_incluidos': evento.itens_incluidos,
+            'qr_code_pix': qr_code_pix_url,
         },
         'organizador': {
             'nome': evento.organizador.get_full_name() or evento.organizador.username,
