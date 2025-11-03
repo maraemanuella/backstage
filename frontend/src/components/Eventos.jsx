@@ -39,7 +39,7 @@ function Eventos({ eventos }) {
 
   const getImageUrl = (imagem) => {
     if (!imagem) return null;
-    return imagem.startsWith('http') ? imagem : `${import.meta.env.VITE_API_URL}${imagem}`;
+    return imagem.startsWith('http') ? imagem : imagem;
   };
 
   const formatDateTime = (dateString) => {
