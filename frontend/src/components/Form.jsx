@@ -3,6 +3,7 @@ import { toast, ToastContainer } from "react-toastify";
 import api from "../api.js";
 import { useNavigate } from "react-router-dom";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "../constants.js";
+import PasswordStrengthIndicator from "./PasswordStrengthIndicator";
 import "react-toastify/dist/ReactToastify.css";
 import '../styles/Form.css'
 import Img from '../assets/logo.png'
@@ -146,6 +147,18 @@ function Form({ route, method }) {
                   required
                   className="block w-full px-3 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition"
                 />
+                {!isLogin && <PasswordStrengthIndicator password={password} />}
+                {isLogin && (
+                  <div className="text-right mt-2">
+                    <button
+                      type="button"
+                      onClick={() => navigate("/forgot-password")}
+                      className="text-sm text-gray-600 hover:text-black hover:underline"
+                    >
+                      Esqueci minha senha
+                    </button>
+                  </div>
+                )}
               </div>
 
               <button
