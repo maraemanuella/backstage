@@ -7,7 +7,8 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from apps.users.views import (
     CreateUserView, CustomTokenObtainView, ListUsersView,
     RetrieveUpdateUserView, DeleteUserView, MeView,
-    update_user_profile, verificar_documento, status_documento
+    update_user_profile, verificar_documento, status_documento,
+    listar_verificacoes_pendentes, aprovar_verificacao, rejeitar_verificacao
 )
 from apps.users.views import GoogleLoginView
 
@@ -33,7 +34,10 @@ from apps.analytics.views import (
     evento_analytics_geral, evento_analytics_demograficos, evento_analytics_interacoes,
     evento_analytics_roi, evento_analytics_atualizar_custo, evento_analytics_exportar_pdf
 )
-from apps.dashboard.views import dashboard_metricas
+from apps.dashboard.views import (
+    dashboard_metricas, dashboard_metricas_globais, dashboard_organizadores,
+    dashboard_verificacoes, dashboard_performance, dashboard_logs
+)
 from apps.checkin.views import realizar_checkin
 
 urlpatterns = [
@@ -62,6 +66,11 @@ urlpatterns = [
 
     # User Management (Admin)
     path('api/user-management/', include('apps.user_management.urls')),
+
+    # Verificação de Documentos (Admin)
+    path('api/admin/verificacoes/pendentes/', listar_verificacoes_pendentes, name='admin-verificacoes-pendentes'),
+    path('api/admin/verificacoes/<int:user_id>/aprovar/', aprovar_verificacao, name='admin-aprovar-verificacao'),
+    path('api/admin/verificacoes/<int:user_id>/rejeitar/', rejeitar_verificacao, name='admin-rejeitar-verificacao'),
 
     # Eventos
     path('api/eventos/', EventoListView.as_view(), name='evento-list'),
@@ -110,8 +119,15 @@ urlpatterns = [
     path('api/eventos/<uuid:evento_id>/analytics/atualizar-custo/', evento_analytics_atualizar_custo, name='evento-analytics-atualizar-custo'),
     path('api/eventos/<uuid:evento_id>/analytics/exportar-pdf/', evento_analytics_exportar_pdf, name='evento-analytics-exportar-pdf'),
 
-    # Dashboard
+    # Dashboard do Organizador
     path('api/dashboard/metricas/', dashboard_metricas, name='dashboard-metricas'),
+
+    # Dashboard Admin
+    path('api/admin/dashboard/metricas/', dashboard_metricas_globais, name='admin-dashboard-metricas'),
+    path('api/admin/dashboard/organizadores/', dashboard_organizadores, name='admin-dashboard-organizadores'),
+    path('api/admin/dashboard/verificacoes/', dashboard_verificacoes, name='admin-dashboard-verificacoes'),
+    path('api/admin/dashboard/performance/', dashboard_performance, name='admin-dashboard-performance'),
+    path('api/admin/dashboard/logs/', dashboard_logs, name='admin-dashboard-logs'),
 
     # Check-in
     path('api/checkin/<uuid:inscricao_id>/', realizar_checkin, name='realizar-checkin'),

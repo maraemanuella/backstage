@@ -33,6 +33,8 @@ import UserManagement from "./pages/UserManagement";
 import PaymentPage from "./pages/PaymentPage";
 import InscriptionSuccess from "./pages/InscriptionSuccess";
 import GerenciarPagamentos from "./pages/GerenciarPagamentos";
+import DashboardAdmin from "./pages/DashboardAdmin";
+import VerificarDocumentosAdmin from "./pages/VerificarDocumentosAdmin";
 
 
 function Logout() {
@@ -317,6 +319,26 @@ function App() {
             element={
               <ProtectedRoute>
                 <EventoAnalytics />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Dashboard Admin */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardAdmin />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Verificação de Documentos Admin */}
+          <Route
+            path="/admin/verificar-documentos"
+            element={
+              <ProtectedRoute>
+                <VerificarDocumentosAdmin />
               </ProtectedRoute>
             }
           />

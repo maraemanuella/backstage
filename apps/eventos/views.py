@@ -10,11 +10,21 @@ from .serializers import EventoSerializer
 
 
 class EventoCreateView(generics.CreateAPIView):
+    """
+    View para criar eventos.
+    Requer que o usuário tenha documento verificado.
+    """
     queryset = Evento.objects.all()
     serializer_class = EventoSerializer
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
+        if self.request.user.documento_verificado != 'aprovado':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied({
+                'error': 'Você precisa verificar seu documento antes de criar eventos.',
+                'status_verificacao': self.request.user.documento_verificado
+            })
         serializer.save(
             organizador=self.request.user,
             status='publicado'
@@ -98,20 +108,42 @@ def evento_resumo_inscricao(request, evento_id):
 
 
 class ManageEventosView(generics.ListAPIView):
+    """
+    Retorna uma lista de todos os eventos (publicados ou não)
+    criados pelo usuário autenticado (o organizador).
+    Requer que o usuário tenha documento verificado.
+    """
     serializer_class = EventoSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
+        if user.documento_verificado != 'aprovado':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied({
+                'error': 'Você precisa verificar seu documento antes de gerenciar eventos.',
+                'status_verificacao': user.documento_verificado
+            })
         return Evento.objects.filter(organizador=user).order_by('-created_at')
 
 
 class EventoRetrieveUpdateView(generics.RetrieveUpdateAPIView):
+    """
+    View para buscar (GET) e atualizar (PATCH/PUT) um evento específico
+    criado pelo usuário logado.
+    Requer que o usuário tenha documento verificado.
+    """
     parser_classes = (MultiPartParser, FormParser)
     serializer_class = EventoSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = 'id'
 
     def get_queryset(self):
+        if self.request.user.documento_verificado != 'aprovado':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied({
+                'error': 'Você precisa verificar seu documento antes de gerenciar eventos.',
+                'status_verificacao': self.request.user.documento_verificado
+            })
         return Evento.objects.filter(organizador=self.request.user)
 

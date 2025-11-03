@@ -64,7 +64,15 @@ function EventoAnalytics() {
       
       // Buscar usuário
       const userRes = await api.get("api/user/me/");
-      setUser(userRes.data);
+      const userData = userRes.data;
+      setUser(userData);
+      
+      // Verificar se o documento foi aprovado
+      if (userData.documento_verificado !== 'aprovado') {
+        alert('Você precisa verificar seu documento antes de acessar analytics de eventos.');
+        navigate('/verificar-documento');
+        return;
+      }
       
       // Buscar dados de analytics
       const [geralRes, demograficosRes, interacoesRes, roiRes] = await Promise.allSettled([

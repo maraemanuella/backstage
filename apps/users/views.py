@@ -4,13 +4,12 @@ from rest_framework.response import Response
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from rest_framework.decorators import api_view, permission_classes
-import time
 import requests
 import os
 import secrets
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import CustomTokenSerializer, UserSerializer, DocumentoVerificacaoSerializer
+from .serializers import CustomTokenSerializer, UserSerializer, DocumentoVerificacaoSerializer, VerificacaoDocumentoAdminSerializer
 
 User = get_user_model()
 
@@ -116,15 +115,16 @@ def update_user_profile(request):
 def verificar_documento(request):
     user = request.user
     if user.documento_verificado == 'aprovado':
-        return Response({'error': 'Seu documento j foi verificado e aprovado.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Seu documento já foi verificado e aprovado.'}, status=status.HTTP_400_BAD_REQUEST)
 
     serializer = DocumentoVerificacaoSerializer(user, data=request.data, partial=True)
     if serializer.is_valid():
-        serializer.save(documento_verificado='verificando')
-        time.sleep(7)
-        user.documento_verificado = 'aprovado'
-        user.save()
-        return Response({'status': 'aprovado', 'mensagem': 'Documento verificado com sucesso! Voc j pode criar eventos.'})
+        # Salva o documento com status "pendente" para aguardar aprovação manual do admin
+        serializer.save(documento_verificado='pendente')
+        return Response({
+            'status': 'pendente', 
+            'mensagem': 'Documento enviado com sucesso! Aguarde a análise de um administrador.'
+        })
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -212,4 +212,102 @@ class GoogleLoginView(APIView):
 
         except Exception as e:
             return Response({'error': f'Erro ao processar login Google: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ===========================
+# VERIFICAÇÃO DE DOCUMENTOS (ADMIN)
+# ===========================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def listar_verificacoes_pendentes(request):
+    """
+    Lista todos os usuários com documentos pendentes de verificação.
+    Apenas administradores podem acessar.
+    """
+    if not request.user.is_staff:
+        return Response(
+            {'error': 'Acesso negado. Apenas administradores podem acessar este recurso.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    # Filtra usuários que enviaram documento (tipo_documento preenchido) 
+    # e que não foram aprovados ainda
+    usuarios = User.objects.filter(
+        tipo_documento__isnull=False
+    ).exclude(
+        documento_verificado='aprovado'
+    ).order_by('-date_joined')
+    
+    serializer = VerificacaoDocumentoAdminSerializer(usuarios, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def aprovar_verificacao(request, user_id):
+    """
+    Aprova a verificação de documento de um usuário.
+    Apenas administradores podem executar esta ação.
+    """
+    if not request.user.is_staff:
+        return Response(
+            {'error': 'Acesso negado. Apenas administradores podem aprovar verificações.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    try:
+        usuario = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'Usuário não encontrado.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    # Atualiza o status para aprovado
+    usuario.documento_verificado = 'aprovado'
+    usuario.save()
+    
+    serializer = VerificacaoDocumentoAdminSerializer(usuario)
+    return Response({
+        'message': f'Documento de {usuario.username} aprovado com sucesso!',
+        'usuario': serializer.data
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def rejeitar_verificacao(request, user_id):
+    """
+    Rejeita a verificação de documento de um usuário.
+    Apenas administradores podem executar esta ação.
+    """
+    if not request.user.is_staff:
+        return Response(
+            {'error': 'Acesso negado. Apenas administradores podem rejeitar verificações.'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    try:
+        usuario = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'Usuário não encontrado.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    motivo = request.data.get('motivo', 'Documento não aprovado.')
+    
+    # Atualiza o status para rejeitado
+    usuario.documento_verificado = 'rejeitado'
+    usuario.save()
+    
+    # TODO: Enviar email para o usuário informando a rejeição e o motivo
+    
+    serializer = VerificacaoDocumentoAdminSerializer(usuario)
+    return Response({
+        'message': f'Documento de {usuario.username} rejeitado.',
+        'motivo': motivo,
+        'usuario': serializer.data
+    })
 
