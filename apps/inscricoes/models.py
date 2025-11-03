@@ -50,6 +50,12 @@ class Inscricao(models.Model):
 
     metodo_pagamento = models.CharField(max_length=20, choices=METODO_PAGAMENTO_CHOICES)
     status_pagamento = models.CharField(max_length=20, choices=STATUS_PAGAMENTO_CHOICES, default='pendente')
+    
+    # Campos para rastreamento de pagamento
+    data_pagamento = models.DateTimeField(blank=True, null=True, verbose_name="Data do Pagamento")
+    comprovante_pagamento = models.ImageField(upload_to='comprovantes_pagamento/', blank=True, null=True, verbose_name="Comprovante de Pagamento")
+    id_transacao_gateway = models.CharField(max_length=200, blank=True, null=True, verbose_name="ID da Transação")
+    observacoes_pagamento = models.TextField(blank=True, null=True, verbose_name="Observações sobre o Pagamento")
 
     checkin_realizado = models.BooleanField(default=False)
     data_checkin = models.DateTimeField(blank=True, null=True)

@@ -10,7 +10,12 @@ class EventoSerializer(serializers.ModelSerializer):
     organizador_username = serializers.CharField(source='organizador.username', read_only=True)
     organizador_score = serializers.FloatField(source='organizador.score', read_only=True)
 
+<<<<<<< HEAD
     foto_capa = serializers.SerializerMethodField()
+=======
+    foto_capa = serializers.ImageField(use_url=True, required=False)
+    qr_code_pix = serializers.ImageField(use_url=True, required=False)
+>>>>>>> 2131f23 (Correçao no pagamento)
     latitude = serializers.FloatField(required=False, allow_null=True)
     longitude = serializers.FloatField(required=False, allow_null=True)
 
@@ -29,6 +34,7 @@ class EventoSerializer(serializers.ModelSerializer):
             'permite_transferencia',
             'politica_cancelamento',
             'foto_capa',
+            'qr_code_pix',
             'status',
             'created_at',
             'updated_at',

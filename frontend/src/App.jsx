@@ -30,6 +30,9 @@ import EditEvent from "./pages/EditEvent.jsx";
 import CriarEvento from "./pages/CriarEvento";
 import EventoAnalytics from "./pages/EventoAnalytics";
 import UserManagement from "./pages/UserManagement";
+import PaymentPage from "./pages/PaymentPage";
+import InscriptionSuccess from "./pages/InscriptionSuccess";
+import GerenciarPagamentos from "./pages/GerenciarPagamentos";
 
 
 function Logout() {
@@ -110,6 +113,36 @@ function App() {
             element={
               <ProtectedRoute>
                 <RegistrationSuccess />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Pagamento */}
+          <Route
+            path="/pagamento/:inscricaoId"
+            element={
+              <ProtectedRoute>
+                <PaymentPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Sucesso da inscrição */}
+          <Route
+            path="/inscricoes/sucesso"
+            element={
+              <ProtectedRoute>
+                <InscriptionSuccess />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Gerenciar pagamentos (organizador) */}
+          <Route
+            path="/eventos/:eventoId/gerenciar-pagamentos"
+            element={
+              <ProtectedRoute>
+                <GerenciarPagamentos />
               </ProtectedRoute>
             }
           />

@@ -53,6 +53,7 @@ class Evento(models.Model):
     )
 
     foto_capa = models.ImageField(upload_to='eventos/capas/', blank=True, null=True)
+    qr_code_pix = models.ImageField(upload_to='eventos/qrcodes_pix/', blank=True, null=True)
 
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
