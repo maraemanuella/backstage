@@ -23,7 +23,7 @@ function Home() {
         setLoading(true);
         
         const [userRes, eventosRes, favoritesRes] = await Promise.allSettled([
-          api.get("api/user/me/"),
+          api.get("/api/user/me/"),
           api.get("/api/eventos/"),
           api.get("/api/favorites/")
         ]);

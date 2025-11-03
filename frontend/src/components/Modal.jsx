@@ -7,6 +7,7 @@ import {
   X,
   PlusCircle,
   AlertCircle,
+  CircleHelp,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -154,7 +155,7 @@ function Modal({ isOpen, setOpenModal, user }) {
           {/* Footer com perfil e logout */}
           <div className="ml-2 mt-[410px] text-black p-1 rounded w-[280px] cursor-pointer hover:bg-black  hover:text-white transition-colors duration-300">
             <Link to="/sac" className="flex gap-1 items-center">
-              <CircleQuestionMark className="h-5 w-5 ml-2" /> SAC
+              <CircleHelp className="h-5 w-5 ml-2" /> SAC
             </Link>
           </div>
           <div className="absolute bottom-0 left-0 right-0 flex flex-row items-center border-t border-gray-200 bg-white p-4">

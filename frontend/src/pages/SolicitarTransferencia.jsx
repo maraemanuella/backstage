@@ -63,7 +63,7 @@ function SolicitarTransferencia() {
       }
     }
 
-    api.get("api/user/me/")
+    api.get("/api/user/me/")
       .then(res => setUser(res.data))
       .catch(console.error);
 

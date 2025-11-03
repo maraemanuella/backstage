@@ -16,7 +16,7 @@ export default function EventosPassados() {
         setLoading(true);
         
         const [userRes, inscricoesRes] = await Promise.allSettled([
-          api.get("api/user/me/"),
+          api.get("/api/user/me/"),
           api.get('/api/inscricoes/minhas/')
         ]);
 
