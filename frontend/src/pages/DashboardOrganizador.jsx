@@ -64,15 +64,7 @@ function DashboardOrganizador() {
         ]);
 
         if (userRes.status === 'fulfilled') {
-          const userData = userRes.value.data;
-          setUser(userData);
-          
-          // Verificar se o documento foi aprovado
-          if (userData.documento_verificado !== 'aprovado') {
-            alert('Você precisa verificar seu documento antes de acessar o dashboard de organizador.');
-            navigate('/verificar-documento');
-            return;
-          }
+          setUser(userRes.value.data);
         }
 
         // Buscar dados das APIs

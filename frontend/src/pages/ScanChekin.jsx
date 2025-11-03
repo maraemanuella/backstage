@@ -70,44 +70,11 @@ const ScanCheckin = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [checkinHistory, setCheckinHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [user, setUser] = useState(null);
-  const [isVerified, setIsVerified] = useState(false);
   const scannerRef = useRef(null);
   const html5QrcodeScannerRef = useRef(null);
 
-  // Verificar documento antes de qualquer coisa
-  useEffect(() => {
-    const verificarDocumento = async () => {
-      try {
-        const response = await axios.get('/api/user/me/', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('access_token')}`
-          }
-        });
-        
-        const userData = response.data;
-        setUser(userData);
-        
-        if (userData.documento_verificado !== 'aprovado') {
-          alert('Você precisa verificar seu documento antes de realizar check-ins.');
-          navigate('/verificar-documento');
-          return;
-        }
-        
-        setIsVerified(true);
-      } catch (error) {
-        console.error('Erro ao verificar usuário:', error);
-        navigate('/login');
-      }
-    };
-    
-    verificarDocumento();
-  }, [navigate]);
-
   // Detectar se é dispositivo móvel
   useEffect(() => {
-    if (!isVerified) return; // Só executa se verificado
-    
     const checkIfMobile = () => {
       const userAgent = navigator.userAgent || navigator.vendor || window.opera;
       const mobileCheck = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
@@ -117,7 +84,7 @@ const ScanCheckin = () => {
     };
 
     checkIfMobile();
-  }, [isVerified]);
+  }, []);
 
   // Inicializar scanner
   useEffect(() => {

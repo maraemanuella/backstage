@@ -39,22 +39,14 @@ function EditEvent() {
           api.get("/api/user/me/"),
         ]);
 
-        const userData = userResponse.data;
         const data = eventoResponse.data;
-
-        // Verificar se o documento foi aprovado
-        if (userData.documento_verificado !== 'aprovado') {
-          alert('Você precisa verificar seu documento antes de editar eventos.');
-          navigate('/verificar-documento');
-          return;
-        }
 
         if (data.data_evento) {
           data.data_evento = data.data_evento.slice(0, 16);
         }
 
         setEvento((prev) => ({ ...prev, ...data }));
-        setUser(userData);
+        setUser(userResponse.data);
         setError(null);
       } catch (err) {
         setError(
@@ -67,7 +59,7 @@ function EditEvent() {
     };
 
     fetchData();
-  }, [id, navigate]);
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
