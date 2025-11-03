@@ -35,6 +35,11 @@ function CriarEvento() {
       try {
         const response = await api.get('/api/user/me/')
         setUser(response.data)
+
+        if (response.data.documento_verificado !== 'aprovado') {
+          alert('Você precisa verificar seu documento antes de criar eventos.')
+          navigate('/verificar-documento')
+        }
       } catch (error) {
         console.error('Erro ao verificar usuário:', error)
         navigate('/login')
