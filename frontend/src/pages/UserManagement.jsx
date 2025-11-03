@@ -54,23 +54,14 @@ const UserManagement = () => {
     const fetchCurrentUser = async () => {
       try {
         const resp = await api.get('api/user/me/');
-        const userData = resp.data;
-        setUser(userData);
-        
-        // Verificar se é admin
-        if (!userData.is_staff) {
-          alert('Acesso negado. Apenas administradores podem acessar o gerenciamento de usuários.');
-          navigate('/');
-          return;
-        }
+        setUser(resp.data);
       } catch (err) {
         console.warn('Não foi possível obter usuário atual', err);
-        navigate('/');
       }
     };
 
     fetchCurrentUser();
-  }, [filter, navigate]);
+  }, [filter]);
 
   return (
     <main className="min-h-screen bg-gray-50">

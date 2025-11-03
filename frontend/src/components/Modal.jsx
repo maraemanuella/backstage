@@ -7,58 +7,17 @@ import {
   X,
   PlusCircle,
   AlertCircle,
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
-import MeuEvento from "./MeuEvento";
-import {
-  ChartNoAxesColumn,
-  LayoutDashboard,
-  LogOut,
-  Settings,
-  TicketCheck,
-  X,
-  PlusCircle,
-  AlertCircle,
   CircleHelp,
-  FileCheck
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import MeuEvento from "./MeuEvento";
-import { useState, useEffect } from 'react';
-import api from "../api.js";
-import profile from "../assets/profile.png";
+import { useState } from "react";
+import profile from "../assets/profile.png"; // Adjust the path as necessary
 
 function Modal({ isOpen, setOpenModal, user }) {
   const navigate = useNavigate();
   const [showAlert, setShowAlert] = useState(false);
-  const [hasEvents, setHasEvents] = useState(false);
-  const [checkingEvents, setCheckingEvents] = useState(true);
-
-  // Verificar se o usuário tem eventos criados
-  useEffect(() => {
-    const checkUserEvents = async () => {
-      if (!user) {
-        setCheckingEvents(false);
-        return;
-      }
-
-      try {
-        const response = await api.get("/api/manage/");
-        setHasEvents(response.data.length > 0);
-      } catch (error) {
-        console.error("Erro ao verificar eventos:", error);
-        setHasEvents(false);
-      } finally {
-        setCheckingEvents(false);
-      }
-    };
-
-    if (isOpen) {
-      checkUserEvents();
-    }
-  }, [user, isOpen]);
 
   const handleLogout = () => {
     // Limpa todos os dados do localStorage
@@ -82,10 +41,7 @@ function Modal({ isOpen, setOpenModal, user }) {
   };
 
   const handleCriarEvento = () => {
-    const status = user?.documento_verificado;
-    const isVerified = status === "aprovado";
-
-    if (!isVerified) {
+    if (!user?.documento_verificado) {
       setShowAlert(true);
       return;
     }
@@ -93,7 +49,7 @@ function Modal({ isOpen, setOpenModal, user }) {
     setOpenModal(false);
     navigate("/criar-evento");
   };
-  
+
   if (isOpen) {
     return (
       <div
@@ -132,8 +88,7 @@ function Modal({ isOpen, setOpenModal, user }) {
                       onClick={() => {
                         setShowAlert(false);
                         setOpenModal(false);
-                        navigate('/verificar-documento');
-
+                        navigate("/credenciamento");
                       }}
                       className="px-3 py-1.5 bg-amber-600 text-white text-xs font-medium rounded hover:bg-amber-700 transition-colors"
                     >
@@ -190,45 +145,11 @@ function Modal({ isOpen, setOpenModal, user }) {
               </a>
             </li>
 
-            
-            {user?.is_staff && (
-              <>
-                <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
-                  <button
-                    onClick={() => {
-                      navigate('/admin/dashboard');
-                      setOpenModal(false);
-                    }}
-                    className="flex gap-3 items-center w-full text-left"
-                  >
-                    <Settings className="h-5 w-5" />
-                    <span>Dashboard Admin</span>
-                  </button>
-                </li>
-                
-                <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
-                  <button
-                    onClick={() => {
-                      navigate('/admin/verificar-documentos');
-                      setOpenModal(false);
-                    }}
-                    className="flex gap-3 items-center w-full text-left"
-                  >
-                    <FileCheck className="h-5 w-5" />
-                    <span>Verificar Documentos</span>
-                  </button>
-                </li>
-              </>
-            )}
-
-            {/* Botão Gerenciar Eventos - Apenas para admins ou organizadores com eventos */}
-            {(user?.is_staff || hasEvents) && !checkingEvents && (
-              <li className="ml-2 text-black p-1 rounded w-[280px] shadow-7xl cursor-pointer mt-4 hover:bg-black  hover:text-white transition-colors duration-300">
-                <Link to="/gerenciar" className="flex gap-1 items-center">
-                  <Settings className="h-5 w-5 ml-2" /> Gerenciar eventos
-                </Link>
-              </li>
-            )}
+            <li className="ml-2 text-black p-1 rounded w-[280px] shadow-7xl cursor-pointer mt-4 hover:bg-black  hover:text-white transition-colors duration-300">
+              <Link to="/gerenciar" className="flex gap-1 items-center">
+                <Settings className="h-5 w-5 ml-2" /> Gerenciar eventos
+              </Link>
+            </li>
           </ul>
 
           {/* Footer com perfil e logout */}

@@ -12,32 +12,10 @@ const GerenciarPagamentos = () => {
   const [inscricoesPendentes, setInscricoesPendentes] = useState([]);
   const [error, setError] = useState('');
   const [processando, setProcessando] = useState(null);
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const verificarUsuario = async () => {
-      try {
-        const userRes = await api.get('/api/user/me/');
-        const userData = userRes.data;
-        setUser(userData);
-        
-        // Verificar se o documento foi aprovado
-        if (userData.documento_verificado !== 'aprovado') {
-          alert('Você precisa verificar seu documento antes de gerenciar pagamentos.');
-          navigate('/verificar-documento');
-          return;
-        }
-        
-        // Se aprovado, carrega os pagamentos
-        carregarPagamentosPendentes();
-      } catch (err) {
-        console.error('Erro ao verificar usuário:', err);
-        navigate('/');
-      }
-    };
-    
-    verificarUsuario();
-  }, [eventoId, navigate]);
+    carregarPagamentosPendentes();
+  }, [eventoId]);
 
   const carregarPagamentosPendentes = async () => {
     try {

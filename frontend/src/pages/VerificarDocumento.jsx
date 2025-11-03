@@ -105,7 +105,7 @@ function VerificarDocumento() {
           </h1>
           <p className="text-lg text-gray-600 leading-relaxed">
             Para criar eventos, é necessário verificar sua identidade através de um documento oficial (CPF ou CNPJ).
-            Após o envio, um administrador irá analisar e aprovar seu documento.
+            O processo de verificação leva até 30 segundos.
           </p>
         </div>
 
@@ -119,20 +119,6 @@ function VerificarDocumento() {
                   Documento verificado com sucesso!
                 </strong>
                 <p className="text-gray-600">Você já pode criar eventos.</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {statusAtual === "pendente" && (
-          <div className="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6 mb-6">
-            <div className="flex items-center">
-              <span className="text-3xl mr-3">📋</span>
-              <div>
-                <strong className="text-blue-700 text-xl block mb-1">
-                  Aguardando análise
-                </strong>
-                <p className="text-gray-600">Seu documento foi enviado e está aguardando aprovação de um administrador.</p>
               </div>
             </div>
           </div>
