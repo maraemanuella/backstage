@@ -9,7 +9,6 @@ import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
-import Notifications from "./pages/Notifications";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EventDescription from "./pages/EventDescription";
 import Waitlist from "./pages/Waitlist";
@@ -30,8 +29,11 @@ import ManageEvent from "./pages/ManageEvent";
 import EditEvent from "./pages/EditEvent.jsx";
 import CriarEvento from "./pages/CriarEvento";
 import EventoAnalytics from "./pages/EventoAnalytics";
+import Sac from "./pages/Sac.jsx";
 import UserManagement from "./pages/UserManagement";
-
+import PaymentPage from "./pages/PaymentPage";
+import InscriptionSuccess from "./pages/InscriptionSuccess";
+import GerenciarPagamentos from "./pages/GerenciarPagamentos";
 
 function Logout() {
   localStorage.clear();
@@ -114,6 +116,36 @@ function App() {
               </ProtectedRoute>
             }
           />
+          
+          {/* Pagamento */}
+          <Route
+            path="/pagamento/:inscricaoId"
+            element={
+              <ProtectedRoute>
+                <PaymentPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Sucesso da inscrição */}
+          <Route
+            path="/inscricoes/sucesso"
+            element={
+              <ProtectedRoute>
+                <InscriptionSuccess />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Gerenciar pagamentos (organizador) */}
+          <Route
+            path="/eventos/:eventoId/gerenciar-pagamentos"
+            element={
+              <ProtectedRoute>
+                <GerenciarPagamentos />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Check-in */}
           <Route
@@ -167,16 +199,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <EditProfile />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Notificações */}
-          <Route
-            path="/notificacoes"
-            element={
-              <ProtectedRoute>
-                <Notifications />
               </ProtectedRoute>
             }
           />
@@ -255,6 +277,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <ManageEvent />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* SAC */}
+          <Route
+            path="/sac"
+            element={
+              <ProtectedRoute>
+                <Sac />
               </ProtectedRoute>
             }
           />

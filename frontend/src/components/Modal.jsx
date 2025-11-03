@@ -6,12 +6,13 @@ import {
   TicketCheck,
   X,
   PlusCircle,
-  AlertCircle
+  AlertCircle,
+  CircleHelp,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import MeuEvento from "./MeuEvento";
-import { useState } from 'react';
+import { useState } from "react";
 import profile from "../assets/profile.png"; // Adjust the path as necessary
 
 function Modal({ isOpen, setOpenModal, user }) {
@@ -40,14 +41,13 @@ function Modal({ isOpen, setOpenModal, user }) {
   };
 
   const handleCriarEvento = () => {
-    
     if (!user?.documento_verificado) {
-      setShowAlert(true); 
+      setShowAlert(true);
       return;
     }
-    
+
     setOpenModal(false);
-    navigate('/criar-evento');
+    navigate("/criar-evento");
   };
 
   if (isOpen) {
@@ -80,14 +80,15 @@ function Modal({ isOpen, setOpenModal, user }) {
                     Credenciamento Necessário
                   </h3>
                   <p className="text-xs text-amber-800 leading-relaxed mb-3">
-                    Para criar eventos, você precisa fazer o credenciamento com o CNPJ da sua empresa ou CPF.
+                    Para criar eventos, você precisa fazer o credenciamento com
+                    o CNPJ da sua empresa ou CPF.
                   </p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
                         setShowAlert(false);
                         setOpenModal(false);
-                        navigate('/credenciamento');
+                        navigate("/credenciamento");
                       }}
                       className="px-3 py-1.5 bg-amber-600 text-white text-xs font-medium rounded hover:bg-amber-700 transition-colors"
                     >
@@ -111,12 +112,11 @@ function Modal({ isOpen, setOpenModal, user }) {
             </li>
 
             <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-black hover:text-white transition-colors duration-300 mb-2">
-              <button 
+              <button
                 onClick={handleCriarEvento}
                 className="flex gap-3 items-center w-full text-left"
-
               >
-                <PlusCircle className="h-5 w-5" /> 
+                <PlusCircle className="h-5 w-5" />
                 <span>Criar Evento</span>
               </button>
             </li>
@@ -131,23 +131,16 @@ function Modal({ isOpen, setOpenModal, user }) {
               </button>
             </li>
 
-            <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
-              <a href="#" className="flex gap-3 items-center">
-                <TicketCheck className="h-5 w-5" />
-                <span>Check-in</span>
-              </a>
-            </li>
-
-            <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
-              <a href="#" className="flex gap-3 items-center">
-                <ChartNoAxesColumn className="h-5 w-5" />
-                <span>Painel Financeiro</span>
-              </a>
-            </li>
-
             <li className="ml-2 text-black p-1 rounded w-[280px] shadow-7xl cursor-pointer mt-4 hover:bg-black  hover:text-white transition-colors duration-300">
               <Link to="/gerenciar" className="flex gap-1 items-center">
                 <Settings className="h-5 w-5 ml-2" /> Gerenciar eventos
+              </Link>
+            </li>
+
+            <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
+              <Link to="/sac" className="flex gap-3 items-center">
+                <CircleHelp className="h-5 w-5" />
+                <span>SAC</span>
               </Link>
             </li>
           </ul>

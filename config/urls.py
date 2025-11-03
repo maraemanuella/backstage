@@ -19,7 +19,9 @@ from apps.eventos.views import (
     evento_resumo_inscricao, ManageEventosView, EventoRetrieveUpdateView
 )
 from apps.inscricoes.views import (
-    InscricaoCreateView, MinhasInscricoesView, inscricao_detalhes
+    InscricaoCreateView, MinhasInscricoesView, inscricao_detalhes,
+    iniciar_inscricao_pagamento, confirmar_pagamento_inscricao,
+    aprovar_pagamento_inscricao, listar_pagamentos_pendentes
 )
 from apps.avaliacoes.views import AvaliacaoListView, AvaliacaoCreateView
 from apps.favoritos.views import list_favorites, toggle_favorite
@@ -31,7 +33,9 @@ from apps.analytics.views import (
     evento_analytics_geral, evento_analytics_demograficos, evento_analytics_interacoes,
     evento_analytics_roi, evento_analytics_atualizar_custo, evento_analytics_exportar_pdf
 )
-from apps.dashboard.views import dashboard_metricas
+from apps.dashboard.views import (
+    dashboard_metricas, eventos_proximos, eventos_anteriores, notificacoes, graficos
+)
 from apps.checkin.views import realizar_checkin
 
 urlpatterns = [
@@ -74,6 +78,12 @@ urlpatterns = [
     path('api/inscricoes/minhas/', MinhasInscricoesView.as_view(), name='minhas-inscricoes'),
     path('api/inscricoes/<uuid:inscricao_id>/', inscricao_detalhes, name='inscricao-detail'),
     path('api/registrations/<uuid:inscricao_id>/', inscricao_detalhes, name='registration-detail'),
+    
+    # Pagamento PIX
+    path('api/inscricoes/iniciar-pagamento/', iniciar_inscricao_pagamento, name='iniciar-inscricao-pagamento'),
+    path('api/inscricoes/<uuid:inscricao_id>/confirmar-pagamento/', confirmar_pagamento_inscricao, name='confirmar-pagamento'),
+    path('api/inscricoes/<uuid:inscricao_id>/aprovar-pagamento/', aprovar_pagamento_inscricao, name='aprovar-pagamento'),
+    path('api/inscricoes/evento/<uuid:evento_id>/pagamentos-pendentes/', listar_pagamentos_pendentes, name='pagamentos-pendentes'),
 
     # Avaliações
     path('api/eventos/<uuid:evento_id>/avaliacoes/', AvaliacaoListView.as_view(), name='avaliacao-list'),
@@ -104,12 +114,13 @@ urlpatterns = [
 
     # Dashboard
     path('api/dashboard/metricas/', dashboard_metricas, name='dashboard-metricas'),
+    path('api/dashboard/eventos-proximos/', eventos_proximos, name='dashboard-eventos-proximos'),
+    path('api/dashboard/eventos-anteriores/', eventos_anteriores, name='dashboard-eventos-anteriores'),
+    path('api/dashboard/notificacoes/', notificacoes, name='dashboard-notificacoes'),
+    path('api/dashboard/graficos/', graficos, name='dashboard-graficos'),
 
     # Check-in
     path('api/checkin/<uuid:inscricao_id>/', realizar_checkin, name='realizar-checkin'),
-    
-    # Notificações
-    path('api/notificacoes/', include('apps.notificacoes.urls')),
 ]
 
 if settings.DEBUG:

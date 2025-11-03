@@ -10,7 +10,8 @@ class EventoSerializer(serializers.ModelSerializer):
     organizador_username = serializers.CharField(source='organizador.username', read_only=True)
     organizador_score = serializers.FloatField(source='organizador.score', read_only=True)
 
-    foto_capa = serializers.SerializerMethodField()
+    foto_capa = serializers.ImageField(use_url=True, required=False)
+    qr_code_pix = serializers.ImageField(use_url=True, required=False)
     latitude = serializers.FloatField(required=False, allow_null=True)
     longitude = serializers.FloatField(required=False, allow_null=True)
 
@@ -29,6 +30,7 @@ class EventoSerializer(serializers.ModelSerializer):
             'permite_transferencia',
             'politica_cancelamento',
             'foto_capa',
+            'qr_code_pix',
             'status',
             'created_at',
             'updated_at',
@@ -46,11 +48,6 @@ class EventoSerializer(serializers.ModelSerializer):
             'inscritos_count', 'vagas_disponiveis', 'esta_lotado',
             'organizador_nome', 'organizador_username', 'organizador_score'
         ]
-
-    def get_foto_capa(self, obj):
-        if obj.foto_capa:
-            return obj.foto_capa.url
-        return None
 
     def create(self, validated_data):
         evento = Evento.objects.create(**validated_data)

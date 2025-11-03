@@ -92,6 +92,10 @@ class InscricaoSerializer(serializers.ModelSerializer):
             'valor_final',
             'metodo_pagamento',
             'status_pagamento',
+            'data_pagamento',
+            'comprovante_pagamento',
+            'id_transacao_gateway',
+            'observacoes_pagamento',
             'checkin_realizado',
             'data_checkin',
             'qr_code',
@@ -114,7 +118,8 @@ class InscricaoSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             'id', 'status', 'valor_original', 'desconto_aplicado',
-            'valor_final', 'qr_code', 'qr_code_image', 'created_at', 'updated_at', 'evento_id'
+            'valor_final', 'qr_code', 'qr_code_image', 'created_at', 'updated_at', 'evento_id',
+            'data_pagamento', 'id_transacao_gateway'
         ]
 
     def get_evento_foto_capa(self, obj):

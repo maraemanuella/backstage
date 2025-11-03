@@ -60,7 +60,7 @@ function DashboardOrganizador() {
         setLoading(true);
         
         const [userRes] = await Promise.allSettled([
-          api.get("api/user/me/")
+          api.get("/api/user/me/")
         ]);
 
         if (userRes.status === 'fulfilled') {

@@ -63,7 +63,7 @@ function EventoAnalytics() {
       setLoading(true);
       
       // Buscar usuário
-      const userRes = await api.get("api/user/me/");
+      const userRes = await api.get("/api/user/me/");
       setUser(userRes.data);
       
       // Buscar dados de analytics

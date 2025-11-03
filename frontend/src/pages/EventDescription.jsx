@@ -56,7 +56,7 @@ function EventDescription() {
     }
 
     api
-      .get(`api/eventos/${eventId}/`)
+      .get(`/api/eventos/${eventId}/`)
       .then((res) => {
         setEvent(res.data);
         console.log(res.data);
@@ -72,7 +72,7 @@ function EventDescription() {
       });
 
     api
-      .get(`api/eventos/${eventId}/avaliacoes/`)
+      .get(`/api/eventos/${eventId}/avaliacoes/`)
       .then((res) => {
         // Ensure we always set an array
         const data = Array.isArray(res.data) ? res.data : [];
@@ -183,14 +183,14 @@ function EventDescription() {
         return;
       }
       await api.post(
-        `api/eventos/${eventId}/avaliacoes/criar/`,
+        `/api/eventos/${eventId}/avaliacoes/criar/`,
         { comentario, nota },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success("Avaliação enviada!");
       setComentario("");
       setNota(0);
-      const res = await api.get(`api/eventos/${eventId}/avaliacoes/`);
+      const res = await api.get(`/api/eventos/${eventId}/avaliacoes/`);
       setAvaliacoes(res.data);
     } catch (err) {
       let errorMessage = "Erro ao enviar avaliação.";
