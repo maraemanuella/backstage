@@ -164,7 +164,7 @@ function Modal({ isOpen, setOpenModal, user }) {
             >
               {user?.profile_photo ? (
                 <img
-                  src={`${import.meta.env.VITE_API_URL}${user.profile_photo}`}
+                  src={user.profile_photo}
                   alt="Foto de perfil"
                   className="w-10 h-10 rounded-full object-cover"
                   onError={(e) => {

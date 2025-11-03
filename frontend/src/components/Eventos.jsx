@@ -20,6 +20,12 @@ function Eventos({ eventos }) {
 
   const toggleFavorite = async (eventoId) => {
     try {
+      // Debug: ensure eventoId is valid
+      if (!eventoId || String(eventoId).includes('<')) {
+        console.error('toggleFavorite: eventoId inválido:', eventoId);
+        return;
+      }
+      console.debug('toggleFavorite:', eventoId);
       const res = await api.post(`/api/favorites/toggle/${eventoId}/`);
       if (res.data.favorito) {
         setFavorites([...favorites, eventoId]);
@@ -33,7 +39,7 @@ function Eventos({ eventos }) {
 
   const getImageUrl = (imagem) => {
     if (!imagem) return null;
-    return imagem.startsWith('http') ? imagem : `${import.meta.env.VITE_API_URL}${imagem}`;
+    return imagem.startsWith('http') ? imagem : imagem;
   };
 
   const formatDateTime = (dateString) => {

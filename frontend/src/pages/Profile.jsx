@@ -39,12 +39,9 @@ function Profile() {
         return;
       }
 
-      console.log('Fazendo requisição para /api/user/me/');
       const response = await api.get('api/user/me/', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      console.log('User data:', response.data); // Debug log
-      console.log('Profile photo path:', response.data.profile_photo); // Debug específico para foto
       setUser(response.data);
     } catch (err) {
       console.error('Erro ao carregar perfil:', err);
@@ -187,15 +184,11 @@ function Profile() {
                   <img 
                     src={user.profile_photo.startsWith('http') 
                       ? user.profile_photo 
-                      : `${import.meta.env.VITE_API_URL}${user.profile_photo}`
+                      : user.profile_photo
                     }
                     alt="Foto do perfil" 
                     className="w-full h-full object-cover rounded-full"
-                    onLoad={() => console.log('Imagem carregada com sucesso:', user.profile_photo)}
                     onError={(e) => {
-                      console.log('Erro ao carregar imagem:', e.target.src);
-                      console.log('Profile photo do user:', user.profile_photo);
-                      // Se der erro, mostra o ícone padrão
                       e.target.style.display = 'none';
                     }}
                   />

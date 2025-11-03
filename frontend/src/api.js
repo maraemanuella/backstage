@@ -1,8 +1,15 @@
 import axios from "axios";
 import { ACCESS_TOKEN, REFRESH_TOKEN } from "./constants.js";
 
+let API_BASE = import.meta.env.VITE_API_URL || '';
+
+// Normalize API_BASE: remove trailing slash and avoid '/api' duplication
+if (API_BASE.endsWith('/')) API_BASE = API_BASE.slice(0, -1);
+if (API_BASE === '/api') API_BASE = ''; // prefer proxy when developer set /api
+if (API_BASE.endsWith('/api')) API_BASE = API_BASE.slice(0, -4);
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: API_BASE,
 });
 
 // Intercepta cada requisição e adiciona o token de acesso
@@ -35,8 +42,8 @@ api.interceptors.response.use(
       }
 
       try {
-        // Tenta pegar novo access token
-        const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/token/refresh/`, {
+        // Tenta pegar novo access token via instancia 'api' (respeita proxy/baseURL)
+        const response = await api.post(`/api/token/refresh/`, {
           refresh: refreshToken,
         });
 

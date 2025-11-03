@@ -23,7 +23,6 @@ function InscriptionForm({ eventId }) {
     cpf_inscricao: ''
   })
   
-  const [metodoPagamento, setMetodoPagamento] = useState('')
   const [aceitouTermos, setAceitouTermos] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
@@ -76,10 +75,6 @@ function InscriptionForm({ eventId }) {
       toast.error('CPF deve conter 11 dígitos')
       return
     }
-    if (!metodoPagamento) {
-      toast.error('Selecione um método de pagamento')
-      return
-    }
     if (!aceitouTermos) {
       toast.error('Você precisa aceitar os termos para prosseguir')
       return
@@ -92,36 +87,30 @@ function InscriptionForm({ eventId }) {
 
     try {
       const payload = {
-        evento: eventId,
+        evento_id: eventId,
         ...dadosParticipante,
         cpf_inscricao: cpfLimpo,
-        metodo_pagamento: metodoPagamento,
         aceita_termos: aceitouTermos
       }
-      console.log('Payload inscrição:', payload)
-      const response = await api.post('/api/inscricoes/', payload)
+      
+      console.log('Criando inscrição com pagamento PIX:', payload)
+      
+      // Usa o novo endpoint que retorna o QR Code
+      const response = await api.post('/api/inscricoes/iniciar-pagamento/', payload)
 
-      console.log('Inscrição criada:', response.data)
-      toast.success('Inscrição realizada com sucesso!')
-
-      // Navega para a página de finalização/QR code
-      if (response.data && response.data.id) {
-        navigate(`/inscricao-realizada/${response.data.id}`)
+      console.log('Inscrição iniciada:', response.data)
+      
+      // Redireciona para a página de pagamento com os dados
+      if (response.data && response.data.inscricao_id) {
+        navigate(`/pagamento/${response.data.inscricao_id}`, {
+          state: {
+            paymentData: response.data
+          }
+        })
         return
       }
 
-      // Fallback: busca as inscrições do usuário e encontra a inscrição para este evento
-      try {
-        const minhas = await api.get('/api/inscricoes/minhas/')
-        const inscricoes = minhas.data || []
-        const match = inscricoes.find(i => String(i.evento_id || i.evento || i.event) === String(eventId) || String(i.evento) === String(eventId))
-        if (match && match.id) {
-          navigate(`/inscricao-realizada/${match.id}`)
-          return
-        }
-      } catch (e) {
-        console.error('Erro ao buscar minhas inscrições para fallback:', e)
-      }
+      toast.error('Erro ao processar inscrição: dados incompletos')
     } catch (err) {
       console.error('Erro:', err)
 
@@ -136,8 +125,10 @@ function InscriptionForm({ eventId }) {
         } else if (typeof data === 'object') {
           // junta mensagens de campos e non_field_errors
           const parts = []
+          if (data.error) parts.push(data.error)
           if (data.detail) parts.push(data.detail)
           Object.keys(data).forEach(key => {
+            if (key === 'error' || key === 'detail') return
             const val = data[key]
             if (Array.isArray(val)) parts.push(`${key}: ${val.join(' ')}`)
             else if (typeof val === 'string') parts.push(`${key}: ${val}`)
@@ -182,16 +173,29 @@ function InscriptionForm({ eventId }) {
               dadosParticipante={dadosParticipante}
               onInputChange={handleInputChange}
             />
-            <PaymentMethodSelector 
-              metodoPagamento={metodoPagamento}
-              onSelect={setMetodoPagamento}
-            />
+            
+            <div className="payment-info-box">
+              <h3>💳 Método de Pagamento</h3>
+              <div className="pix-only-notice">
+                <div className="pix-icon">
+                  <svg width="40" height="40" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M242.4 292.5C247.8 287.1 247.8 278.2 242.4 272.8L155.5 185.9C150.1 180.5 141.2 180.5 135.8 185.9L106.6 215.1C101.2 220.5 101.2 229.4 106.6 234.8L193.5 321.7C198.9 327.1 207.8 327.1 213.2 321.7L242.4 292.5Z" fill="#32BCAD"/>
+                    <path d="M405.4 234.8L318.5 321.7C313.1 327.1 304.2 327.1 298.8 321.7L269.6 292.5C264.2 287.1 264.2 278.2 269.6 272.8L356.5 185.9C361.9 180.5 370.8 180.5 376.2 185.9L405.4 215.1C410.8 220.5 410.8 229.4 405.4 234.8Z" fill="#32BCAD"/>
+                  </svg>
+                </div>
+                <p><strong>Pagamento via PIX</strong></p>
+                <p className="pix-description">
+                  Após preencher seus dados, você será direcionado para a página de pagamento 
+                  onde poderá escanear o QR Code PIX do evento.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="summary-section">
             <FinancialSummary 
               eventData={eventData}
-              metodoPagamento={metodoPagamento}
+              metodoPagamento="pix"
               aceitouTermos={aceitouTermos}
               onTermosChange={setAceitouTermos}
               onSubmit={handleSubmit}

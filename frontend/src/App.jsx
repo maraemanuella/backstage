@@ -1,7 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { FavoritesProvider } from "./contexts/FavoritesContext.jsx";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
@@ -27,6 +30,10 @@ import EditEvent from "./pages/EditEvent.jsx";
 import CriarEvento from "./pages/CriarEvento";
 import EventoAnalytics from "./pages/EventoAnalytics";
 import Sac from "./pages/Sac.jsx";
+import UserManagement from "./pages/UserManagement";
+import PaymentPage from "./pages/PaymentPage";
+import InscriptionSuccess from "./pages/InscriptionSuccess";
+import GerenciarPagamentos from "./pages/GerenciarPagamentos";
 
 function Logout() {
   localStorage.clear();
@@ -40,10 +47,11 @@ function RegisterAndLogout() {
 
 function App() {
   return (
-    <FavoritesProvider>
-      <BrowserRouter>
-        <TitleUpdater />
-        <Routes>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <FavoritesProvider>
+        <BrowserRouter>
+          <TitleUpdater />
+          <Routes>
           {/* Página inicial */}
           <Route
             path="/"
@@ -71,6 +79,22 @@ function App() {
               </PublicRoute>
             }
           />
+          <Route
+            path="/forgot-password"
+            element={
+              <PublicRoute>
+                <ForgotPassword />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/reset-password/:uid/:token"
+            element={
+              <PublicRoute>
+                <ResetPassword />
+              </PublicRoute>
+            }
+          />
           <Route path="/logout" element={<Logout />} />
 
           {/* Eventos */}
@@ -89,6 +113,36 @@ function App() {
             element={
               <ProtectedRoute>
                 <RegistrationSuccess />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Pagamento */}
+          <Route
+            path="/pagamento/:inscricaoId"
+            element={
+              <ProtectedRoute>
+                <PaymentPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Sucesso da inscrição */}
+          <Route
+            path="/inscricoes/sucesso"
+            element={
+              <ProtectedRoute>
+                <InscriptionSuccess />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Gerenciar pagamentos (organizador) */}
+          <Route
+            path="/eventos/:eventoId/gerenciar-pagamentos"
+            element={
+              <ProtectedRoute>
+                <GerenciarPagamentos />
               </ProtectedRoute>
             }
           />
@@ -237,6 +291,16 @@ function App() {
             }
           />
 
+          {/* Gestão de Usuários (apenas para administradores) */}
+          <Route
+            path="/user-management"
+            element={
+              <ProtectedRoute>
+                <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Editar Eventos */}
           <Route
             path="/gerenciar/editar/:id"
@@ -272,6 +336,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </FavoritesProvider>
+    </GoogleOAuthProvider>
   );
 }
 
