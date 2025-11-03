@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import api from "../api.js";
+import { GoogleMap, Marker } from "@react-google-maps/api";
+import { useGoogleMaps } from "../hooks/useGoogleMaps.js";
 import {
   FaMapMarkerAlt,
   FaClock,
@@ -12,6 +14,7 @@ import {
   FaUsers,
   FaCheckCircle,
   FaShareAlt,
+  FaQrcode,
 } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -38,6 +41,7 @@ function InfoItem({ icon, children }) {
 function EventDescription() {
   const { eventId } = useParams();
   const navigate = useNavigate();
+  const { isLoaded: mapsLoaded } = useGoogleMaps();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,19 +51,35 @@ function EventDescription() {
   const [comentario, setComentario] = useState("");
   const [nota, setNota] = useState(0);
   const [enviandoAvaliacao, setEnviandoAvaliacao] = useState(false);
+  const [eventoExpirado, setEventoExpirado] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [isInWaitlist, setIsInWaitlist] = useState(false);
+  const [waitlistPosition, setWaitlistPosition] = useState(null);
+  const [inscricaoId, setInscricaoId] = useState(null);
 
   useEffect(() => {
     if (!eventId) {
-      setError("ID do evento não fornecido");
+      setError("ID do evento n├úo fornecido");
       setLoading(false);
       return;
     }
 
     api
-      .get(`api/eventos/${eventId}/`)
+      .get(`/api/eventos/${eventId}/`)
       .then((res) => {
         setEvent(res.data);
-        console.log(res.data);
+
+        // Verificar se já passaram 30 minutos do início do evento
+        if (res.data.data_evento) {
+          const dataEvento = new Date(res.data.data_evento);
+          const agora = new Date();
+          const diferencaMinutos = (agora - dataEvento) / (1000 * 60); // Diferença em minutos
+
+          if (diferencaMinutos > 30) {
+            setEventoExpirado(true);
+          }
+        }
+
         setLoading(false);
       })
       .catch((err) => {
@@ -72,137 +92,101 @@ function EventDescription() {
       });
 
     api
-      .get(`api/eventos/${eventId}/avaliacoes/`)
+      .get(`/api/eventos/${eventId}/avaliacoes/`)
       .then((res) => {
-        // Ensure we always set an array
-        const data = Array.isArray(res.data) ? res.data : [];
-        setAvaliacoes(data);
+        setAvaliacoes(res.data);
       })
       .catch((err) => {
-        console.error("Erro ao carregar avaliações:", err);
         setAvaliacoes([]);
       });
 
     const fetchResumo = async () => {
       try {
-        const token = localStorage.getItem("access");
-        if (!token) return;
-        const res = await api.get(`/api/eventos/${eventId}/resumo-inscricao/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.data && typeof res.data.ja_inscrito !== "undefined") {
-          setIsRegistered(!!res.data.ja_inscrito);
+        const token = localStorage.getItem('access')
+        if (!token) return
+        const res = await api.get(`/api/eventos/${eventId}/resumo-inscricao/`, { headers: { Authorization: `Bearer ${token}` } })
+
+        if (res.data && typeof res.data.ja_inscrito !== 'undefined') {
+          setIsRegistered(!!res.data.ja_inscrito)
+
+          // Capturar o ID da inscrição se existir
+          if (res.data.inscricao_id) {
+            setInscricaoId(res.data.inscricao_id)
+          }
         }
       } catch (err) {
-        console.error("Erro ao buscar resumo da inscrição:", err);
-        console.error("Detalhes:", err.response?.data);
+        console.error('Erro ao buscar resumo de inscrição:', err);
       }
-    };
+    }
     fetchResumo();
+
+    // Verificar se está nos favoritos
+    const checkFavorite = async () => {
+      try {
+        const token = localStorage.getItem('access');
+        if (!token) return;
+        const res = await api.get('/api/favorites/', { headers: { Authorization: `Bearer ${token}` } });
+        const favorited = res.data.some(fav => fav.evento === eventId || fav.evento?.id === eventId);
+        setIsFavorited(favorited);
+      } catch (err) {
+        console.error('Erro ao verificar favoritos:', err);
+      }
+    }
+    checkFavorite();
+
+    // Verificar status na waitlist
+    const checkWaitlist = async () => {
+      try {
+        const token = localStorage.getItem('access');
+        if (!token) return;
+        const res = await api.get(`/api/waitlist/${eventId}/status/`, { headers: { Authorization: `Bearer ${token}` } });
+        if (res.data.na_waitlist) {
+          setIsInWaitlist(true);
+          setWaitlistPosition(res.data.posicao);
+        }
+      } catch (err) {
+        console.error('Erro ao verificar waitlist:', err);
+      }
+    }
+    checkWaitlist();
   }, [eventId]);
-
-  // ---------- Inscrição ----------
-  const handleRegister = async () => {
-    if (isRegistered) {
-      toast.info("Você já está inscrito neste evento!");
-      return;
-    }
-    if (event.esta_lotado || event.vagas_disponiveis <= 0) {
-      toast.error("Evento lotado! Não há mais vagas disponíveis.");
-      return;
-    }
-    const token = localStorage.getItem("access");
-    if (!token) {
-      toast.info("Você precisa estar logado para se inscrever");
-      navigate("/login");
-      return;
-    }
-    navigate(`/inscricao/${eventId}`);
-  };
-
-  // ---------- Lista de Espera ----------
-  const handleWaitlist = () => {
-    const isLotado =
-      event && (event.esta_lotado === true || Number(event.vagas_disponiveis) <= 0);
-    if (!isLotado) {
-      toast.info("Ainda há vagas — você pode se inscrever normalmente.");
-      return navigate(`/inscricao/${eventId}`);
-    }
-    navigate(`/evento/${eventId}/waitlist`);
-  };
-
-  // ---------- Check-in ----------
-  const handleCheckin = async () => {
-    try {
-      const token = localStorage.getItem("access");
-      if (!token) {
-        toast.error("Você precisa estar logado para fazer check-in.");
-        navigate("/login");
-        return;
-      }
-
-      const res = await api.get("/api/inscricoes/minhas/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.data || res.data.length === 0) {
-        toast.error("Nenhuma inscrição encontrada.");
-        return;
-      }
-
-      const inscricaoEvento = res.data.find(
-        (i) => i.evento_id === event.id
-      );
-
-      if (!inscricaoEvento) {
-        toast.error("Inscrição correspondente a este evento não encontrada.");
-        return;
-      }
-
-      toast.success("Check-in iniciado com sucesso!");
-      navigate(`/checkin/${inscricaoEvento.id}`);
-    } catch (err) {
-      console.error(err);
-      toast.error("Erro ao processar o check-in.");
-    }
-  };
-
-  // ---------- Avaliações ----------
   const handleAvaliacaoSubmit = async (e) => {
     e.preventDefault();
     if (!comentario || nota < 0 || nota > 5) {
-      toast.error("Preencha o comentário e selecione uma nota de 0 a 5.");
+      toast.error("Preencha o coment├írio e selecione uma nota de 0 a 5.");
       return;
     }
     setEnviandoAvaliacao(true);
     try {
-      const token = localStorage.getItem("access");
+      // Recupera o token JWT do localStorage
+      const token = localStorage.getItem('access');
       if (!token) {
-        toast.error("Você precisa estar logado para avaliar.");
+        toast.error("Voc├¬ precisa estar logado para avaliar.");
         setEnviandoAvaliacao(false);
         return;
       }
       await api.post(
-        `api/eventos/${eventId}/avaliacoes/criar/`,
+        `/api/eventos/${eventId}/avaliacoes/criar/`,
         { comentario, nota },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success("Avaliação enviada!");
+      toast.success("Avalia├º├úo enviada!");
       setComentario("");
       setNota(0);
-      const res = await api.get(`api/eventos/${eventId}/avaliacoes/`);
+      // Atualizar lista de avalia├º├Áes
+      const res = await api.get(`/api/eventos/${eventId}/avaliacoes/`);
       setAvaliacoes(res.data);
     } catch (err) {
-      let errorMessage = "Erro ao enviar avaliação.";
+      let errorMessage = "Erro ao enviar avalia├º├úo.";
       if (err.response?.data) {
-        if (typeof err.response.data === "string") {
+        if (typeof err.response.data === 'string') {
           errorMessage = err.response.data;
         } else if (err.response.data.error) {
           errorMessage = err.response.data.error;
         } else if (Array.isArray(err.response.data)) {
-          errorMessage = err.response.data.join(" ");
+          errorMessage = err.response.data.join(' ');
         } else {
-          errorMessage = Object.values(err.response.data).join(" ");
+          errorMessage = Object.values(err.response.data).join(' ');
         }
       }
       toast.error(errorMessage);
@@ -211,7 +195,111 @@ function EventDescription() {
     }
   };
 
+  const handleRegister = async () => {
+    // Verificar se o evento expirou (30 minutos após o início)
+    if (eventoExpirado) {
+      toast.error("Prazo de inscrição encerrado. Já se passaram 30 minutos do início do evento.");
+      return;
+    }
+
+    // Redirect to the full inscription form instead of calling a non-existing endpoint
+    if (isRegistered) {
+      toast.info("Você já está inscrito no evento!");
+      return;
+    }
+
+    if (event.esta_lotado || event.vagas_disponiveis <= 0) {
+      toast.error("Evento lotado! Não há mais vagas disponíveis.");
+      return;
+    }
+
+    // Verifica se o usuário está autenticado antes de navegar para o formulário
+    const token = localStorage.getItem('access');
+    if (!token) {
+      toast.info("Você precisa estar logado para se inscrever");
+      navigate('/login');
+      return;
+    }
+
+    // Navega para a página de inscrição onde o usuário preencherá o formulário
+    navigate(`/inscricao/${eventId}`);
+  };
+
+  const handleFavorite = async () => {
+    const token = localStorage.getItem('access');
+    if (!token) {
+      toast.info("Você precisa estar logado para favoritar");
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const res = await api.post(
+        `/api/favorites/toggle/${eventId}/`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setIsFavorited(res.data.favorito);
+
+      if (res.data.favorito) {
+        toast.success("Evento adicionado aos favoritos!");
+      } else {
+        toast.info("Evento removido dos favoritos");
+      }
+    } catch (err) {
+      console.error('Erro ao favoritar:', err);
+      toast.error("Erro ao favoritar evento");
+    }
+  };
+
+  const handleWaitlist = async () => {
+    const token = localStorage.getItem('access');
+    if (!token) {
+      toast.info("Você precisa estar logado para entrar na lista de espera");
+      navigate('/login');
+      return;
+    }
+
+    try {
+      if (isInWaitlist) {
+        // Sair da waitlist
+        await api.post(
+          `/api/waitlist/${eventId}/leave/`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setIsInWaitlist(false);
+        setWaitlistPosition(null);
+        toast.success("Você saiu da lista de espera");
+      } else {
+        // Entrar na waitlist
+        const res = await api.post(
+          `/api/waitlist/${eventId}/join/`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setIsInWaitlist(true);
+        setWaitlistPosition(res.data.posicao);
+        toast.success(`Você entrou na lista de espera! Posição: ${res.data.posicao}`);
+      }
+    } catch (err) {
+      console.error('Erro na waitlist:', err);
+      const errorMessage = err.response?.data?.error || "Erro ao processar lista de espera";
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleCheckin = () => {
+    if (!inscricaoId) {
+      toast.error("ID da inscrição não encontrado");
+      return;
+    }
+    navigate(`/checkin/${inscricaoId}`);
+  };
+
   const handleBack = () => navigate("/");
+
 
   if (loading) return <p className="text-center">Carregando evento...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
@@ -226,7 +314,7 @@ function EventDescription() {
     <div className="bg-gray-50 min-h-screen py-6 px-2 md:px-0">
       <ToastContainer />
       <div className="max-w-7xl mx-auto bg-white rounded-xl shadow p-6 md:p-14">
-        {/* Banner */}
+        {/* Foto/Capa do Evento */}
         <div className="w-full h-48 md:h-56 bg-gray-200 rounded-lg mb-6 flex items-center justify-center overflow-hidden">
           {event.foto_capa ? (
             <img src={event.foto_capa} alt="Capa do Evento" className="object-cover w-full h-full" />
@@ -235,7 +323,6 @@ function EventDescription() {
           )}
         </div>
 
-        {/* Voltar */}
         <div className="flex items-center mb-4">
           <EventButton
             className="bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 flex items-center gap-2 px-3 py-1 text-sm mr-2"
@@ -245,33 +332,36 @@ function EventDescription() {
           </EventButton>
         </div>
 
-        {/* Título */}
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{event.titulo}</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+          {event.titulo}
+        </h1>
 
-        {/* Infos */}
         <div className="flex flex-col gap-2 mt-4 mb-6">
           <InfoItem icon={<FaCalendarAlt />}>
             {event.data_evento ? new Date(event.data_evento).toLocaleDateString("pt-BR") : ""}
           </InfoItem>
           <InfoItem icon={<FaClock />}>
-            {event.data_evento ? new Date(event.data_evento).toLocaleTimeString("pt-BR") : ""}
+            {event.data_evento
+              ? new Date(event.data_evento).toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit"
+                })
+              : ""}
           </InfoItem>
           <InfoItem icon={<FaMapMarkerAlt />}>{event.endereco}</InfoItem>
         </div>
 
-        {/* Organizador */}
+        {/* Informa├º├Áes do organizador */}
         <section className="mt-4 mb-6 flex items-center gap-4">
           <div className="flex items-center gap-2">
             <FaUser className="text-gray-600" />
-            <span className="font-semibold text-gray-800">
-              {event.organizador_nome || event.organizador_username || "Organizador"}
-            </span>
+            <span className="font-semibold text-gray-800">{event.organizador_nome || event.organizador_username || "Organizador"}</span>
             <FaStar className="text-yellow-400 ml-2" />
             <span className="text-gray-700">{event.organizador_score || "5.0"}</span>
           </div>
         </section>
 
-        {/* Capacidade */}
+        {/* Capacidade do evento */}
         <div className="mt-2 mb-6">
           <div className="w-full h-2 bg-gray-200 rounded-full mb-1">
             <div
@@ -280,134 +370,135 @@ function EventDescription() {
             ></div>
           </div>
           <span className="text-sm text-gray-600">
-            {event.inscritos_count}/{event.capacidade_maxima} inscritos —{" "}
-            {event.vagas_disponiveis} vagas restantes
+            {event.inscritos_count}/{event.capacidade_maxima} inscritos - {event.vagas_disponiveis} vagas restantes
           </span>
         </div>
 
-        {/* Valores */}
+        {/* Valores do evento */}
         <section className="mb-6">
           <h3 className="font-semibold mb-2">Valores</h3>
           <div className="flex gap-4 items-center">
-            <span className="text-gray-700">
-              Depósito original: <b>R$ {event.valor_deposito || "0,00"}</b>
-            </span>
-            <span className="text-green-700">
-              Com desconto: <b>R$ {event.valor_com_desconto || "0,00"}</b>
-            </span>
+            <span className="text-gray-700">Depósito original: <b>R$ {event.valor_deposito || "0,00"}</b></span>
+            <span className="text-green-700">Com desconto: <b>R$ {event.valor_com_desconto || "0,00"}</b></span>
           </div>
         </section>
 
-        {/* Ações */}
-        <div className="flex flex-wrap gap-4 mt-4 mb-6">
+        {/* Botões de ação */}
+        <div className="flex gap-4 mt-4 mb-6 flex-wrap">
           <EventButton
-              onClick={handleRegister}
-              disabled={registering || isRegistered || event.esta_lotado || event.vagas_disponiveis <= 0}
-              className={`
-                flex items-center gap-2 px-8 py-3
-                ${
-                  registering || isRegistered || event.esta_lotado || event.vagas_disponiveis <= 0
-                    ? "bg-gray-400 text-gray-200 cursor-not-allowed"
-                    : "bg-green-600 text-white hover:bg-green-700 cursor-pointer"
-                }
-              `}
-            >
-              <FaCheckCircle />
-              {isRegistered
-                ? "Já inscrito"
-                : event.esta_lotado || event.vagas_disponiveis <= 0
-                ? "Lotado"
-                : "Se inscrever"}
-            </EventButton>
-
-          <EventButton
-            className="bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-2 px-8 py-3"
-            onClick={handleWaitlist}
+            className="bg-green-600 text-white hover:bg-green-700 flex items-center gap-2 px-8 py-3 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            onClick={handleRegister}
+            disabled={registering || isRegistered || event.esta_lotado || event.vagas_disponiveis <= 0 || eventoExpirado}
           >
-            <FaUsers /> Lista de espera
+            <FaCheckCircle />
+            {eventoExpirado
+              ? "Prazo Encerrado"
+              : isRegistered
+              ? "Já Inscrito"
+              : event.esta_lotado || event.vagas_disponiveis <= 0
+              ? "Lotado"
+              : "Se inscrever"}
           </EventButton>
 
+          {/* Botão de Check-in - só aparece se estiver inscrito */}
+          {isRegistered && inscricaoId && (
+            <EventButton
+              className="bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2 px-8 py-3"
+              onClick={handleCheckin}
+            >
+              <FaQrcode />
+              Fazer Check-in
+            </EventButton>
+          )}
+
+          <EventButton
+            className={`${isInWaitlist ? 'bg-yellow-500 text-white hover:bg-yellow-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} flex items-center gap-2 px-8 py-3`}
+            onClick={handleWaitlist}
+          >
+            <FaUsers />
+            {isInWaitlist
+              ? `Na lista (Pos. ${waitlistPosition})`
+              : "Lista de espera"}
+          </EventButton>
           <EventButton className="bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-2 px-8 py-3">
             <FaShareAlt /> Compartilhar
           </EventButton>
-
-          {/* Só mostra Check-in se inscrito */}
-          {isRegistered && (
-            <EventButton
-              className="bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2 px-8 py-3 hover:cursor-pointer"
-              onClick={handleCheckin}
-            >
-              <FaStar /> Check-in
-            </EventButton>
-          )}
+          <EventButton
+            className={`${isFavorited ? 'bg-yellow-500 text-white hover:bg-yellow-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} flex items-center gap-2 px-8 py-3`}
+            onClick={handleFavorite}
+          >
+            <FaStar />
+            {isFavorited ? "Favoritado" : "Favoritar"}
+          </EventButton>
         </div>
 
-        {/* Descrição */}
         <section className="mt-6">
           <h2 className="text-lg font-semibold mb-2">Sobre o Evento</h2>
           <p className="text-gray-700">{event.descricao}</p>
         </section>
 
-        {/* Mapa */}
-        {event.latitude && event.longitude && (
-          <section className="mt-6">
-            <h3 className="font-semibold mb-2">Localização</h3>
-            <div className="w-full h-56 rounded-lg overflow-hidden">
-              <iframe
-                src={`https://www.google.com/maps/embed/v1/view?zoom=19&center=${event.latitude},${event.longitude}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`}
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="Localização do evento"
-                className="rounded-b-lg"
-              />
-            </div>
-          </section>
-        )}
-
-        {/* Política de Cancelamento */}
+        {/* Mapa interativo */}
         <section className="mt-6">
-          <h3 className="font-semibold mb-2">Política de Cancelamento</h3>
-          <p className="text-gray-700">
-            {event.politica_cancelamento || "Cancelamento permitido até 24h antes do evento."}
-          </p>
+          <h3 className="font-semibold mb-2">Localização</h3>
+          <div className="w-full h-56 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+            {!mapsLoaded ? (
+              <span className="text-gray-500">Carregando mapa...</span>
+            ) : (
+              <GoogleMap
+                mapContainerStyle={{ width: "100%", height: "100%" }}
+                center={{
+                  lat: event.latitude ? parseFloat(event.latitude) : -23.5962,
+                  lng: event.longitude ? parseFloat(event.longitude) : -46.6823
+                }}
+                zoom={15}
+                options={{
+                  zoomControl: true,
+                  streetViewControl: false,
+                  mapTypeControl: false,
+                  fullscreenControl: true,
+                }}
+              >
+                {event.latitude && event.longitude && (
+                  <Marker
+                    position={{
+                      lat: parseFloat(event.latitude),
+                      lng: parseFloat(event.longitude)
+                    }}
+                    title={event.titulo}
+                  />
+                )}
+              </GoogleMap>
+            )}
+          </div>
         </section>
 
-        {/* Avaliações */}
+        <section className="mt-6">
+          <h3 className="font-semibold mb-2">Politica de Cancelamento</h3>
+          <p className="text-gray-700">{event.politica_cancelamento || "Cancelamento permitido at├® 24h antes do evento."}</p>
+        </section>
+
         <section className="mt-6">
           <h3 className="font-semibold mb-2">Avaliações do Evento</h3>
           <div className="space-y-2 mb-4">
             {avaliacoes.length > 0 ? (
               avaliacoes.map((review, idx) => (
                 <div key={idx} className="bg-gray-100 rounded p-2">
-                  <span className="font-semibold">
-                    {review.usuario_nome || review.usuario || "Usuário"}
-                  </span>
-                  : {review.comentario}
-                  <span className="ml-2 text-yellow-500">
-                    <FaStar /> {review.nota}
-                  </span>
+                  <span className="font-semibold">{review.usuario_nome || review.usuario || "Usu├írio"}</span>: {review.comentario}
+                  <span className="ml-2 text-yellow-500"><FaStar /> {review.nota}</span>
                 </div>
               ))
             ) : (
               <span className="text-gray-500">Nenhuma avaliação disponível.</span>
             )}
           </div>
-
-          {/* Formulário */}
-          <form
-            onSubmit={handleAvaliacaoSubmit}
-            className="bg-gray-50 p-4 rounded shadow flex flex-col gap-2"
-          >
+          {/* Formul├írio de avalia├º├úo */}
+          <form onSubmit={handleAvaliacaoSubmit} className="bg-gray-50 p-4 rounded shadow flex flex-col gap-2">
             <label className="font-semibold">Deixe sua avaliação:</label>
             <textarea
               className="border rounded p-2"
               value={comentario}
-              onChange={(e) => setComentario(e.target.value)}
-              placeholder="Escreva seu comentário..."
+              onChange={e => setComentario(e.target.value)}
+              placeholder="Escreva seu comentário"
               rows={3}
               required
             />
@@ -416,15 +507,16 @@ function EventDescription() {
               <select
                 id="nota"
                 value={nota}
-                onChange={(e) => setNota(Number(e.target.value))}
+                onChange={e => setNota(Number(e.target.value))}
                 className="border rounded p-1"
                 required
               >
-                {[0, 1, 2, 3, 4, 5].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
+                <option value={0}>0</option>
+                <option value={1}>1</option>
+                <option value={2}>2</option>
+                <option value={3}>3</option>
+                <option value={4}>4</option>
+                <option value={5}>5</option>
               </select>
               <FaStar className="text-yellow-500" />
             </div>

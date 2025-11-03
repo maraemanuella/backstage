@@ -68,10 +68,10 @@ function EventoAnalytics() {
       
       // Buscar dados de analytics
       const [geralRes, demograficosRes, interacoesRes, roiRes] = await Promise.allSettled([
-        api.get(`/api/eventos/${eventoId}/analytics/geral/`),
-        api.get(`/api/eventos/${eventoId}/analytics/demograficos/`),
-        api.get(`/api/eventos/${eventoId}/analytics/interacoes/`),
-        api.get(`/api/eventos/${eventoId}/analytics/roi/`)
+        api.get(`/api/analytics/eventos/${eventoId}/geral/`),
+        api.get(`/api/analytics/eventos/${eventoId}/demograficos/`),
+        api.get(`/api/analytics/eventos/${eventoId}/interacoes/`),
+        api.get(`/api/analytics/eventos/${eventoId}/roi/`)
       ]);
 
       if (geralRes.status === 'fulfilled') {
@@ -110,7 +110,7 @@ function EventoAnalytics() {
         return;
       }
 
-      await api.post(`/api/eventos/${eventoId}/analytics/atualizar-custo/`, {
+      await api.post(`/api/analytics/eventos/${eventoId}/atualizar-custo/`, {
         custo_total: valor
       });
 
@@ -125,8 +125,8 @@ function EventoAnalytics() {
 
   const handleExportarPDF = async () => {
     try {
-      const response = await api.get(`/api/eventos/${eventoId}/analytics/exportar-pdf/`);
-      
+      const response = await api.get(`/api/analytics/eventos/${eventoId}/exportar-pdf/`);
+
       // Converter base64 para blob e fazer download
       const byteCharacters = atob(response.data.pdf_base64);
       const byteNumbers = new Array(byteCharacters.length);

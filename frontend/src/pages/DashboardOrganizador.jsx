@@ -70,7 +70,7 @@ function DashboardOrganizador() {
         // Buscar dados das APIs
         const [metricas, eventosProximos, eventosAnteriores, notificacoes, graficos] = 
           await Promise.allSettled([
-            api.get("/api/dashboard/metricas/"),
+            api.get("/api/eventos/dashboard/metricas/"),
             api.get("/api/dashboard/eventos-proximos/"),
             api.get("/api/dashboard/eventos-anteriores/"),
             api.get("/api/dashboard/notificacoes/"),

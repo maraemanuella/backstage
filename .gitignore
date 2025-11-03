@@ -7,7 +7,7 @@
 venv/
 .ven/
 
-# Variáveis de ambiente
+# Variáveis de ambiente (UNIFICADO na raiz)
 .env
 
 # Cache do Python
@@ -16,7 +16,8 @@ __pycache__/
 
 # Node modules
 frontend/node_modules/
-frontend/.env
 
 backstage/staticfiles/
 backstage/api/migrations/__pycache__/*
+
+staticfiles

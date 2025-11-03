@@ -53,7 +53,7 @@ function ManageEvent() {
   useEffect(() => {
     const fetchMeusEventos = () => {
       api
-        .get("/api/manage/")
+        .get("/api/eventos/manage/")
         .then((response) => {
           const eventos = response.data;
           setMeusEventos(eventos);

@@ -64,7 +64,7 @@ function Header({ user, setOpenModal }) {
         
         <button
           onClick={handleLogoClick}
-          className="font-script text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold hover:opacity-80 transition-opacity truncate"
+          className="font-script text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold hover:opacity-80 transition-opacity truncate cursor-pointer"
         >
           BACKSTAGE
         </button>

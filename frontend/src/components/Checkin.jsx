@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams , useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api";
 import { QRCodeSVG } from "qrcode.react";
 
 const api_key = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -100,19 +100,21 @@ const Checkin = () => {
           return;
         }
 
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/inscricoes/${id}/`, {
+        const res = await api.get(`/api/inscricoes/${id}/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setInscricao(res.data);
 
         const eventoId = res.data.evento_id;
-        const eventoRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/eventos/${eventoId}/`, {
+        const eventoRes = await api.get(`/api/eventos/${eventoId}/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setEvento(eventoRes.data);
-        console.log(eventoRes.data);
+        console.log('✅ Evento carregado:', eventoRes.data);
+        console.log('✅ Inscrição carregada:', res.data);
       } catch (err) {
-        console.error("Erro ao buscar inscrição ou evento:", err);
+        console.error("❌ Erro ao buscar inscrição ou evento:", err);
+        console.error("Detalhes do erro:", err.response?.data);
         setError("Não foi possível carregar inscrição ou evento.");
       } finally {
         setLoading(false);

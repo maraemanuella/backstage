@@ -169,7 +169,7 @@ function RegistrationSuccess() {
 
     return (
         <div className="registration-success-container">
-            <button className="back-btn" onClick={() => navigate(-1)}>
+            <button className="back-btn" onClick={() => navigate(-2)}>
                 Voltar
             </button>
 

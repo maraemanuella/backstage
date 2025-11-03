@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api"; // Usando sua instância do Axios
 import Header from "../components/Header.jsx";
 import { ArrowLeft } from "lucide-react";
+import { loadPlacesLibrary } from '../utils/googleMaps';
 
 function EditEvent() {
   const { id } = useParams();
@@ -22,19 +23,23 @@ function EditEvent() {
     politica_cancelamento: "",
     status: "rascunho",
     foto_capa: null,
+    latitude: "",
+    longitude: "",
   });
 
   const [coverPhotoFile, setCoverPhotoFile] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const enderecoInputRef = useRef(null);
+  const autocompleteRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         const [eventoResponse, userResponse] = await Promise.all([
-          api.get(`/api/manage/eventos/${id}/`),
+          api.get(`/api/eventos/manage/${id}/`),
           api.get("/api/user/me/"),
         ]);
 
@@ -59,6 +64,110 @@ function EditEvent() {
 
     fetchData();
   }, [id]);
+
+  // Inicializar Google Places Autocomplete
+  useEffect(() => {
+    let autocomplete = null;
+
+    const initAutocomplete = async () => {
+      try {
+        if (!import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {
+          console.error('❌ Google Maps API Key não configurada!');
+          if (enderecoInputRef.current) {
+            enderecoInputRef.current.placeholder = 'Digite o endereço completo (autocomplete indisponível)';
+          }
+          return;
+        }
+
+        const { Autocomplete } = await loadPlacesLibrary();
+
+        if (!enderecoInputRef.current) return;
+
+        autocomplete = new Autocomplete(enderecoInputRef.current, {
+          fields: ['address_components', 'geometry', 'name', 'formatted_address'],
+          types: ['address'],
+          componentRestrictions: { country: 'br' }
+        });
+
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+
+          if (!place.geometry) {
+            console.warn('⚠️ Nenhum detalhe disponível para:', place.name);
+            window.alert(`Nenhum detalhe disponível para o endereço: '${place.name}'. Por favor, selecione uma opção da lista.`);
+            return;
+          }
+
+          const getComponentName = (componentType, useShortName = false) => {
+            for (const component of place.address_components || []) {
+              if (component.types[0] === componentType) {
+                return useShortName ? component.short_name : component.long_name;
+              }
+            }
+            return '';
+          };
+
+          const streetNumber = getComponentName('street_number');
+          const route = getComponentName('route');
+          const neighborhood = getComponentName('sublocality_level_1') || getComponentName('neighborhood');
+          const city = getComponentName('locality') || getComponentName('administrative_area_level_2');
+          const state = getComponentName('administrative_area_level_1', true);
+          const country = getComponentName('country');
+
+          let fullAddress = '';
+          if (route) {
+            fullAddress = route;
+            if (streetNumber) fullAddress += `, ${streetNumber}`;
+          } else {
+            fullAddress = place.name || place.formatted_address;
+          }
+
+          if (neighborhood && !fullAddress.includes(neighborhood)) {
+            fullAddress += ` - ${neighborhood}`;
+          }
+          if (city && !fullAddress.includes(city)) {
+            fullAddress += `, ${city}`;
+          }
+          if (state) {
+            fullAddress += ` - ${state}`;
+          }
+          if (country && country !== 'Brasil' && country !== 'Brazil') {
+            fullAddress += `, ${country}`;
+          }
+
+          setEvento(prev => ({
+            ...prev,
+            endereco: fullAddress || place.formatted_address,
+            latitude: place.geometry.location.lat().toString(),
+            longitude: place.geometry.location.lng().toString()
+          }));
+
+          console.log('✅ Endereço atualizado:', {
+            endereco: fullAddress,
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng()
+          });
+        });
+
+        autocompleteRef.current = autocomplete;
+        console.log('✅ Google Places Autocomplete inicializado!');
+
+      } catch (error) {
+        console.error('❌ Erro ao inicializar Google Maps Autocomplete:', error);
+        if (enderecoInputRef.current) {
+          enderecoInputRef.current.placeholder = 'Digite o endereço completo (autocomplete indisponível)';
+        }
+      }
+    };
+
+    initAutocomplete();
+
+    return () => {
+      if (autocomplete && window.google?.maps?.event) {
+        window.google.maps.event.clearInstanceListeners(autocomplete);
+      }
+    };
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -93,6 +202,9 @@ function EditEvent() {
     formData.append("politica_cancelamento", evento.politica_cancelamento);
     formData.append("status", evento.status);
 
+    if (evento.latitude) formData.append("latitude", evento.latitude);
+    if (evento.longitude) formData.append("longitude", evento.longitude);
+
     // Formata a data corretamente para o backend
     let dataEvento = evento.data_evento;
     if (dataEvento && dataEvento.length === 16) {
@@ -106,7 +218,7 @@ function EditEvent() {
     }
 
     try {
-      await api.patch(`/api/manage/eventos/${id}/`, formData, {
+      await api.patch(`/api/eventos/manage/${id}/`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -360,12 +472,15 @@ function EditEvent() {
                 Endereço
               </label>
               <input
+                ref={enderecoInputRef}
                 type="text"
                 id="endereco"
                 name="endereco"
                 value={evento.endereco}
                 onChange={handleChange}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                placeholder="Digite o endereço e selecione uma opção"
+                autoComplete="off"
                 required
               />
             </div>
