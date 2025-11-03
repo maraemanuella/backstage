@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
+import Notifications from "./pages/Notifications";
 import ProtectedRoute from "./components/ProtectedRoute";
 import EventDescription from "./pages/EventDescription";
 import Waitlist from "./pages/Waitlist";
@@ -199,6 +200,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <EditProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Notificações */}
+          <Route
+            path="/notificacoes"
+            element={
+              <ProtectedRoute>
+                <Notifications />
               </ProtectedRoute>
             }
           />

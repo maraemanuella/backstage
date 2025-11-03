@@ -153,16 +153,30 @@ class GoogleLoginView(APIView):
 
         try:
             token_url = 'https://oauth2.googleapis.com/token'
+            
+            client_id = os.getenv('GOOGLE_CLIENT_ID', '')
+            client_secret = os.getenv('GOOGLE_CLIENT_SECRET', '')
+            redirect_uri = os.getenv('GOOGLE_OAUTH_CALLBACK_URL', 'http://localhost:5173')
+            
             token_data = {
                 'code': code,
-                'client_id': os.getenv('GOOGLE_CLIENT_ID', ''),
-                'client_secret': os.getenv('GOOGLE_CLIENT_SECRET', ''),
-                'redirect_uri': os.getenv('GOOGLE_OAUTH_CALLBACK_URL', 'http://localhost:5173'),
+                'client_id': client_id,
+                'client_secret': client_secret,
+                'redirect_uri': redirect_uri,
                 'grant_type': 'authorization_code',
             }
+            
+            print(f"\n[Google OAuth Debug]")
+            print(f"Client ID: {client_id[:30]}...")
+            print(f"Client Secret: {client_secret[:20]}...")
+            print(f"Redirect URI: {redirect_uri}")
+            print(f"Code length: {len(code)}")
 
             token_resp = requests.post(token_url, data=token_data, timeout=10)
             token_json = token_resp.json()
+            
+            print(f"Google Response Status: {token_resp.status_code}")
+            print(f"Google Response: {token_json}")
             
             if token_resp.status_code != 200 or 'error' in token_json:
                 return Response({'error': 'Falha ao trocar code por token', 'details': token_json}, status=status.HTTP_400_BAD_REQUEST)
