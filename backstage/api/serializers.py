@@ -183,78 +183,11 @@ class EventoSerializer(serializers.ModelSerializer):
         return data
 
 
-class InscricaoCreateSerializer(serializers.ModelSerializer):
-    """
-    Serializer para criar uma nova inscrição em evento.
-    Calcula automaticamente valores com desconto baseado no score do usuário.
-    Método de pagamento: apenas PIX.
-    """
-
-    class Meta:
-        model = Inscricao
-        fields = [
-            'evento',
-            'nome_completo_inscricao',
-            'cpf_inscricao',
-            'telefone_inscricao',
-            'email_inscricao',
-            'metodo_pagamento',
-            'aceita_termos',
-        ]
-
-    def validate(self, attrs):
-        """Validações"""
-        evento = attrs.get('evento')
-        usuario = self.context['request'].user
-
-        # Verifica se já está inscrito
-        if Inscricao.objects.filter(usuario=usuario, evento=evento).exists():
-            raise serializers.ValidationError("Você já está inscrito neste evento.")
-
-        # Verifica se o evento não está lotado
-        if evento.esta_lotado:
-            raise serializers.ValidationError("Este evento está lotado.")
-
-        # Verifica se aceita os termos
-        if not attrs.get('aceita_termos'):
-            raise serializers.ValidationError("Você deve aceitar os termos para se inscrever.")
-
-        # Validação de CPF
-        cpf = attrs.get('cpf_inscricao', '').replace('.', '').replace('-', '')
-        if len(cpf) != 11 or not cpf.isdigit():
-            raise serializers.ValidationError("CPF deve ter 11 dígitos.")
-        attrs['cpf_inscricao'] = cpf  # Salva apenas números
-
-        return attrs
-
-    def create(self, validated_data):
-        """Cria a inscrição com os cálculos automáticos"""
-        usuario = self.context['request'].user
-        evento = validated_data['evento']
-
-        # Calcula valores
-        valor_original = evento.valor_deposito
-        valor_com_desconto = evento.calcular_valor_com_desconto(usuario)
-        desconto_aplicado = valor_original - valor_com_desconto
-
-        # Cria a inscrição
-        inscricao = Inscricao.objects.create(
-            usuario=usuario,
-            evento=evento,
-            nome_completo_inscricao=validated_data['nome_completo_inscricao'],
-            cpf_inscricao=validated_data['cpf_inscricao'],
-            telefone_inscricao=validated_data['telefone_inscricao'],
-            email_inscricao=validated_data['email_inscricao'],
-            metodo_pagamento=validated_data.get('metodo_pagamento', 'pix'),  # PIX como padrão
-            aceita_termos=validated_data['aceita_termos'],
-            valor_original=valor_original,
-            desconto_aplicado=desconto_aplicado,
-            valor_final=valor_com_desconto,
-            status='confirmada',  # Confirmada automaticamente
-            status_pagamento='aprovado'  # Pagamento aprovado (PIX é processado externamente)
-        )
-
-        return inscricao
+# ============================================================================
+# NOTA: InscricaoCreateSerializer foi movido para payment_serializers.py
+# Use PaymentInscricaoCreateSerializer em vez deste.
+# Removido para evitar duplicação de código.
+# ============================================================================
 
 
 class InscricaoSerializer(serializers.ModelSerializer):

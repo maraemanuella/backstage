@@ -100,6 +100,11 @@ urlpatterns += [
 # Analytics URLs
 urlpatterns += analytics_urls
 
+# Payment URLs (Sistema de Pagamento PIX)
+urlpatterns += [
+    path('pagamento/', include('api.payment_urls')),
+]
+
 # User management sub-urls (keeps this file small)
 urlpatterns += [
     path('user-management/', include('api.user_management.urls')),

@@ -18,12 +18,13 @@ from .serializers import (
     CustomTokenSerializer,
     UserSerializer,
     EventoSerializer,
-    InscricaoCreateSerializer,
     InscricaoSerializer,
     AvaliacaoSerializer,
     TransferRequestSerializer,
     DocumentoVerificacaoSerializer,
 )
+# Import do serializer de pagamento (movido para módulo separado)
+from .payment_serializers import PaymentInscricaoCreateSerializer
 
 from .models import Evento, Inscricao, Avaliacao
 
@@ -140,8 +141,12 @@ class EventoDetailView(generics.RetrieveAPIView):
 
 
 class InscricaoCreateView(generics.CreateAPIView):
+    """
+    View para criar inscrições em eventos com pagamento.
+    Usa PaymentInscricaoCreateSerializer do módulo payment_serializers.
+    """
     queryset = Inscricao.objects.all()
-    serializer_class = InscricaoCreateSerializer
+    serializer_class = PaymentInscricaoCreateSerializer
     permission_classes = [IsAuthenticated]
 
     def get_serializer_context(self):
