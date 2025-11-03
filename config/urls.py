@@ -9,6 +9,8 @@ from apps.users.views import (
     RetrieveUpdateUserView, DeleteUserView, MeView,
     update_user_profile, verificar_documento, status_documento
 )
+from apps.users.views import GoogleLoginView
+
 from apps.users.password_views import (
     password_reset_request, password_reset_confirm, password_reset_validate
 )
@@ -45,6 +47,8 @@ urlpatterns = [
     path('api/user/profile/', update_user_profile, name='update-user-profile'),
     path('api/token/', CustomTokenObtainView.as_view(), name='get_token'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='refresh'),
+    # Google social login (custom endpoint)
+    path('api/auth/google/', GoogleLoginView.as_view(), name='google_login'),
     path('api/api-auth/', include('rest_framework.urls')),
     path('api/verificar-documento/', verificar_documento, name='verificar-documento'),
     path('api/status-documento/', status_documento, name='status-documento'),

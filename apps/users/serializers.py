@@ -6,7 +6,7 @@ from .validators import validate_password_strength
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
-    profile_photo = serializers.ImageField(use_url=True, required=False)
+    profile_photo = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -39,6 +39,12 @@ class UserSerializer(serializers.ModelSerializer):
             "get_full_name": {"read_only": True},
         }
 
+    def get_profile_photo(self, obj):
+        if obj.profile_photo:
+            # Retorna apenas o caminho relativo, sem o domínio
+            return obj.profile_photo.url
+        return None
+      
     def validate_password(self, value):
         errors = validate_password_strength(value)
         if errors:
@@ -97,4 +103,22 @@ class DocumentoVerificacaoSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("CNPJ deve ter 14 dgitos.")
 
         return value
+
+
+class CustomUserDetailsSerializer(serializers.ModelSerializer):
+    """
+    Serializador para os detalhes do usuário retornados após autenticação social
+    """
+    profile_photo = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'profile_photo', 
+                 'telefone', 'cpf', 'cnpj', 'data_nascimento', 'sexo', 'score')
+        read_only_fields = ('email',)
+    
+    def get_profile_photo(self, obj):
+        if obj.profile_photo:
+            return obj.profile_photo.url
+        return None
 

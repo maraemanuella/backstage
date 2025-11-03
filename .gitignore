@@ -10,6 +10,10 @@ venv/
 # Variáveis de ambiente
 .env
 
+# Banco de dados local
+db.sqlite3
+*.db
+
 # Cache do Python
 __pycache__/
 *.pyc

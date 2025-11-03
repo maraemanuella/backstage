@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { FavoritesProvider } from "./contexts/FavoritesContext.jsx";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -43,10 +44,11 @@ function RegisterAndLogout() {
 
 function App() {
   return (
-    <FavoritesProvider>
-      <BrowserRouter>
-        <TitleUpdater />
-        <Routes>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <FavoritesProvider>
+        <BrowserRouter>
+          <TitleUpdater />
+          <Routes>
           {/* Página inicial */}
           <Route
             path="/"
@@ -291,6 +293,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </FavoritesProvider>
+    </GoogleOAuthProvider>
   );
 }
 

@@ -15,4 +15,5 @@ channels-redis
 daphne
 django-sslserver
 reportlab
+requests
 mailersend

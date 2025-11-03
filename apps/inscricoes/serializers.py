@@ -70,7 +70,7 @@ class InscricaoSerializer(serializers.ModelSerializer):
     evento_data = serializers.DateTimeField(source='evento.data_evento', read_only=True)
     evento_endereco = serializers.CharField(source='evento.endereco', read_only=True)
     evento_local_especifico = serializers.CharField(source='evento.local_especifico', read_only=True)
-    evento_foto_capa = serializers.ImageField(source='evento.foto_capa', read_only=True)
+    evento_foto_capa = serializers.SerializerMethodField()
 
     organizador_nome = serializers.CharField(source='evento.organizador.get_full_name', read_only=True)
     organizador_telefone = serializers.CharField(source='evento.organizador.telefone', read_only=True)
@@ -116,6 +116,11 @@ class InscricaoSerializer(serializers.ModelSerializer):
             'id', 'status', 'valor_original', 'desconto_aplicado',
             'valor_final', 'qr_code', 'qr_code_image', 'created_at', 'updated_at', 'evento_id'
         ]
+
+    def get_evento_foto_capa(self, obj):
+        if obj.evento and obj.evento.foto_capa:
+            return obj.evento.foto_capa.url
+        return None
 
     def get_reembolso_estimado(self, obj):
         return obj.calcular_reembolso_estimado()
