@@ -153,16 +153,37 @@ class GoogleLoginView(APIView):
 
         try:
             token_url = 'https://oauth2.googleapis.com/token'
+            
+            # Para @react-oauth/google com flow: 'auth-code', usar 'postmessage'
+            # Mas também tentar com a URL real se falhar
+            redirect_uri = 'postmessage'
+            
             token_data = {
                 'code': code,
                 'client_id': os.getenv('GOOGLE_CLIENT_ID', ''),
                 'client_secret': os.getenv('GOOGLE_CLIENT_SECRET', ''),
-                'redirect_uri': os.getenv('GOOGLE_OAUTH_CALLBACK_URL', 'http://localhost:5173'),
+                'redirect_uri': redirect_uri,
                 'grant_type': 'authorization_code',
             }
 
+            print(f"[DEBUG] Tentando trocar code por token...")
+            print(f"[DEBUG] Client ID: {os.getenv('GOOGLE_CLIENT_ID', '')[:20]}...")
+            print(f"[DEBUG] Redirect URI: {redirect_uri}")
+            
             token_resp = requests.post(token_url, data=token_data, timeout=10)
             token_json = token_resp.json()
+            
+            print(f"[DEBUG] Response status: {token_resp.status_code}")
+            print(f"[DEBUG] Response body: {token_json}")
+            
+            # Se falhar com postmessage, tentar com a URL real
+            if token_resp.status_code != 200 and 'redirect_uri_mismatch' in str(token_json):
+                print("[DEBUG] Tentando com redirect_uri alternativo...")
+                token_data['redirect_uri'] = 'http://localhost:5173'
+                token_resp = requests.post(token_url, data=token_data, timeout=10)
+                token_json = token_resp.json()
+                print(f"[DEBUG] Response status (retry): {token_resp.status_code}")
+                print(f"[DEBUG] Response body (retry): {token_json}")
             
             if token_resp.status_code != 200 or 'error' in token_json:
                 return Response({'error': 'Falha ao trocar code por token', 'details': token_json}, status=status.HTTP_400_BAD_REQUEST)

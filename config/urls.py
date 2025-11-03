@@ -33,7 +33,9 @@ from apps.analytics.views import (
     evento_analytics_geral, evento_analytics_demograficos, evento_analytics_interacoes,
     evento_analytics_roi, evento_analytics_atualizar_custo, evento_analytics_exportar_pdf
 )
-from apps.dashboard.views import dashboard_metricas
+from apps.dashboard.views import (
+    dashboard_metricas, eventos_proximos, eventos_anteriores, notificacoes, graficos
+)
 from apps.checkin.views import realizar_checkin
 
 urlpatterns = [
@@ -112,6 +114,10 @@ urlpatterns = [
 
     # Dashboard
     path('api/dashboard/metricas/', dashboard_metricas, name='dashboard-metricas'),
+    path('api/dashboard/eventos-proximos/', eventos_proximos, name='dashboard-eventos-proximos'),
+    path('api/dashboard/eventos-anteriores/', eventos_anteriores, name='dashboard-eventos-anteriores'),
+    path('api/dashboard/notificacoes/', notificacoes, name='dashboard-notificacoes'),
+    path('api/dashboard/graficos/', graficos, name='dashboard-graficos'),
 
     # Check-in
     path('api/checkin/<uuid:inscricao_id>/', realizar_checkin, name='realizar-checkin'),
