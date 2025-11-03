@@ -10,6 +10,10 @@ from apps.users.views import (
     update_user_profile, verificar_documento, status_documento
 )
 from apps.users.views import GoogleLoginView
+
+from apps.users.password_views import (
+    password_reset_request, password_reset_confirm, password_reset_validate
+)
 from apps.eventos.views import (
     EventoCreateView, EventoListView, EventoDetailView,
     evento_resumo_inscricao, ManageEventosView, EventoRetrieveUpdateView
@@ -48,6 +52,11 @@ urlpatterns = [
     path('api/api-auth/', include('rest_framework.urls')),
     path('api/verificar-documento/', verificar_documento, name='verificar-documento'),
     path('api/status-documento/', status_documento, name='status-documento'),
+
+    # Password Reset
+    path('api/password-reset/', password_reset_request, name='password-reset-request'),
+    path('api/password-reset-confirm/', password_reset_confirm, name='password-reset-confirm'),
+    path('api/password-reset-validate/', password_reset_validate, name='password-reset-validate'),
 
     # User Management (Admin)
     path('api/user-management/', include('apps.user_management.urls')),

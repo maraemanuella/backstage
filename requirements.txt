@@ -16,3 +16,4 @@ daphne
 django-sslserver
 reportlab
 requests
+mailersend

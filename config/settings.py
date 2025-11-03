@@ -138,12 +138,18 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+    {
+        'NAME': 'apps.users.validators.CustomPasswordValidator',
     },
 ]
 
@@ -216,3 +222,20 @@ CHANNEL_LAYERS = {
     }
 }
 
+
+# EMAIL / MAILERSEND CONFIG
+EMAIL_BACKEND = "anymail.backends.mailersend.EmailBackend"
+
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
+if not DEFAULT_FROM_EMAIL:
+    raise ValueError("DEFAULT_FROM_EMAIL não definido no .env")
+
+MAILERSEND_API_TOKEN = os.getenv("MAILERSEND_API_TOKEN")
+if not MAILERSEND_API_TOKEN:
+    raise ValueError("MAILERSEND_API_TOKEN não definido no .env")
+
+ANYMAIL = {
+    "MAILERSEND_API_KEY": MAILERSEND_API_TOKEN
+}
+
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
