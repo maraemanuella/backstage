@@ -115,9 +115,6 @@ urlpatterns = [
 
     # Check-in
     path('api/checkin/<uuid:inscricao_id>/', realizar_checkin, name='realizar-checkin'),
-    
-    # Notificações
-    path('api/notificacoes/', include('apps.notificacoes.urls')),
 ]
 
 if settings.DEBUG:

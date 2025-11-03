@@ -67,7 +67,6 @@ INSTALLED_APPS = [
     "apps.dashboard",
     "apps.checkin",
     "apps.user_management",
-    "apps.notificacoes",
     "corsheaders",
     "channels",
     "sslserver",
