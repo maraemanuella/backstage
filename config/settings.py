@@ -75,13 +75,14 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'config.middleware.CrossOriginOpenerPolicyMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -160,7 +161,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'pt-BR'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
 
@@ -225,18 +226,19 @@ CHANNEL_LAYERS = {
 
 
 # EMAIL / MAILERSEND CONFIG
-EMAIL_BACKEND = "anymail.backends.mailersend.EmailBackend"
+# Para desenvolvimento, usar console backend
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = "anymail.backends.mailersend.EmailBackend"
+    ANYMAIL = {
+        "MAILERSEND_API_KEY": os.getenv("MAILERSEND_API_TOKEN")
+    }
 
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
-if not DEFAULT_FROM_EMAIL:
-    raise ValueError("DEFAULT_FROM_EMAIL não definido no .env")
-
-MAILERSEND_API_TOKEN = os.getenv("MAILERSEND_API_TOKEN")
-if not MAILERSEND_API_TOKEN:
-    raise ValueError("MAILERSEND_API_TOKEN não definido no .env")
-
-ANYMAIL = {
-    "MAILERSEND_API_KEY": MAILERSEND_API_TOKEN
-}
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@localhost.dev")
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+# Security headers for Google OAuth
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"

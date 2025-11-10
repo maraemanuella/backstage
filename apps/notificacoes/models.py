@@ -16,11 +16,14 @@ class Notificacao(models.Model):
         ('transferencia_aprovada', 'Transferência Aprovada'),
         ('transferencia_recusada', 'Transferência Recusada'),
         ('transferencia_recebida', 'Solicitação de Transferência Recebida'),
+        ('transferencia', 'Transferência'),
         ('inscricao_confirmada', 'Inscrição Confirmada'),
         ('checkin_lembrete', 'Lembrete de Check-in'),
         ('avaliacao_pendente', 'Avaliação Pendente'),
         ('documento_aprovado', 'Documento Aprovado'),
         ('documento_rejeitado', 'Documento Rejeitado'),
+        ('favorito_novo_evento', 'Novo Evento de Favorito'),
+        ('evento_cancelado', 'Evento Cancelado'),
         ('sistema', 'Notificação do Sistema'),
     ]
     

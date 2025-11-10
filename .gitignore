@@ -14,6 +14,9 @@ venv/
 db.sqlite3
 *.db
 
+# Arquivos de mídia de teste
+media/
+
 # Cache do Python
 __pycache__/
 *.pyc

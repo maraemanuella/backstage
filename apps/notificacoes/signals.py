@@ -1,75 +1,83 @@
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 
-# Usaremos utils para criar notificações
 from .utils import (
     criar_notificacao_inscricao_confirmada,
     criar_notificacao_evento_cancelado,
+    notificar_usuarios_favorito,
 )
 
 
-@receiver(pre_save, sender=None)
-def marcar_transicoes(sender, instance, **kwargs):
+@receiver(pre_save, sender='inscricoes.Inscricao')
+def marcar_transicao_inscricao(sender, instance, **kwargs):
     """
-    Marca flags em instances antes de salvar para detectar transições de estado
-    nas models Inscricao e Evento sem criar acoplamento forte via imports no topo.
+    Detecta quando uma inscrição muda para 'confirmada'
     """
-    # Importes locais para evitar import circular
-    try:
-        from apps.inscricoes.models import Inscricao
-    except Exception:
-        Inscricao = None
-    try:
-        from apps.eventos.models import Evento
-    except Exception:
-        Evento = None
-
-    # Transição de Inscricao -> status confirmada
-    if Inscricao and isinstance(instance, Inscricao) and instance.pk:
+    if instance.pk:
         try:
-            antigo = Inscricao.objects.get(pk=instance.pk)
+            antigo = sender.objects.get(pk=instance.pk)
             if antigo.status != 'confirmada' and instance.status == 'confirmada':
                 setattr(instance, '_notify_confirmed', True)
-        except Inscricao.DoesNotExist:
+        except sender.DoesNotExist:
             pass
 
-    # Transição de Evento -> status cancelado
-    if Evento and isinstance(instance, Evento) and instance.pk:
+
+@receiver(post_save, sender='inscricoes.Inscricao')
+def notificar_inscricao_confirmada(sender, instance, created, **kwargs):
+    """
+    Cria notificação quando inscrição é confirmada
+    """
+    # Se foi criada já confirmada
+    if created and instance.status == 'confirmada':
+        criar_notificacao_inscricao_confirmada(instance.usuario, instance.evento)
+    # Se mudou para confirmada
+    elif getattr(instance, '_notify_confirmed', False):
+        criar_notificacao_inscricao_confirmada(instance.usuario, instance.evento)
+
+
+@receiver(post_save, sender='eventos.Evento')
+def notificar_novo_evento(sender, instance, created, **kwargs):
+    """
+    Notifica usuários que favoritaram o organizador quando um novo evento é criado
+    """
+    if created and instance.status == 'publicado':
+        print(f"[NOTIFICACAO] Novo evento criado: {instance.titulo} por {instance.organizador.username}")
         try:
-            antigo = Evento.objects.get(pk=instance.pk)
+            notificar_usuarios_favorito(instance.organizador, instance)
+            print(f"[NOTIFICACAO] Notificações enviadas para seguidores de {instance.organizador.username}")
+        except Exception as e:
+            print(f"[NOTIFICACAO] Erro ao notificar seguidores: {str(e)}")
+
+
+@receiver(pre_save, sender='eventos.Evento')
+def marcar_transicao_evento(sender, instance, **kwargs):
+    """
+    Detecta quando um evento é cancelado
+    """
+    if instance.pk:
+        try:
+            antigo = sender.objects.get(pk=instance.pk)
             if antigo.status != 'cancelado' and instance.status == 'cancelado':
                 setattr(instance, '_notify_cancelled', True)
-        except Evento.DoesNotExist:
+        except sender.DoesNotExist:
             pass
 
 
-@receiver(post_save, sender=None)
-def acionar_notificacoes(sender, instance, created, **kwargs):
+@receiver(post_save, sender='eventos.Evento')
+def notificar_evento_cancelado(sender, instance, created, **kwargs):
     """
-    Após salvar, cria notificações com base nas flags marcadas em pre_save.
+    Notifica todos os inscritos confirmados quando um evento é cancelado
     """
-    # Importes locais para evitar import circular
-    try:
+    if getattr(instance, '_notify_cancelled', False):
         from apps.inscricoes.models import Inscricao
-    except Exception:
-        Inscricao = None
-    try:
-        from apps.eventos.models import Evento
-    except Exception:
-        Evento = None
-
-    # Inscricao confirmada
-    if Inscricao and isinstance(instance, Inscricao):
-        if created and instance.status == 'confirmada':
-            # Criada já confirmada
-            criar_notificacao_inscricao_confirmada(instance.usuario, instance.evento)
-        elif getattr(instance, '_notify_confirmed', False):
-            criar_notificacao_inscricao_confirmada(instance.usuario, instance.evento)
-
-    # Evento cancelado -> notificar todos os inscritos confirmados
-    if Evento and isinstance(instance, Evento):
-        if getattr(instance, '_notify_cancelled', False):
-            from apps.inscricoes.models import Inscricao as InscricaoModel
-            qs = InscricaoModel.objects.filter(evento=instance, status='confirmada').select_related('usuario')
-            for insc in qs:
-                criar_notificacao_evento_cancelado(insc.usuario, instance)
+        print(f"[NOTIFICACAO] Evento cancelado: {instance.titulo}")
+        
+        inscricoes = Inscricao.objects.filter(
+            evento=instance, 
+            status='confirmada'
+        ).select_related('usuario')
+        
+        for insc in inscricoes:
+            criar_notificacao_evento_cancelado(insc.usuario, instance)
+        
+        print(f"[NOTIFICACAO] {inscricoes.count()} usuários notificados sobre cancelamento")
