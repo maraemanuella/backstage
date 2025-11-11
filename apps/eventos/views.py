@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 
 from .models import Evento
 from .serializers import EventoSerializer
+from apps.notificacoes.utils import notificar_usuarios_favorito
 
 
 class EventoCreateView(generics.CreateAPIView):
@@ -15,10 +16,28 @@ class EventoCreateView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(
+        evento = serializer.save(
             organizador=self.request.user,
             status='publicado'
         )
+        
+        # Notificar o organizador que o evento foi criado
+        from apps.notificacoes.models import Notificacao
+        Notificacao.objects.create(
+            usuario=self.request.user,
+            tipo='sistema',
+            titulo='Evento criado com sucesso!',
+            mensagem=f'Seu evento "{evento.titulo}" foi criado e publicado com sucesso.',
+            link=f'/evento/{evento.id}'
+        )
+        
+        # Notificar usuários que favoritaram eventos deste organizador
+        try:
+            num_notificados = notificar_usuarios_favorito(self.request.user, evento)
+            if num_notificados > 0:
+                print(f"[NOTIFICACAO] Evento criado: {evento.titulo} - {num_notificados} usuarios notificados")
+        except Exception as e:
+            print(f"[NOTIFICACAO] Erro ao notificar usuarios: {e}")
 
 
 class EventoListView(generics.ListAPIView):

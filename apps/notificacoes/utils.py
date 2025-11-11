@@ -9,13 +9,6 @@ def criar_notificacao_vaga_lista_espera(usuario, evento):
     """
     Cria notificação quando uma vaga é liberada na lista de espera
     
-    Args:
-        usuario: Instância de CustomUser
-        evento: Instância de Evento
-    
-    Exemplo:
-        from apps.notificacoes.utils import criar_notificacao_vaga_lista_espera
-        criar_notificacao_vaga_lista_espera(usuario, evento)
     """
     Notificacao.objects.create(
         usuario=usuario,
@@ -30,10 +23,6 @@ def criar_notificacao_evento_proximo(usuario, evento, dias_faltando):
     """
     Cria notificação lembrando que um evento está próximo
     
-    Args:
-        usuario: Instância de CustomUser
-        evento: Instância de Evento
-        dias_faltando: Número de dias até o evento
     """
     if dias_faltando == 1:
         mensagem = f'O evento "{evento.titulo}" é amanhã! Não se esqueça.'
@@ -55,10 +44,6 @@ def criar_notificacao_transferencia_recebida(usuario, transferencia, evento):
     """
     Notifica quando alguém oferece uma transferência de ingresso
     
-    Args:
-        usuario: Usuário que recebeu a oferta
-        transferencia: Instância de Transferencia
-        evento: Instância de Evento
     """
     Notificacao.objects.create(
         usuario=usuario,
@@ -110,26 +95,43 @@ def criar_notificacao_avaliacao(usuario, evento):
 
 def notificar_usuarios_favorito(organizador, evento):
     """
-    Notifica todos os usuários que favoritaram um organizador
+    Notifica todos os usuários que favoritaram eventos anteriores do organizador
     sobre um novo evento
-    
-    Args:
-        organizador: Usuário organizador do evento
-        evento: Novo evento criado
     """
-    from apps.favoritos.models import Favorito
+    from apps.favoritos.models import Favorite
+    from apps.eventos.models import Evento
     
-    # Buscar todos que favoritaram este organizador
-    favoritos = Favorito.objects.filter(organizador=organizador)
+    # Buscar todos os eventos anteriores do organizador
+    eventos_anteriores = Evento.objects.filter(organizador=organizador).exclude(id=evento.id)
     
-    for favorito in favoritos:
-        Notificacao.objects.create(
-            usuario=favorito.usuario,
-            tipo='favorito_novo_evento',
-            titulo=f'Novo evento de {organizador.username}',
-            mensagem=f'{organizador.username} criou um novo evento: "{evento.titulo}"',
-            link=f'/evento/{evento.id}'
-        )
+    # Buscar usuários que favoritaram eventos deste organizador
+    usuarios_interessados = Favorite.objects.filter(
+        evento__in=eventos_anteriores
+    ).values_list('user_id', flat=True).distinct()
+    
+    # Criar notificações para cada usuário interessado
+    notificacoes = []
+    for user_id in usuarios_interessados:
+        from apps.users.models import CustomUser
+        try:
+            usuario = CustomUser.objects.get(id=user_id)
+            notificacoes.append(
+                Notificacao(
+                    usuario=usuario,
+                    tipo='favorito_novo_evento',
+                    titulo=f'Novo evento de {organizador.username}',
+                    mensagem=f'{organizador.username} criou um novo evento: "{evento.titulo}"',
+                    link=f'/evento/{evento.id}'
+                )
+            )
+        except CustomUser.DoesNotExist:
+            continue
+    
+    # Bulk create para performance
+    if notificacoes:
+        Notificacao.objects.bulk_create(notificacoes)
+        return len(notificacoes)
+    return 0
 
 
 def criar_notificacao_sistema(usuario, titulo, mensagem, link=None):
@@ -148,7 +150,6 @@ def criar_notificacao_sistema(usuario, titulo, mensagem, link=None):
 def notificar_todos_usuarios(titulo, mensagem, link=None):
     """
     Envia uma notificação para TODOS os usuários ativos
-    (útil para avisos importantes do sistema)
     """
     usuarios_ativos = CustomUser.objects.filter(is_active=True)
     

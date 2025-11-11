@@ -8,6 +8,7 @@ from django.utils import timezone
 from .models import Inscricao
 from .serializers import InscricaoCreateSerializer, InscricaoSerializer
 from apps.eventos.models import Evento
+from apps.notificacoes.models import Notificacao
 
 
 class InscricaoCreateView(generics.CreateAPIView):
@@ -25,6 +26,16 @@ class InscricaoCreateView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         try:
             inscricao = serializer.save()
+            
+            # Criar notificação de inscrição recebida
+            Notificacao.objects.create(
+                usuario=inscricao.usuario,
+                tipo='inscricao_confirmada',
+                titulo='Inscrição recebida!',
+                mensagem=f'Sua inscrição para "{inscricao.evento.titulo}" foi recebida e está aguardando aprovação do pagamento.',
+                link=f'/evento/{inscricao.evento.id}'
+            )
+            
         except Exception as e:
             return Response({'error': 'Erro ao criar inscrição', 'details': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -112,6 +123,15 @@ def iniciar_inscricao_pagamento(request):
         valor_final=valor_com_desconto,
         status='pendente',  # Status pendente até confirmar pagamento
         status_pagamento='pendente'
+    )
+    
+    # Criar notificação de inscrição iniciada
+    Notificacao.objects.create(
+        usuario=request.user,
+        tipo='inscricao_confirmada',
+        titulo='Inscrição iniciada!',
+        mensagem=f'Sua inscrição para "{evento.titulo}" foi iniciada. Complete o pagamento para confirmar sua participação.',
+        link=f'/evento/{evento.id}'
     )
     
     # Retornar dados da inscrição com QR Code
@@ -204,10 +224,29 @@ def aprovar_pagamento_inscricao(request, inscricao_id):
             inscricao.status = 'confirmada'
             inscricao.status_pagamento = 'aprovado'
             mensagem = 'Pagamento aprovado com sucesso!'
+            
+            # Criar notificação de pagamento aprovado
+            Notificacao.objects.create(
+                usuario=inscricao.usuario,
+                tipo='inscricao_confirmada',
+                titulo='Pagamento aprovado!',
+                mensagem=f'Seu pagamento para "{inscricao.evento.titulo}" foi aprovado. Você está confirmado no evento!',
+                link=f'/evento/{inscricao.evento.id}'
+            )
+            
         elif acao == 'rejeitar':
             inscricao.status = 'cancelada'
             inscricao.status_pagamento = 'rejeitado'
             mensagem = 'Pagamento rejeitado'
+            
+            # Criar notificação de pagamento rejeitado
+            Notificacao.objects.create(
+                usuario=inscricao.usuario,
+                tipo='sistema',
+                titulo='Pagamento rejeitado',
+                mensagem=f'Seu pagamento para "{inscricao.evento.titulo}" foi rejeitado. Entre em contato com o organizador.',
+                link=f'/evento/{inscricao.evento.id}'
+            )
         else:
             return Response(
                 {'erro': 'Ação inválida. Use "aprovar" ou "rejeitar"'},

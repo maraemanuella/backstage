@@ -177,19 +177,17 @@ const NotificationBell = () => {
           </div>
 
           {/* Footer */}
-          {notifications.length > 0 && (
-            <div className="p-3 border-t border-gray-200 text-center">
-              <button
-                onClick={() => {
-                  navigate('/notificacoes');
-                  setIsOpen(false);
-                }}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-              >
-                Ver todas as notificações
-              </button>
-            </div>
-          )}
+          <div className="p-3 border-t border-gray-200 text-center">
+            <button
+              onClick={() => {
+                navigate('/notificacoes');
+                setIsOpen(false);
+              }}
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Ver todas as notificações
+            </button>
+          </div>
         </div>
       )}
     </div>

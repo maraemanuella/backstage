@@ -140,10 +140,7 @@ def status_documento(request):
     })
 
 class GoogleLoginView(APIView):
-    """Recebe `code` do frontend (fluxo auth-code + PKCE), troca por tokens
-    no Google, obtém info do usuário, cria/retorna usuário local e gera JWTs.
-    Compatível com o formato atual do projeto (campo documento_verificado usa strings).
-    """
+
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -152,22 +149,34 @@ class GoogleLoginView(APIView):
             return Response({'error': 'Código não fornecido'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            client_secret = os.getenv('GOOGLE_CLIENT_SECRET', '')
+            client_id = os.getenv('GOOGLE_CLIENT_ID', '')
+            
+            print(f"[DEBUG] Client Secret presente: {bool(client_secret) and client_secret != 'YOUR_GOOGLE_CLIENT_SECRET_HERE'}")
+            print(f"[DEBUG] Tamanho do secret: {len(client_secret) if client_secret else 0}")
+            
+            # Se não tiver client secret configurado, retornar erro explicativo
+            if not client_secret or client_secret == 'YOUR_GOOGLE_CLIENT_SECRET_HERE':
+                return Response({
+                    'error': 'Google Client Secret não configurado',
+                    'message': 'Por favor, configure o GOOGLE_CLIENT_SECRET no arquivo .env com o valor correto do Google Cloud Console'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
             token_url = 'https://oauth2.googleapis.com/token'
             
-            # Para @react-oauth/google com flow: 'auth-code', usar 'postmessage'
-            # Mas também tentar com a URL real se falhar
+           
             redirect_uri = 'postmessage'
             
             token_data = {
                 'code': code,
-                'client_id': os.getenv('GOOGLE_CLIENT_ID', ''),
-                'client_secret': os.getenv('GOOGLE_CLIENT_SECRET', ''),
+                'client_id': client_id,
+                'client_secret': client_secret,
                 'redirect_uri': redirect_uri,
                 'grant_type': 'authorization_code',
             }
 
             print(f"[DEBUG] Tentando trocar code por token...")
-            print(f"[DEBUG] Client ID: {os.getenv('GOOGLE_CLIENT_ID', '')[:20]}...")
+            print(f"[DEBUG] Client ID: {client_id[:20]}...")
             print(f"[DEBUG] Redirect URI: {redirect_uri}")
             
             token_resp = requests.post(token_url, data=token_data, timeout=10)
@@ -200,18 +209,27 @@ class GoogleLoginView(APIView):
             if not email:
                 return Response({'error': 'Email não disponível no perfil do Google'}, status=status.HTTP_400_BAD_REQUEST)
 
-            username = email.split('@')[0]
-            user, created = User.objects.get_or_create(
-                email=email,
-                defaults={
-                    'username': username,
-                    'first_name': userinfo.get('given_name', ''),
-                    'last_name': userinfo.get('family_name', ''),
-                    'documento_verificado': 'pendente',
-                }
-            )
-
-            if created:
+            # Tentar obter usuário existente por email
+            user = User.objects.filter(email=email).first()
+            
+            if not user:
+                # Criar novo usuário
+                base_username = email.split('@')[0]
+                username = base_username
+                
+                # Se o username já existir, adicionar um número
+                counter = 1
+                while User.objects.filter(username=username).exists():
+                    username = f"{base_username}{counter}"
+                    counter += 1
+                
+                user = User.objects.create(
+                    email=email,
+                    username=username,
+                    first_name=userinfo.get('given_name', ''),
+                    last_name=userinfo.get('family_name', ''),
+                    documento_verificado='pendente',
+                )
                 # definir senha aleatória segura
                 user.set_password(secrets.token_urlsafe(32))
                 user.save()
@@ -232,5 +250,12 @@ class GoogleLoginView(APIView):
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
-            return Response({'error': f'Erro ao processar login Google: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+            import traceback
+            print(f"[ERROR] Erro no login do Google: {str(e)}")
+            print(f"[ERROR] Traceback completo:")
+            traceback.print_exc()
+            return Response({
+                'error': f'Erro ao processar login Google: {str(e)}',
+                'type': type(e).__name__
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
