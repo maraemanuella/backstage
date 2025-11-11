@@ -1,0 +1,26 @@
+# IDEs e configs locais
+.vscode/
+.idea/
+
+# Ambientes virtuais
+.venv/
+venv/
+.ven/
+
+# Variáveis de ambiente
+.env
+
+# Banco de dados local
+db.sqlite3
+*.db
+
+# Cache do Python
+__pycache__/
+*.pyc
+
+# Node modules
+frontend/node_modules/
+frontend/.env
+
+backstage/staticfiles/
+backstage/api/migrations/__pycache__/*

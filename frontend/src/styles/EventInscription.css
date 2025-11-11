@@ -1,0 +1,405 @@
+.inscription-container {
+  background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+  min-height: 100vh;
+  padding: 20px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.back-btn {
+  background: rgba(255, 255, 255, 0.938);
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  color: rgb(0, 0, 0);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.inscription-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.inscription-header {
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: none;
+  position: relative;
+}
+
+.inscription-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: calc(-50vw + 50%);
+  width: 100vw;
+  height: 2px;
+  background-color: #e0e0e0;
+}
+
+.inscription-content h1 {
+  color: #333;
+  font-size: 2rem;
+  margin: 0 0 8px 0;
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+.section-divider {
+  border: none;
+  height: 1px;
+  background-color: #e0e0e0;
+  margin: 20px 0;
+}
+
+.event-summary h3 {
+  margin: 15px 0;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.included-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.included-list li {
+  padding: 8px 0;
+  color: #666;
+  font-size: 14px;
+  position: relative;
+  padding-left: 20px;
+}
+
+.included-list li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #27ae60;
+  font-weight: bold;
+}
+
+.inscription-content > p {
+  color: #666;
+  margin: 0 0 30px 0;
+}
+
+.event-summary {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.event-summary h2 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.4rem;
+}
+
+.event-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.event-details span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.inscription-layout {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 30px;
+  align-items: start;
+}
+
+.form-card {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.form-card h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 1.2rem;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 15px;
+  box-sizing: border-box;
+  transition: border-color 0.3s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.payment-option {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.payment-option:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+}
+
+.payment-option.selected {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.payment-option input[type="radio"] {
+  margin-right: 12px;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  position: sticky;
+  top: 20px;
+}
+
+.summary-card h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 1.2rem;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.discount-badge {
+  background: linear-gradient(135deg, #ffffff, #ffffff);
+  color: rgb(37, 173, 82);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.discount-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  display: block;
+  margin: 5px 0;
+}
+
+.discount-badge small {
+  opacity: 0.9;
+  font-size: 12px;
+}
+
+.price-breakdown {
+  margin-bottom: 20px;
+}
+
+.price-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.price-item.discount {
+  color: #27ae60;
+}
+
+.price-item.fee {
+  color: #e74c3c;
+}
+
+.price-item.total {
+  font-weight: 700;
+  font-size: 16px;
+  padding-top: 10px;
+  border-top: 1px solid #e0e0e0;
+  color: #333;
+}
+
+.refund-info {
+  background: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 20px 0;
+  border: 1px solid #616160;
+}
+
+.refund-info h4 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 14px;
+}
+
+.refund-info p {
+  margin: 0 0 8px 0;
+  color: #666;
+  font-size: 13px;
+}
+
+.refund-amount {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1467b4;
+  margin-bottom: 8px;
+}
+
+.refund-info small {
+  color: #666;
+  font-size: 12px;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 20px 0;
+  cursor: pointer;
+  font-size: 13px;
+  color: #666;
+}
+
+.checkbox-container input[type="checkbox"] {
+  margin: 0;
+}
+
+.confirm-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #232427, #242325);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.confirm-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+.confirm-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Estilos para aviso PIX */
+.payment-info-box {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 1.5rem;
+}
+
+.payment-info-box h3 {
+  color: #2d3748;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.pix-only-notice {
+  background: linear-gradient(135deg, #32bcad15 0%, #32bcad10 100%);
+  border: 2px solid #32bcad;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.pix-icon {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.pix-only-notice p {
+  margin: 0.5rem 0;
+  color: #4a5568;
+  line-height: 1.6;
+}
+
+.pix-only-notice p strong {
+  color: #2d3748;
+  font-size: 1.1rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.pix-description {
+  font-size: 0.95rem;
+  color: #718096;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .inscription-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .event-details {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .payment-info-box {
+    margin-top: 1rem;
+    padding: 1rem;
+  }
+  
+  .pix-only-notice {
+    padding: 1rem;
+  }
+}
