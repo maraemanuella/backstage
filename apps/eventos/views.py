@@ -65,7 +65,10 @@ def evento_resumo_inscricao(request, evento_id):
 
     evento = get_object_or_404(Evento, id=evento_id, status='publicado')
     usuario = request.user
-    ja_inscrito = Inscricao.objects.filter(usuario=usuario, evento=evento).exists()
+    ja_inscrito = Inscricao.objects.filter(
+        usuario=usuario, 
+        evento=evento
+    ).exclude(status='cancelada').exists()
 
     itens_incluidos = [
         item.strip()

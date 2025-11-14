@@ -315,3 +315,66 @@ def listar_pagamentos_pendentes(request, evento_id):
             status=status.HTTP_400_BAD_REQUEST
         )
 
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cancelar_inscricao(request, inscricao_id):
+    """
+    Permite que o usuário cancele sua própria inscrição
+    """
+    try:
+        inscricao = get_object_or_404(
+            Inscricao,
+            id=inscricao_id,
+            usuario=request.user
+        )
+        
+        # Verificar se a inscrição já foi cancelada
+        if inscricao.status == 'cancelada':
+            return Response(
+                {'erro': 'Esta inscrição já foi cancelada'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Verificar se o evento já passou
+        if inscricao.evento.data_evento < timezone.now():
+            return Response(
+                {'erro': 'Não é possível cancelar inscrição de evento já realizado'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Atualizar status
+        inscricao.status = 'cancelada'
+        inscricao.save()
+        
+        # Criar notificação para o usuário
+        Notificacao.objects.create(
+            usuario=request.user,
+            tipo='inscricao_cancelada',
+            titulo='Inscrição cancelada',
+            mensagem=f'Sua inscrição no evento "{inscricao.evento.titulo}" foi cancelada com sucesso.',
+            link=f'/evento/{inscricao.evento.id}'
+        )
+        
+        # Notificar o organizador
+        Notificacao.objects.create(
+            usuario=inscricao.evento.organizador,
+            tipo='inscricao_cancelada',
+            titulo='Inscrição cancelada',
+            mensagem=f'{request.user.get_full_name() or request.user.username} cancelou a inscrição no evento "{inscricao.evento.titulo}".',
+            link=f'/evento/{inscricao.evento.id}'
+        )
+        
+        return Response(
+            {
+                'mensagem': 'Inscrição cancelada com sucesso',
+                'inscricao': InscricaoSerializer(inscricao).data
+            },
+            status=status.HTTP_200_OK
+        )
+        
+    except Exception as e:
+        return Response(
+            {'erro': str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )

@@ -35,6 +35,7 @@ import UserManagement from "./pages/UserManagement";
 import PaymentPage from "./pages/PaymentPage";
 import InscriptionSuccess from "./pages/InscriptionSuccess";
 import GerenciarPagamentos from "./pages/GerenciarPagamentos";
+import MeusEventos from "./pages/MeusEventos";
 
 function Logout() {
   localStorage.clear();
@@ -230,6 +231,16 @@ function App() {
             element={
               <ProtectedRoute>
                 <HeartPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Meus Eventos - Página Unificada */}
+          <Route
+            path="/meus-eventos"
+            element={
+              <ProtectedRoute>
+                <MeusEventos />
               </ProtectedRoute>
             }
           />
