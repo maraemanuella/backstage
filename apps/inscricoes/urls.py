@@ -7,6 +7,7 @@ from .views import (
     confirmar_pagamento_inscricao,
     aprovar_pagamento_inscricao,
     listar_pagamentos_pendentes,
+    cancelar_inscricao,
 )
 
 urlpatterns = [
@@ -22,5 +23,8 @@ urlpatterns = [
     # Rotas de pagamento - organizador
     path('<uuid:inscricao_id>/aprovar-pagamento/', aprovar_pagamento_inscricao, name='aprovar-pagamento'),
     path('evento/<uuid:evento_id>/pagamentos-pendentes/', listar_pagamentos_pendentes, name='pagamentos-pendentes'),
+    
+    # Cancelar inscrição
+    path('<uuid:inscricao_id>/cancelar/', cancelar_inscricao, name='cancelar-inscricao'),
 ]
 
