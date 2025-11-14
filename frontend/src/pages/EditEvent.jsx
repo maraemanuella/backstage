@@ -11,7 +11,8 @@ function EditEvent() {
   const [evento, setEvento] = useState({
     titulo: "",
     descricao: "",
-    categoria: "Workshop",
+    categorias: [],
+    categorias_customizadas: [],
     itens_incluidos: "",
     data_evento: "",
     endereco: "",
@@ -84,7 +85,10 @@ function EditEvent() {
     // Isso evita o envio de campos somente leitura que causam o erro 400.
     formData.append("titulo", evento.titulo);
     formData.append("descricao", evento.descricao);
-    formData.append("categoria", evento.categoria);
+    formData.append("categorias", JSON.stringify(evento.categorias));
+    if (evento.categorias.includes('Outro') && evento.categorias_customizadas.length > 0) {
+      formData.append("categorias_customizadas", JSON.stringify(evento.categorias_customizadas));
+    }
     formData.append("itens_incluidos", evento.itens_incluidos);
     formData.append("endereco", evento.endereco);
     formData.append("local_especifico", evento.local_especifico);
@@ -286,27 +290,34 @@ function EditEvent() {
             </small>
           </div>
 
-          {/* Categoria e Status */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Categorias e Status */}
+          <div className="grid grid-cols-1 gap-6">
             <div>
-              <label
-                htmlFor="categoria"
-                className="flex text-sm font-medium text-black  bg-gray-300 inset-0 p-1  rounded-t-2xl justify-center items-center"
-              >
-                Categoria
+              <label className="flex text-sm font-medium text-black bg-gray-300 inset-0 p-1 rounded-t-2xl justify-center items-center">
+                Categorias (selecione uma ou mais)
               </label>
-              <select
-                id="categoria"
-                name="categoria"
-                value={evento.categoria}
-                onChange={handleChange}
-                className="block w-full input-style p-1 border-2 border-gray-300 rounded-b-2xl"
-              >
-                <option>Workshop</option>
-                <option>Palestra</option>
-                <option>Networking</option>
-                <option>Curso</option>
-              </select>
+              <div className="border-2 border-gray-300 rounded-b-2xl p-4 space-y-2">
+                {['Workshop', 'Palestra', 'Networking', 'Curso', 'Outro'].map((cat) => (
+                  <label key={cat} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                    <input
+                      type="checkbox"
+                      value={cat}
+                      checked={evento.categorias?.includes(cat) || false}
+                      onChange={(e) => {
+                        const { value, checked } = e.target;
+                        setEvento(prev => {
+                          const novasCategorias = checked
+                            ? [...(prev.categorias || []), value]
+                            : (prev.categorias || []).filter(c => c !== value);
+                          return { ...prev, categorias: novasCategorias };
+                        });
+                      }}
+                      className="w-4 h-4 text-blue-600 rounded"
+                    />
+                    <span className="text-sm">{cat}</span>
+                  </label>
+                ))}
+              </div>
             </div>
             <div>
               <label

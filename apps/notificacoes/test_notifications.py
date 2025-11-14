@@ -59,7 +59,7 @@ try:
             endereco="Rua Teste, 123",
             cidade="Sao Paulo",
             estado="SP",
-            categoria="show",
+            categorias=["show"],
             capacidade_maxima=100,
             valor_deposito=50.00,
             status='publicado'
@@ -89,7 +89,7 @@ try:
         endereco="Rua Teste, 123",
         cidade="Sao Paulo",
         estado="SP",
-        categoria="show",
+        categorias=["show"],
         capacidade_maxima=100,
         valor_deposito=50.00,
         status='publicado'

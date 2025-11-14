@@ -132,11 +132,20 @@ function Eventos({ eventos }) {
 
               {/* Content */}
               <div className="p-4">
-                {/* Category badge */}
-                {evento.categoria && (
-                  <span className="inline-block px-3 py-1 bg-purple-100 text-purple-600 text-xs font-medium rounded-full mb-2">
-                    {evento.categoria}
-                  </span>
+                {/* Category badges */}
+                {evento.categorias && evento.categorias.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {evento.categorias.map((cat, idx) => (
+                      <span key={idx} className="inline-block px-3 py-1 bg-purple-100 text-purple-600 text-xs font-medium rounded-full">
+                        {cat}
+                      </span>
+                    ))}
+                    {evento.categorias_customizadas && evento.categorias_customizadas.map((cat, idx) => (
+                      <span key={`custom-${idx}`} className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full">
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
                 )}
 
                 {/* Title */}

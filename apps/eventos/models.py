@@ -9,6 +9,7 @@ class Evento(models.Model):
     ('Palestra', 'Palestra'),
     ('Networking', 'Networking'),
     ('Curso', 'Curso'),
+    ('Outro', 'Outro'),
     ]
 
     STATUS_CHOICES = [
@@ -22,7 +23,8 @@ class Evento(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     titulo = models.CharField(max_length=200)
     descricao = models.TextField()
-    categoria = models.CharField(max_length=20, choices=CATEGORIA_CHOICES)
+    categorias = models.JSONField(default=list, help_text="Lista de categorias do evento")
+    categorias_customizadas = models.JSONField(default=list, blank=True, help_text="Lista de categorias personalizadas quando 'Outro' é selecionado")
 
     organizador = models.ForeignKey(
         'users.CustomUser',
