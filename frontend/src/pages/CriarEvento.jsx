@@ -16,7 +16,8 @@ function CriarEvento() {
   const [evento, setEvento] = useState({
     titulo: '',
     descricao: '',
-    categoria: '',
+    categorias: [],
+    categorias_customizadas: [],
     data_evento: '',
     endereco: '',
     local_especifico: '',
@@ -29,6 +30,8 @@ function CriarEvento() {
     latitude: '',
     longitude: ''
   })
+  
+  const [novaCategoria, setNovaCategoria] = useState('')
 
   useEffect(() => {
     const verificarPermissao = async () => {
@@ -207,6 +210,39 @@ function CriarEvento() {
     }))
   }
 
+  const handleCategoriaChange = (e) => {
+    const { value, checked } = e.target
+    setEvento(prev => {
+      const novasCategorias = checked
+        ? [...prev.categorias, value]
+        : prev.categorias.filter(cat => cat !== value)
+      
+      // Se desmarcar 'Outro', limpar categorias customizadas
+      if (!checked && value === 'Outro') {
+        return { ...prev, categorias: novasCategorias, categorias_customizadas: [] }
+      }
+      
+      return { ...prev, categorias: novasCategorias }
+    })
+  }
+
+  const adicionarCategoriaCustomizada = () => {
+    if (novaCategoria.trim() && !evento.categorias_customizadas.includes(novaCategoria.trim())) {
+      setEvento(prev => ({
+        ...prev,
+        categorias_customizadas: [...prev.categorias_customizadas, novaCategoria.trim()]
+      }))
+      setNovaCategoria('')
+    }
+  }
+
+  const removerCategoriaCustomizada = (index) => {
+    setEvento(prev => ({
+      ...prev,
+      categorias_customizadas: prev.categorias_customizadas.filter((_, i) => i !== index)
+    }))
+  }
+
   const handleFileChange = (e) => {
     setEvento(prev => ({
       ...prev,
@@ -216,6 +252,19 @@ function CriarEvento() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Validar se pelo menos uma categoria foi selecionada
+    if (evento.categorias.length === 0) {
+      alert('Por favor, selecione pelo menos uma categoria.')
+      return
+    }
+    
+    // Validar se 'Outro' está selecionado e categorias_customizadas está preenchida
+    if (evento.categorias.includes('Outro') && evento.categorias_customizadas.length === 0) {
+      alert('Por favor, adicione pelo menos uma categoria personalizada quando "Outro" está selecionado.')
+      return
+    }
+    
     setLoading(true)
 
     try {
@@ -223,7 +272,10 @@ function CriarEvento() {
 
       formData.append('titulo', evento.titulo)
       formData.append('descricao', evento.descricao)
-      formData.append('categoria', evento.categoria)
+      formData.append('categorias', JSON.stringify(evento.categorias))
+      if (evento.categorias.includes('Outro') && evento.categorias_customizadas.length > 0) {
+        formData.append('categorias_customizadas', JSON.stringify(evento.categorias_customizadas))
+      }
       formData.append('data_evento', evento.data_evento)
       formData.append('endereco', evento.endereco)
       formData.append('capacidade_maxima', evento.capacidade_maxima)
@@ -292,21 +344,81 @@ function CriarEvento() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Categoria *</label>
-                  <select
-                    name="categoria"
-                    value={evento.categoria}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Selecione...</option>
-                    <option value="Workshop">Workshop</option>
-                    <option value="Palestra">Palestra</option>
-                    <option value="Networking">Networking</option>
-                    <option value="Curso">Curso</option>
-                  </select>
+                  <label className="block text-sm font-medium mb-2">Categorias * <span className="text-gray-500 text-xs">(selecione uma ou mais)</span></label>
+                  <div className="space-y-2 p-3 border border-gray-300 rounded-lg">
+                    {['Workshop', 'Palestra', 'Networking', 'Curso', 'Outro'].map((cat) => (
+                      <label key={cat} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input
+                          type="checkbox"
+                          value={cat}
+                          checked={evento.categorias.includes(cat)}
+                          onChange={handleCategoriaChange}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                        />
+                        <span className="text-sm">{cat}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {evento.categorias.length === 0 && (
+                    <small className="text-red-500">Selecione pelo menos uma categoria</small>
+                  )}
                 </div>
+
+                {/* Campo condicional para categorias customizadas */}
+                {evento.categorias.includes('Outro') && (
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium mb-1">
+                      Categorias Personalizadas * <span className="text-gray-500 text-xs">(ex: Festa, Casamento, Hackathon)</span>
+                    </label>
+                    
+                    {/* Lista de categorias adicionadas */}
+                    {evento.categorias_customizadas.length > 0 && (
+                      <div className="space-y-2 mb-3">
+                        {evento.categorias_customizadas.map((cat, index) => (
+                          <div key={index} className="flex items-center justify-between bg-blue-50 px-3 py-2 rounded-lg">
+                            <span className="text-sm font-medium text-blue-900">{cat}</span>
+                            <button
+                              type="button"
+                              onClick={() => removerCategoriaCustomizada(index)}
+                              className="text-red-600 hover:text-red-800 text-sm font-medium"
+                            >
+                              Remover
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Input para adicionar nova categoria */}
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={novaCategoria}
+                        onChange={(e) => setNovaCategoria(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            adicionarCategoriaCustomizada()
+                          }
+                        }}
+                        maxLength={100}
+                        placeholder="Digite uma categoria e clique em Adicionar"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={adicionarCategoriaCustomizada}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium whitespace-nowrap"
+                      >
+                        Adicionar
+                      </button>
+                    </div>
+                    
+                    {evento.categorias_customizadas.length === 0 && (
+                      <small className="text-red-500">Adicione pelo menos uma categoria personalizada</small>
+                    )}
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium mb-1">Descrição *</label>

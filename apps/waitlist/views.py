@@ -123,8 +123,11 @@ def waitlist_suggestions(request, event_id):
     candidates = []
     for ev in qs:
         score = 0
-        if ev.categoria == evento.categoria:
-            score += 3
+        # Check if events have common categories
+        if hasattr(ev, 'categorias') and hasattr(evento, 'categorias'):
+            common_categories = set(ev.categorias or []) & set(evento.categorias or [])
+            if common_categories:
+                score += 3
         days_diff = abs((ev.data_evento - evento.data_evento).days)
         score += max(0, 5 - min(days_diff, 5))
         if ev.vagas_disponiveis > 0:

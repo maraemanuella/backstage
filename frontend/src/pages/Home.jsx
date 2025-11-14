@@ -56,7 +56,7 @@ function Home() {
 
   const eventosFiltrados = eventos.filter(evento => {
     const filtroTipo = filtroAtivo.toLowerCase() === "todos" || 
-                       evento.categoria?.toLowerCase() === filtroAtivo.toLowerCase();
+                       (evento.categorias && evento.categorias.some(cat => cat.toLowerCase() === filtroAtivo.toLowerCase()));
     
     const filtroBusca = !busca || 
                         evento.titulo?.toLowerCase().includes(busca.toLowerCase()) ||

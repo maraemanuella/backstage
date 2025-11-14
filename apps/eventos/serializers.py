@@ -21,7 +21,9 @@ class EventoSerializer(serializers.ModelSerializer):
             'id',
             'titulo',
             'descricao',
-            'categoria',
+            'categorias',
+            'categorias_customizadas',
+            'itens_incluidos',
             'data_evento',
             'endereco',
             'local_especifico',
@@ -48,6 +50,51 @@ class EventoSerializer(serializers.ModelSerializer):
             'inscritos_count', 'vagas_disponiveis', 'esta_lotado',
             'organizador_nome', 'organizador_username', 'organizador_score'
         ]
+
+    def validate(self, data):
+        """
+        Valida se categorias_customizadas foi fornecida quando 'Outro' está nas categorias
+        """
+        categorias = data.get('categorias', [])
+        categorias_customizadas = data.get('categorias_customizadas', [])
+        
+        # Validar que categorias é uma lista
+        if not isinstance(categorias, list):
+            raise serializers.ValidationError({
+                'categorias': 'Categorias deve ser uma lista.'
+            })
+        
+        # Validar que pelo menos uma categoria foi selecionada
+        if not categorias:
+            raise serializers.ValidationError({
+                'categorias': 'Selecione pelo menos uma categoria.'
+            })
+        
+        # Validar categorias válidas
+        categorias_validas = [choice[0] for choice in Evento.CATEGORIA_CHOICES]
+        for cat in categorias:
+            if cat not in categorias_validas:
+                raise serializers.ValidationError({
+                    'categorias': f'Categoria inválida: {cat}'
+                })
+        
+        # Validar que categorias_customizadas é uma lista
+        if not isinstance(categorias_customizadas, list):
+            raise serializers.ValidationError({
+                'categorias_customizadas': 'Categorias customizadas deve ser uma lista.'
+            })
+        
+        # Se 'Outro' estiver selecionado, pelo menos uma categoria customizada é obrigatória
+        if 'Outro' in categorias and not categorias_customizadas:
+            raise serializers.ValidationError({
+                'categorias_customizadas': 'Adicione pelo menos uma categoria personalizada quando "Outro" é selecionado.'
+            })
+        
+        # Limpar categorias_customizadas se 'Outro' não estiver selecionado
+        if 'Outro' not in categorias and categorias_customizadas:
+            data['categorias_customizadas'] = []
+        
+        return data
 
     def create(self, validated_data):
         evento = Evento.objects.create(**validated_data)

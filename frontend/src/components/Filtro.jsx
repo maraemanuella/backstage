@@ -1,5 +1,5 @@
 function Filtro({ filtroAtivo, setFiltroAtivo }) {
-  const filtros = ["Todos", "Workshop", "Palestra", "Networking", "Curso"];
+  const filtros = ["Todos", "Workshop", "Palestra", "Networking", "Curso", "Outro"];
   
   const buttonClass = (isActive) => `
     px-5 py-2 rounded-full border-2 transition-all duration-200 font-medium text-sm md:text-base hover:cursor-pointer
