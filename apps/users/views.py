@@ -61,53 +61,78 @@ class MeView(APIView):
 def update_user_profile(request):
     user = request.user
     try:
+        # Campos permitidos para atualização
         updatable_fields = [
             'username', 'email', 'telefone', 'cpf', 'cnpj',
             'data_nascimento', 'sexo', 'profile_photo'
         ]
 
-        if 'email' in request.data:
-            email = request.data['email']
+        # Construir um dicionário com os novos valores sem mutar request.data
+        updates = {}
+
+        # Email e username: verificar unicidade se fornecidos
+        email = request.data.get('email')
+        if email:
             if User.objects.filter(email=email).exclude(id=user.id).exists():
-                return Response({'email': ['Este email j est em uso por outro usurio.']}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'email': ['Este email já está em uso por outro usuário.']}, status=status.HTTP_400_BAD_REQUEST)
+            updates['email'] = email
 
-        if 'username' in request.data:
-            username = request.data['username']
+        username = request.data.get('username')
+        if username:
             if User.objects.filter(username=username).exclude(id=user.id).exists():
-                return Response({'username': ['Este nome de usurio j est em uso.']}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'username': ['Este nome de usuário já está em uso.']}, status=status.HTTP_400_BAD_REQUEST)
+            updates['username'] = username
 
-        if 'cpf' in request.data and request.data['cpf']:
-            cpf = request.data['cpf'].replace('.', '').replace('-', '').replace(' ', '')
+        # CPF
+        cpf_raw = request.data.get('cpf')
+        if cpf_raw:
+            cpf = ''.join(ch for ch in cpf_raw if ch.isdigit())
             if len(cpf) != 11 or not cpf.isdigit():
-                return Response({'cpf': ['CPF deve ter exatamente 11 dgitos.']}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'cpf': ['CPF deve ter exatamente 11 dígitos.']}, status=status.HTTP_400_BAD_REQUEST)
             if User.objects.filter(cpf=cpf).exclude(id=user.id).exists():
-                return Response({'cpf': ['Este CPF j est em uso por outro usurio.']}, status=status.HTTP_400_BAD_REQUEST)
-            request.data['cpf'] = cpf
+                return Response({'cpf': ['Este CPF já está em uso por outro usuário.']}, status=status.HTTP_400_BAD_REQUEST)
+            updates['cpf'] = cpf
 
-        if 'cnpj' in request.data and request.data['cnpj']:
-            cnpj = request.data['cnpj'].replace('.', '').replace('/', '').replace('-', '').replace(' ', '')
+        # CNPJ
+        cnpj_raw = request.data.get('cnpj')
+        if cnpj_raw:
+            cnpj = ''.join(ch for ch in cnpj_raw if ch.isdigit())
             if len(cnpj) != 14 or not cnpj.isdigit():
-                return Response({'cnpj': ['CNPJ deve ter exatamente 14 dgitos.']}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'cnpj': ['CNPJ deve ter exatamente 14 dígitos.']}, status=status.HTTP_400_BAD_REQUEST)
             if User.objects.filter(cnpj=cnpj).exclude(id=user.id).exists():
-                return Response({'cnpj': ['Este CNPJ j est em uso por outro usurio.']}, status=status.HTTP_400_BAD_REQUEST)
-            request.data['cnpj'] = cnpj
+                return Response({'cnpj': ['Este CNPJ já está em uso por outro usuário.']}, status=status.HTTP_400_BAD_REQUEST)
+            updates['cnpj'] = cnpj
 
-        if 'telefone' in request.data and request.data['telefone']:
-            telefone = request.data['telefone'].replace('(', '').replace(')', '').replace('-', '').replace(' ', '')
+        # Telefone
+        telefone_raw = request.data.get('telefone')
+        if telefone_raw:
+            telefone = ''.join(ch for ch in telefone_raw if ch.isdigit())
             if len(telefone) not in [10, 11] or not telefone.isdigit():
-                return Response({'telefone': ['Telefone deve ter 10 ou 11 dgitos.']}, status=status.HTTP_400_BAD_REQUEST)
-            request.data['telefone'] = telefone
+                return Response({'telefone': ['Telefone deve ter 10 ou 11 dígitos.']}, status=status.HTTP_400_BAD_REQUEST)
+            updates['telefone'] = telefone
 
-        for field in updatable_fields:
-            if field in request.data:
-                setattr(user, field, request.data[field])
+        # Outros campos simples
+        for fld in ['data_nascimento', 'sexo']:
+            if fld in request.data:
+                updates[fld] = request.data.get(fld)
+
+        # profile_photo pode vir em request.FILES
+        if 'profile_photo' in request.FILES:
+            updates['profile_photo'] = request.FILES.get('profile_photo')
+
+        # Aplicar updates no usuário
+        for field, val in updates.items():
+            setattr(user, field, val)
 
         user.save()
 
         serializer = UserSerializer(user)
         return Response({'message': 'Perfil atualizado com sucesso!', 'user': serializer.data}, status=status.HTTP_200_OK)
 
-    except Exception:
+    except Exception as exc:
+        # Log do erro para facilitar debug (será visível no console do servidor)
+        import traceback
+        traceback.print_exc()
         return Response({'error': 'Erro interno do servidor.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
