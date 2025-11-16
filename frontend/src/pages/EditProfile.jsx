@@ -21,6 +21,7 @@ const EditProfile = () => {
   });
   const [photoPreview, setPhotoPreview] = useState(null);
   const [originalData, setOriginalData] = useState({});
+  const [formErrors, setFormErrors] = useState([]);
 
   useEffect(() => {
     fetchUserData();
@@ -59,7 +60,29 @@ const EditProfile = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value: rawValue } = e.target;
+    let value = rawValue;
+
+    // Formata CPF e Telefone enquanto digita
+    if (name === 'cpf') {
+      // remover não dígitos
+      const digits = rawValue.replace(/\D/g, '').slice(0, 11);
+      // aplicar máscara XXX.XXX.XXX-XX
+      value = digits
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+        .replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+    }
+
+    if (name === 'telefone') {
+      const digits = rawValue.replace(/\D/g, '').slice(0, 11);
+      // Formatar (XX) XXXXX-XXXX ou (XX) XXXX-XXXX
+      if (digits.length <= 2) value = digits;
+      else if (digits.length <= 6) value = `(${digits.slice(0,2)}) ${digits.slice(2)}`;
+      else if (digits.length <= 10) value = `(${digits.slice(0,2)}) ${digits.slice(2,6)}-${digits.slice(6)}`;
+      else value = `(${digits.slice(0,2)}) ${digits.slice(2,7)}-${digits.slice(7)}`;
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -122,19 +145,27 @@ const EditProfile = () => {
     
     if (errors.length > 0) {
       errors.forEach(error => toast.error(error));
+      setFormErrors(errors);
       return false;
     }
+    setFormErrors([]);
     
     return true;
   };
 
   const hasChanges = () => {
-    return Object.keys(formData).some(key => {
-      if (key === 'profile_photo') {
-        return formData[key] !== null;
+    const changed = Object.keys(formData).some(key => {
+      if (key === 'profile_photo') return formData[key] !== null;
+      const a = formData[key];
+      const b = originalData[key];
+      if (key === 'cpf' || key === 'cnpj' || key === 'telefone') {
+        const normA = (a || '').toString().replace(/\D/g, '')
+        const normB = (b || '').toString().replace(/\D/g, '')
+        return normA !== normB;
       }
-      return formData[key] !== originalData[key];
+      return a !== b;
     });
+    return changed;
   };
 
   const handleSubmit = async (e) => {
@@ -154,17 +185,24 @@ const EditProfile = () => {
     try {
       const submitData = new FormData();
       
-      // Adicionar apenas campos que mudaram
+      // Adicionar apenas campos que mudaram (comparação normalizada para CPF/CNPJ/telefone)
       Object.keys(formData).forEach(key => {
-        if (key === 'profile_photo' && formData[key]) {
-          submitData.append('profile_photo', formData[key]);
-        } else if (key !== 'profile_photo' && formData[key] !== originalData[key]) {
-          // Limpar formatação de CPF, CNPJ e telefone
-          if (key === 'cpf' || key === 'cnpj' || key === 'telefone') {
-            submitData.append(key, formData[key].replace(/\D/g, ''));
-          } else {
-            submitData.append(key, formData[key]);
-          }
+        const newVal = formData[key];
+        const oldVal = originalData[key];
+        const changed = (key === 'profile_photo') ? !!newVal : (
+          (key === 'cpf' || key === 'cnpj' || key === 'telefone') ?
+            ( (newVal||'').toString().replace(/\D/g, '') !== (oldVal||'').toString().replace(/\D/g, '') ) :
+            newVal !== oldVal
+        );
+
+        if (!changed) return;
+
+        if (key === 'profile_photo') {
+          submitData.append('profile_photo', newVal);
+        } else if (key === 'cpf' || key === 'cnpj' || key === 'telefone') {
+          submitData.append(key, (newVal||'').toString().replace(/\D/g, ''));
+        } else {
+          submitData.append(key, newVal);
         }
       });
       
@@ -194,15 +232,8 @@ const EditProfile = () => {
     }
   };
 
-  const handleCancel = () => {
-    if (hasChanges()) {
-      if (window.confirm('Tem certeza que deseja cancelar? As alterações serão perdidas.')) {
-        navigate('/perfil');
-      }
-    } else {
-      navigate('/perfil');
-    }
-  };
+  // cancel handler removed per UI spec (no cancel button)
+  const handleCancel = () => {};
 
   if (loading) {
     return (
@@ -243,6 +274,18 @@ const EditProfile = () => {
             <h1 className="text-3xl font-bold text-gray-900">Editar Perfil</h1>
             <p className="text-gray-600 mt-2">Atualize suas informações pessoais</p>
           </div>
+
+          {/* Mostrar erros do formulário em bloco visível */}
+          {formErrors && formErrors.length > 0 && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6 whitespace-pre-line">
+              <strong className="font-bold">Erros:</strong>
+              <ul className="mt-2 list-disc list-inside">
+                {formErrors.map((err, idx) => (
+                  <li key={idx}>{err}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Foto de Perfil */}
@@ -400,15 +443,7 @@ const EditProfile = () => {
             </div>
 
             {/* Botões de Ação */}
-            <div className="flex justify-end space-x-4">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
-              >
-                <FaTimes className="mr-2" />
-                Cancelar
-              </button>
+            <div className="flex justify-end">
               <button
                 type="submit"
                 disabled={saving || !hasChanges()}
