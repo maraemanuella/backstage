@@ -16,6 +16,7 @@ class NotificacaoSerializer(serializers.ModelSerializer):
             'mensagem',
             'lida',
             'link',
+            'metadata',
             'created_at',
             'tempo_decorrido',
         ]

@@ -21,7 +21,8 @@ from apps.eventos.views import (
 from apps.inscricoes.views import (
     InscricaoCreateView, MinhasInscricoesView, inscricao_detalhes,
     iniciar_inscricao_pagamento, confirmar_pagamento_inscricao,
-    aprovar_pagamento_inscricao, listar_pagamentos_pendentes, cancelar_inscricao
+    aprovar_pagamento_inscricao, listar_pagamentos_pendentes, cancelar_inscricao,
+    trocar_metodo_pagamento, verificar_pagamento_pendente
 )
 from apps.avaliacoes.views import AvaliacaoListView, AvaliacaoCreateView
 from apps.favoritos.views import list_favorites, toggle_favorite
@@ -82,9 +83,14 @@ urlpatterns = [
     # Pagamento PIX
     path('api/inscricoes/iniciar-pagamento/', iniciar_inscricao_pagamento, name='iniciar-inscricao-pagamento'),
     path('api/inscricoes/<uuid:inscricao_id>/confirmar-pagamento/', confirmar_pagamento_inscricao, name='confirmar-pagamento'),
+    path('api/inscricoes/<uuid:inscricao_id>/trocar-metodo-pagamento/', trocar_metodo_pagamento, name='trocar-metodo-pagamento'),
     path('api/inscricoes/<uuid:inscricao_id>/aprovar-pagamento/', aprovar_pagamento_inscricao, name='aprovar-pagamento'),
+    path('api/inscricoes/evento/<uuid:evento_id>/pagamento-pendente/', verificar_pagamento_pendente, name='verificar-pagamento-pendente'),
     path('api/inscricoes/evento/<uuid:evento_id>/pagamentos-pendentes/', listar_pagamentos_pendentes, name='pagamentos-pendentes'),
     
+    # Pagamento - Todas as formas (PIX e Stripe)
+    path('api/pagamento/', include('apps.inscricoes.payment_urls')),
+
     # Cancelar inscrição
     path('api/inscricoes/<uuid:inscricao_id>/cancelar/', cancelar_inscricao, name='cancelar-inscricao'),
 

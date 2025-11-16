@@ -17,3 +17,4 @@ django-sslserver
 reportlab
 requests
 mailersend
+stripe

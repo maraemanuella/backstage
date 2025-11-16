@@ -33,6 +33,8 @@ import EventoAnalytics from "./pages/EventoAnalytics";
 import Sac from "./pages/Sac.jsx";
 import UserManagement from "./pages/UserManagement";
 import PaymentPage from "./pages/PaymentPage";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
+import PaymentCancelPage from "./pages/PaymentCancelPage";
 import InscriptionSuccess from "./pages/InscriptionSuccess";
 import GerenciarPagamentos from "./pages/GerenciarPagamentos";
 import MeusEventos from "./pages/MeusEventos";
@@ -128,7 +130,27 @@ function App() {
               </ProtectedRoute>
             }
           />
-          
+
+          {/* Stripe payment success */}
+          <Route
+            path="/payment/success"
+            element={
+              <ProtectedRoute>
+                <PaymentSuccessPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Stripe payment cancel */}
+          <Route
+            path="/payment/cancel"
+            element={
+              <ProtectedRoute>
+                <PaymentCancelPage />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Sucesso da inscrição */}
           <Route
             path="/inscricoes/sucesso"

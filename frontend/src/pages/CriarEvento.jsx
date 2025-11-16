@@ -288,7 +288,7 @@ function CriarEvento() {
       if (evento.latitude) formData.append('latitude', evento.latitude)
       if (evento.longitude) formData.append('longitude', evento.longitude)
       if (evento.foto_capa) formData.append('foto_capa', evento.foto_capa)
-      if (evento.qr_code_pix) formData.append('qr_code_pix', evento.qr_code_pix)
+      // QR Code PIX removido - pagamentos apenas via cartão
 
       const response = await api.post('/api/eventos/criar/', formData, {
         headers: {
@@ -543,20 +543,6 @@ function CriarEvento() {
                     onChange={handleFileChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">QR Code PIX para Pagamento</label>
-                  <input
-                    type="file"
-                    name="qr_code_pix"
-                    accept="image/*"
-                    onChange={(e) => setEvento(prev => ({ ...prev, qr_code_pix: e.target.files[0] }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                  <small className="text-gray-500">
-                    Faça upload do QR Code PIX para que os participantes possam realizar o pagamento das inscrições
-                  </small>
                 </div>
               </div>
             </div>

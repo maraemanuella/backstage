@@ -18,6 +18,7 @@ class Notificacao(models.Model):
         ('transferencia_recebida', 'Solicitação de Transferência Recebida'),
         ('transferencia', 'Transferência'),
         ('inscricao_confirmada', 'Inscrição Confirmada'),
+        ('pagamento_pendente', 'Pagamento Pendente'),
         ('checkin_lembrete', 'Lembrete de Check-in'),
         ('avaliacao_pendente', 'Avaliação Pendente'),
         ('documento_aprovado', 'Documento Aprovado'),
@@ -54,6 +55,12 @@ class Notificacao(models.Model):
         blank=True,
         help_text='Link para redirecionar quando a notificação for clicada',
         verbose_name='Link'
+    )
+    metadata = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text='Dados adicionais da notificação (ex: inscricao_id, evento_id)',
+        verbose_name='Metadados'
     )
     created_at = models.DateTimeField(
         auto_now_add=True,

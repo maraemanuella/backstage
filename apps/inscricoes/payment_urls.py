@@ -1,18 +1,33 @@
 """
 payment_urls.py
-URLs relacionadas ao sistema de pagamento PIX
+URLs relacionadas ao sistema de pagamento com Stripe (Cartão)
 """
 from django.urls import path
 from . import payment_views
 
 urlpatterns = [
-    # QR Code PIX do evento
+    # Stripe endpoints (Cartão de Crédito/Débito)
     path(
-        'evento/<uuid:evento_id>/qrcode/',
-        payment_views.evento_qrcode_pix,
-        name='evento-qrcode-pix'
+        'stripe/create-checkout-session/',
+        payment_views.create_stripe_checkout_session,
+        name='stripe-create-checkout-session'
     ),
-    
+    path(
+        'stripe/success/',
+        payment_views.stripe_payment_success,
+        name='stripe-payment-success'
+    ),
+    path(
+        'stripe/webhook/',
+        payment_views.stripe_webhook,
+        name='stripe-webhook'
+    ),
+    path(
+        'stripe/config/',
+        payment_views.stripe_config,
+        name='stripe-config'
+    ),
+
     # Informações de pagamento da inscrição
     path(
         'inscricao/<uuid:inscricao_id>/',

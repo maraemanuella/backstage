@@ -107,22 +107,35 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-db_options = {}
+# Verificar se deve usar PostgreSQL (se DB_NAME está definido)
+DB_NAME = os.getenv('DB_NAME')
 
-if os.getenv('ENV') == 'production':
-    db_options = {'sslmode': 'require'}
+if DB_NAME:
+    # PostgreSQL Configuration
+    db_options = {}
+
+    # Obter modo SSL do .env ou decidir baseado no ENV
+    db_sslmode = os.getenv('DB_SSLMODE', 'disable')
+
+    # Se ENV é production e sslmode não foi especificado, usar require
+    if os.getenv('ENV') == 'production' and os.getenv('DB_SSLMODE') is None:
+        db_sslmode = 'require'
+
+    db_options = {'sslmode': db_sslmode}
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME'),
-            'USER': os.getenv('DB_USER'),
-            'PASSWORD': os.getenv('DB_PASSWORD'),
-            'HOST': os.getenv('DB_HOST'),
-            'PORT': os.getenv('DB_PORT'),
+            'NAME': DB_NAME,
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
             'OPTIONS': db_options
         }
     }
 else:
+    # SQLite (padrão quando não há DB_NAME)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -237,8 +250,16 @@ else:
 
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@localhost.dev")
 
+# STRIPE CONFIG (Cartão de Crédito/Débito)
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', 'your_stripe_secret_key_here')
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY', 'your_stripe_publishable_key_here')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
+STRIPE_CURRENCY = 'brl'
+
+
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 # Security headers for Google OAuth
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+

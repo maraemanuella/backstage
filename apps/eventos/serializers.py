@@ -11,9 +11,9 @@ class EventoSerializer(serializers.ModelSerializer):
     organizador_score = serializers.FloatField(source='organizador.score', read_only=True)
 
     foto_capa = serializers.ImageField(use_url=True, required=False)
-    qr_code_pix = serializers.ImageField(use_url=True, required=False)
     latitude = serializers.FloatField(required=False, allow_null=True)
     longitude = serializers.FloatField(required=False, allow_null=True)
+
 
     class Meta:
         model = Evento
@@ -32,7 +32,6 @@ class EventoSerializer(serializers.ModelSerializer):
             'permite_transferencia',
             'politica_cancelamento',
             'foto_capa',
-            'qr_code_pix',
             'status',
             'created_at',
             'updated_at',
@@ -94,6 +93,11 @@ class EventoSerializer(serializers.ModelSerializer):
         if 'Outro' not in categorias and categorias_customizadas:
             data['categorias_customizadas'] = []
         
+        # Converter itens_incluidos de lista para string se necessário
+        itens = data.get('itens_incluidos', [])
+        if isinstance(itens, list):
+            data['itens_incluidos'] = '\n'.join(itens)
+
         return data
 
     def create(self, validated_data):

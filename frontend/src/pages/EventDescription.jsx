@@ -12,6 +12,7 @@ import {
   FaUsers,
   FaCheckCircle,
   FaShareAlt,
+  FaCreditCard,
 } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -47,6 +48,7 @@ function EventDescription() {
   const [comentario, setComentario] = useState("");
   const [nota, setNota] = useState(0);
   const [enviandoAvaliacao, setEnviandoAvaliacao] = useState(false);
+  const [pendingPayment, setPendingPayment] = useState(null);
 
   useEffect(() => {
     if (!eventId) {
@@ -98,7 +100,22 @@ function EventDescription() {
         console.error("Detalhes:", err.response?.data);
       }
     };
+
+    const checkPendingPayment = async () => {
+      try {
+        const token = localStorage.getItem("access");
+        if (!token) return;
+        const res = await api.get(`/api/inscricoes/evento/${eventId}/pagamento-pendente/`);
+        if (res.data.tem_pagamento_pendente) {
+          setPendingPayment(res.data);
+        }
+      } catch (err) {
+        console.error("Erro ao verificar pagamento pendente:", err);
+      }
+    };
+
     fetchResumo();
+    checkPendingPayment();
   }, [eventId]);
 
   // ---------- Inscrição ----------
@@ -300,7 +317,18 @@ function EventDescription() {
 
         {/* Ações */}
         <div className="flex flex-wrap gap-4 mt-4 mb-6">
-          <EventButton
+          {/* Botão Continuar Pagamento - aparece se houver pagamento pendente */}
+          {pendingPayment ? (
+            <EventButton
+              onClick={() => navigate(`/pagamento/${pendingPayment.inscricao_id}`)}
+              className="bg-orange-600 text-white hover:bg-orange-700 flex items-center gap-2 px-8 py-3"
+            >
+              <FaCreditCard />
+              Continuar Pagamento
+            </EventButton>
+          ) : (
+            /* Botão Se Inscrever - só aparece se NÃO houver pagamento pendente */
+            <EventButton
               onClick={handleRegister}
               disabled={registering || isRegistered || event.esta_lotado || event.vagas_disponiveis <= 0}
               className={`
@@ -319,6 +347,7 @@ function EventDescription() {
                 ? "Lotado"
                 : "Se inscrever"}
             </EventButton>
+          )}
 
           <EventButton
             className="bg-gray-100 text-gray-700 hover:bg-gray-200 flex items-center gap-2 px-8 py-3"
@@ -331,8 +360,8 @@ function EventDescription() {
             <FaShareAlt /> Compartilhar
           </EventButton>
 
-          {/* Só mostra Check-in se inscrito */}
-          {isRegistered && (
+          {/* Check-in só aparece se inscrito e NÃO tem pagamento pendente */}
+          {isRegistered && !pendingPayment && (
             <EventButton
               className="bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2 px-8 py-3 hover:cursor-pointer"
               onClick={handleCheckin}

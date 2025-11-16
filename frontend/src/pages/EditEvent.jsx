@@ -112,7 +112,7 @@ function EditEvent() {
 
     // Adiciona o QR Code PIX, se o usuário selecionou um
     if (qrCodePixFile) {
-      formData.append("qr_code_pix", qrCodePixFile);
+      // QR Code PIX removido - pagamentos apenas via cartão
     }
 
     try {
@@ -259,36 +259,6 @@ function EditEvent() {
             )}
           </div>
 
-          {/* QR Code PIX */}
-          <div>
-            <label
-              htmlFor="qr_code_pix"
-              className="block text-sm font-medium text-gray-700"
-            >
-              QR Code PIX para Pagamento
-            </label>
-            <input
-              type="file"
-              id="qr_code_pix"
-              name="qr_code_pix"
-              accept="image/*"
-              onChange={(e) => setQrCodePixFile(e.target.files[0])}
-              className="mt-1 cursor-pointer block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
-            />
-            {evento.qr_code_pix && (
-              <div className="mt-2">
-                <p className="text-sm text-gray-500">QR Code atual:</p>
-                <img
-                  src={evento.qr_code_pix}
-                  alt="QR Code PIX"
-                  className="h-32 w-32 object-contain border-2 border-gray-300 p-2"
-                />
-              </div>
-            )}
-            <small className="text-gray-500 mt-1 block">
-              Faça upload do QR Code PIX para que os participantes possam realizar o pagamento das inscrições
-            </small>
-          </div>
 
           {/* Categorias e Status */}
           <div className="grid grid-cols-1 gap-6">

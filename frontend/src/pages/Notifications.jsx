@@ -10,7 +10,8 @@ import {
   FaTrash,
   FaCheckDouble,
   FaFilter,
-  FaArrowLeft
+  FaArrowLeft,
+  FaCreditCard
 } from "react-icons/fa";
 import api from "../api";
 import { toast } from "react-toastify";
@@ -35,6 +36,7 @@ function Notifications() {
     { value: "evento_proximo", label: "Evento Próximo" },
     { value: "transferencia", label: "Transferência" },
     { value: "avaliacao", label: "Avaliação" },
+    { value: "pagamento_pendente", label: "Pagamento Pendente" },
     { value: "sistema", label: "Sistema" },
     { value: "evento_cancelado", label: "Evento Cancelado" },
     { value: "evento_modificado", label: "Evento Modificado" },
@@ -50,6 +52,7 @@ function Notifications() {
       evento_proximo: <FaCalendarAlt className="text-blue-500" />,
       transferencia: <FaExchangeAlt className="text-orange-500" />,
       avaliacao: <FaStar className="text-yellow-500" />,
+      pagamento_pendente: <FaCreditCard className="text-orange-500" />,
       sistema: <FaBell className="text-purple-500" />,
       evento_cancelado: <FaBell className="text-red-500" />,
       evento_modificado: <FaBell className="text-yellow-500" />,
@@ -289,7 +292,18 @@ function Notifications() {
                         </div>
 
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          {!notification.lida && notification.link && (
+                          {/* Botão Finalizar Pagamento para notificações de pagamento pendente */}
+                          {notification.tipo === 'pagamento_pendente' && notification.metadata?.inscricao_id && (
+                            <button
+                              onClick={() => navigate(`/pagamento/${notification.metadata.inscricao_id}`)}
+                              className="bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+                            >
+                              <FaCreditCard />
+                              Finalizar Pagamento
+                            </button>
+                          )}
+
+                          {!notification.lida && notification.link && notification.tipo !== 'pagamento_pendente' && (
                             <button
                               onClick={() => markAsRead(notification.id, notification.link)}
                               className="text-blue-600 hover:text-blue-700 text-sm font-medium px-3 py-1 rounded hover:bg-blue-50 transition-colors"
@@ -297,7 +311,7 @@ function Notifications() {
                               Ver
                             </button>
                           )}
-                          {!notification.lida && !notification.link && (
+                          {!notification.lida && !notification.link && notification.tipo !== 'pagamento_pendente' && (
                             <button
                               onClick={() => markAsRead(notification.id, null)}
                               className="text-gray-600 hover:text-gray-700 text-sm font-medium px-3 py-1 rounded hover:bg-gray-100 transition-colors"
