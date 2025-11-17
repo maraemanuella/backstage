@@ -3,7 +3,6 @@ import Busca from "../components/Busca";
 import Filtro from "../components/Filtro";
 import FiltrosAvancados from "../components/FiltrosAvancados";
 import Eventos from "../components/Eventos";
-import Score from "../components/Score";
 import Modal from "../components/Modal";
 import { useContext, useEffect, useState } from "react";
 import api from "../api.js";
@@ -23,7 +22,7 @@ function Home() {
   });
   const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(true);
-  const { favorites, setFavorites } = useContext(FavoritesContext);
+  const { setFavorites } = useContext(FavoritesContext);
 
   const carregarEventos = async () => {
     try {
@@ -130,7 +129,6 @@ function Home() {
       <Modal isOpen={openModal} setOpenModal={setOpenModal} user={user} />
       <Header user={user} setOpenModal={setOpenModal} />
       <Busca busca={busca} setBusca={setBusca} />
-      <Score user={user} />
       <Filtro filtroAtivo={filtroAtivo} setFiltroAtivo={setFiltroAtivo} />
       <FiltrosAvancados
         filtrosAvancados={filtrosAvancados}

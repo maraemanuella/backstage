@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { FaBars, FaUser } from "react-icons/fa";
 import NotificationBell from "./NotificationBell";
+import ScorePill from "./ScorePill";
 
 function Header({ user, setOpenModal }) {
   const navigate = useNavigate();
@@ -64,6 +65,7 @@ function Header({ user, setOpenModal }) {
         </button>
       </div>
 
+        {user && <ScorePill />}
       <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
         {user && <NotificationBell />}
         {user && (

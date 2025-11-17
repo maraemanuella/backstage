@@ -259,3 +259,80 @@ class GoogleLoginView(APIView):
                 'type': type(e).__name__
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_ranking(request):
+    """
+    Retorna informações completas de ranking do usuário autenticado.
+    Inclui: score, nível, cor, e informações sobre o próximo nível.
+    """
+    user = request.user
+    ranking_info = user.get_ranking_info()
+
+    return Response({
+        'score': ranking_info['score'],
+        'nivel': ranking_info['nivel'],
+        'cor': ranking_info['cor'],
+        'proximo_nivel': ranking_info['proximo_nivel'],
+        'descricao': get_nivel_descricao(ranking_info['nivel'])
+    }, status=status.HTTP_200_OK)
+
+
+def get_nivel_descricao(nivel):
+    """Retorna a descrição e benefícios de cada nível"""
+    descricoes = {
+        'Bronze': {
+            'titulo': 'Bronze',
+            'descricao': 'Você está começando sua jornada!',
+            'beneficios': [
+                'Participe de eventos',
+                'Construa seu histórico',
+                'Melhore seu score'
+            ],
+            'dica': 'Participe de eventos e avalie organizadores para subir de nível!'
+        },
+        'Prata': {
+            'titulo': 'Prata',
+            'descricao': 'Usuário confiável da plataforma',
+            'beneficios': [
+                'Prioridade em listas de espera',
+                'Destaque em eventos',
+                'Maior visibilidade'
+            ],
+            'dica': 'Continue participando e mantendo boas avaliações!'
+        },
+        'Ouro': {
+            'titulo': 'Ouro',
+            'descricao': 'Membro valioso da comunidade',
+            'beneficios': [
+                'Alta prioridade em eventos',
+                'Badge dourado no perfil',
+                'Acesso a eventos exclusivos'
+            ],
+            'dica': 'Mantenha um histórico impecável para alcançar Platina!'
+        },
+        'Platina': {
+            'titulo': 'Platina',
+            'descricao': 'Usuário exemplar e confiável',
+            'beneficios': [
+                'Máxima prioridade',
+                'Badge platina premium',
+                'Eventos VIP',
+                'Suporte prioritário'
+            ],
+            'dica': 'Excelente! Continue assim para chegar ao Diamante!'
+        },
+        'Diamante': {
+            'titulo': 'Diamante',
+            'descricao': 'Elite da plataforma!',
+            'beneficios': [
+                'Status máximo',
+                'Badge diamante exclusivo',
+                'Todos os eventos VIP',
+                'Suporte premium 24/7',
+                'Influenciador da comunidade'
+            ],
+            'dica': 'Parabéns! Você atingiu o nível máximo!'
+        }
+    }
+    return descricoes.get(nivel, descricoes['Bronze'])
