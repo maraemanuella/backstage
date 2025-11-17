@@ -1,18 +1,12 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { FaBars, FaUser } from "react-icons/fa";
 import NotificationBell from "./NotificationBell";
 
 function Header({ user, setOpenModal }) {
   const navigate = useNavigate();
-  const location = useLocation();
-  const isUserManagementPage = location.pathname === '/user-management';
 
   const handleProfileClick = () => {
     navigate('/perfil');
-  };
-
-  const handleUserManagementClick = () => {
-    navigate('/user-management');
   };
 
   const handleMenuClick = () => {
@@ -70,7 +64,7 @@ function Header({ user, setOpenModal }) {
         </button>
       </div>
 
-      <div className="flex items-center gap-1 sm:gap-2 md:gap-3 lg:gap-4 flex-shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
         {user && <NotificationBell />}
         {user && (
           <button
@@ -82,17 +76,6 @@ function Header({ user, setOpenModal }) {
             <span className="font-medium text-xs sm:text-sm text-gray-800 hidden md:inline max-w-[100px] lg:max-w-none truncate">
               {user.username}
             </span>
-          </button>
-        )}
-        {/* Show user management link for staff/superuser - hide if already on user management page */}
-        {user && (user.is_superuser || user.is_staff) && !isUserManagementPage && (
-          <button
-            className="text-xs sm:text-sm bg-gray-100 hover:bg-gray-200 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition-colors whitespace-nowrap"
-            onClick={handleUserManagementClick}
-            aria-label="Gestão de Usuários"
-          >
-            <span className="hidden lg:inline">Gestão de Usuários</span>
-            <span className="inline lg:hidden">Gestão</span>
           </button>
         )}
       </div>

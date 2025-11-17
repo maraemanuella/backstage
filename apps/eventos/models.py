@@ -9,6 +9,17 @@ class Evento(models.Model):
     ('Palestra', 'Palestra'),
     ('Networking', 'Networking'),
     ('Curso', 'Curso'),
+    ('Conferência', 'Conferência'),
+    ('Seminário', 'Seminário'),
+    ('Hackathon', 'Hackathon'),
+    ('Meetup', 'Meetup'),
+    ('Webinar', 'Webinar'),
+    ('Treinamento', 'Treinamento'),
+    ('Festa', 'Festa'),
+    ('Show', 'Show'),
+    ('Esporte', 'Esporte'),
+    ('Cultural', 'Cultural'),
+    ('Voluntariado', 'Voluntariado'),
     ('Outro', 'Outro'),
     ]
 
@@ -97,4 +108,21 @@ class Evento(models.Model):
 
         valor_desconto = self.valor_deposito * desconto
         return self.valor_deposito - valor_desconto
+
+    @staticmethod
+    def calcular_taxa_plataforma(valor_deposito):
+        """
+        Calcula a taxa de processamento que fica com a plataforma.
+        5% do valor do depósito para cobrir custos do gateway e operação.
+        Esta taxa só é retida se o usuário NÃO comparecer.
+        """
+        return valor_deposito * Decimal('0.05')
+
+    def calcular_repasse_organizador(self, valor_deposito):
+        """
+        Calcula o valor que o organizador recebe quando o usuário não comparece.
+        Valor do depósito - Taxa da plataforma (5%)
+        """
+        taxa_plataforma = self.calcular_taxa_plataforma(valor_deposito)
+        return valor_deposito - taxa_plataforma
 

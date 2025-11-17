@@ -68,18 +68,22 @@ const InscriptionSuccess = () => {
           <h3>Detalhes da Inscrição</h3>
           <div className="detail-row">
             <span className="detail-label">Evento:</span>
-            <span className="detail-value">{inscricao.evento_titulo || 'N/A'}</span>
-          </div>
-          <div className="detail-row">
-            <span className="detail-label">Status:</span>
-            <span className={`detail-value status-${inscricao.status}`}>
-              {inscricao.status === 'confirmada' ? 'Confirmada' : inscricao.status}
+            <span className="detail-value">
+              {inscricao.evento_titulo || inscricao.evento?.titulo || 'Não informado'}
             </span>
           </div>
           <div className="detail-row">
-            <span className="detail-label">Valor pago:</span>
+            <span className="detail-label">Status:</span>
+            <span className={`detail-value status-${inscricao.status || 'confirmada'}`}>
+              {inscricao.status === 'confirmada' ? 'Confirmada' : inscricao.status || 'Confirmada'}
+            </span>
+          </div>
+          <div className="detail-row">
+            <span className="detail-label">Valor:</span>
             <span className="detail-value">
-              R$ {parseFloat(inscricao.valor_final || 0).toFixed(2)}
+              {parseFloat(inscricao.valor_final || 0).toFixed(2) === '0.00'
+                ? 'Sem depósito'
+                : `R$ ${parseFloat(inscricao.valor_final || 0).toFixed(2)}`}
             </span>
           </div>
           {inscricao.qr_code && (

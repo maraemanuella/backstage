@@ -184,6 +184,63 @@ def iniciar_inscricao_pagamento(request):
     valor_com_desconto = evento.calcular_valor_com_desconto(request.user)
     desconto_aplicado = valor_original - valor_com_desconto
     
+    # EVENTO SEM DEPÓSITO INICIAL (valor zero ou abaixo do mínimo)
+    if valor_com_desconto == 0 or valor_com_desconto < Decimal('0.50'):
+        # Criar inscrição já confirmada (sem depósito necessário)
+        inscricao = Inscricao.objects.create(
+            usuario=request.user,
+            evento=evento,
+            nome_completo_inscricao=request.data.get('nome_completo_inscricao', request.user.get_full_name()),
+            cpf_inscricao=request.data.get('cpf_inscricao', ''),
+            telefone_inscricao=request.data.get('telefone_inscricao', ''),
+            email_inscricao=request.data.get('email_inscricao', request.user.email),
+            metodo_pagamento='isento',
+            aceita_termos=request.data.get('aceita_termos', True),
+            valor_original=valor_original,
+            desconto_aplicado=desconto_aplicado,
+            valor_final=valor_com_desconto,
+            status='confirmada',  # Já confirmado (não requer depósito)
+            status_pagamento='aprovado',  # Isento de pagamento inicial
+            data_pagamento=timezone.now(),
+            expira_em=None  # Não expira
+        )
+
+        # Criar notificação de inscrição confirmada
+        Notificacao.objects.create(
+            usuario=request.user,
+            tipo='inscricao_confirmada',
+            titulo='Inscrição confirmada!',
+            mensagem=f'Sua inscrição para "{evento.titulo}" foi confirmada! Este evento não requer depósito inicial.',
+            link=f'/evento/{evento.id}',
+            metadata={
+                'inscricao_id': str(inscricao.id),
+                'evento_id': str(evento.id),
+                'isento': True
+            }
+        )
+
+        # Retornar resposta de sucesso direto
+        return Response({
+            'inscricao_id': str(inscricao.id),
+            'evento': {
+                'id': str(evento.id),
+                'titulo': evento.titulo,
+                'data_evento': evento.data_evento,
+            },
+            'status': 'confirmada',
+            'status_pagamento': 'aprovado',
+            'valor_final': str(valor_com_desconto),
+            'isento': True,
+            'mensagem': 'Inscrição confirmada! Este evento não requer depósito inicial. Compareça para garantir sua vaga!',
+        }, status=status.HTTP_201_CREATED)
+
+    # EVENTO PAGO - Validar valor mínimo do Stripe (R$ 0.50)
+    if valor_com_desconto < Decimal('0.50'):
+        return Response(
+            {'error': 'Valor mínimo para pagamento é R$ 0,50. Este evento não pode ser pago com cartão.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     # Obter método de pagamento (padrão: cartão de crédito)
     metodo_pagamento = request.data.get('metodo_pagamento', 'cartao_credito')
 

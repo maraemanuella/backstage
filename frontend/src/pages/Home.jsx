@@ -1,6 +1,7 @@
 import Header from "../components/Header";
 import Busca from "../components/Busca";
 import Filtro from "../components/Filtro";
+import FiltrosAvancados from "../components/FiltrosAvancados";
 import Eventos from "../components/Eventos";
 import Score from "../components/Score";
 import Modal from "../components/Modal";
@@ -13,29 +14,70 @@ function Home() {
   const [eventos, setEventos] = useState([]);
   const [busca, setBusca] = useState("");
   const [filtroAtivo, setFiltroAtivo] = useState("Todos");
+  const [filtrosAvancados, setFiltrosAvancados] = useState({
+    depositoLivre: false,
+    proximosSete: false,
+    dataInicio: '',
+    dataFim: '',
+    ordenacao: 'data'
+  });
   const [openModal, setOpenModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const { favorites, setFavorites } = useContext(FavoritesContext);
+
+  const carregarEventos = async () => {
+    try {
+      setLoading(true);
+
+      // Construir query params
+      const params = new URLSearchParams();
+
+      if (filtroAtivo && filtroAtivo !== "Todos") {
+        params.append('categoria', filtroAtivo);
+      }
+
+      if (filtrosAvancados.depositoLivre) {
+        params.append('deposito_livre', 'true');
+      }
+
+      if (filtrosAvancados.proximosSete) {
+        params.append('proximos', 'true');
+      }
+
+      if (filtrosAvancados.dataInicio) {
+        params.append('data_inicio', filtrosAvancados.dataInicio);
+      }
+
+      if (filtrosAvancados.dataFim) {
+        params.append('data_fim', filtrosAvancados.dataFim);
+      }
+
+      if (filtrosAvancados.ordenacao) {
+        params.append('ordenacao', filtrosAvancados.ordenacao);
+      }
+
+      const eventosRes = await api.get(`/api/eventos/?${params.toString()}`);
+      setEventos(eventosRes.data);
+    } catch (error) {
+      console.error("Erro ao carregar eventos:", error);
+      setEventos([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        const [userRes, eventosRes, favoritesRes] = await Promise.allSettled([
+        const [userRes, favoritesRes] = await Promise.allSettled([
           api.get("/api/user/me/"),
-          api.get("/api/eventos/"),
           api.get("/api/favorites/")
         ]);
 
         if (userRes.status === 'fulfilled') {
           setUser(userRes.value.data);
-        }
-
-        if (eventosRes.status === 'fulfilled') {
-          setEventos(eventosRes.value.data);
-        } else {
-          setEventos([]);
         }
 
         if (favoritesRes.status === 'fulfilled') {
@@ -46,24 +88,31 @@ function Home() {
         }
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
-      } finally {
-        setLoading(false);
       }
+
+      // Carregar eventos separadamente
+      carregarEventos();
     };
 
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setFavorites]);
 
-  const eventosFiltrados = eventos.filter(evento => {
-    const filtroTipo = filtroAtivo.toLowerCase() === "todos" || 
-                       (evento.categorias && evento.categorias.some(cat => cat.toLowerCase() === filtroAtivo.toLowerCase()));
-    
-    const filtroBusca = !busca || 
-                        evento.titulo?.toLowerCase().includes(busca.toLowerCase()) ||
-                        evento.endereco?.toLowerCase().includes(busca.toLowerCase());
+  // Recarregar eventos quando filtro de categoria mudar
+  useEffect(() => {
+    carregarEventos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filtroAtivo]);
 
-    return filtroTipo && filtroBusca;
+  const eventosFiltrados = eventos.filter(evento => {
+    return !busca ||
+           evento.titulo?.toLowerCase().includes(busca.toLowerCase()) ||
+           evento.endereco?.toLowerCase().includes(busca.toLowerCase());
   });
+
+  const handleAplicarFiltros = () => {
+    carregarEventos();
+  };
 
   if (loading) {
     return (
@@ -83,6 +132,11 @@ function Home() {
       <Busca busca={busca} setBusca={setBusca} />
       <Score user={user} />
       <Filtro filtroAtivo={filtroAtivo} setFiltroAtivo={setFiltroAtivo} />
+      <FiltrosAvancados
+        filtrosAvancados={filtrosAvancados}
+        setFiltrosAvancados={setFiltrosAvancados}
+        onAplicarFiltros={handleAplicarFiltros}
+      />
       <Eventos eventos={eventosFiltrados} />
     </main>
   );

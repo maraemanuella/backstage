@@ -176,12 +176,20 @@ function Eventos({ eventos }) {
                 </div>
 
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="text-green-600 font-semibold text-lg">
-                    R$ {formatPrice(evento.valor_deposito)}
-                  </span>
-                  {evento.valor_com_desconto && evento.valor_com_desconto < evento.valor_deposito && (
-                    <span className="text-xs text-gray-500 line-through">
-                      R$ {formatPrice(evento.valor_deposito)}
+                  {evento.valor_deposito > 0 ? (
+                    <>
+                      <span className="text-green-600 font-semibold text-lg">
+                        R$ {formatPrice(evento.valor_deposito)}
+                      </span>
+                      {evento.valor_com_desconto && evento.valor_com_desconto < evento.valor_deposito && (
+                        <span className="text-xs text-gray-500 line-through">
+                          R$ {formatPrice(evento.valor_deposito)}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-blue-600 font-medium text-sm bg-blue-50 px-3 py-1.5 rounded-full">
+                      Sem depósito inicial
                     </span>
                   )}
                 </div>

@@ -32,6 +32,7 @@ function CriarEvento() {
   })
   
   const [novaCategoria, setNovaCategoria] = useState('')
+  const [itensInclusos, setItensInclusos] = useState([{ id: 1, valor: '' }])
 
   useEffect(() => {
     const verificarPermissao = async () => {
@@ -243,6 +244,24 @@ function CriarEvento() {
     }))
   }
 
+  // Funções para gerenciar itens inclusos
+  const adicionarItemIncluso = () => {
+    const novoId = itensInclusos.length > 0 ? Math.max(...itensInclusos.map(item => item.id)) + 1 : 1
+    setItensInclusos([...itensInclusos, { id: novoId, valor: '' }])
+  }
+
+  const removerItemIncluso = (id) => {
+    if (itensInclusos.length > 1) {
+      setItensInclusos(itensInclusos.filter(item => item.id !== id))
+    }
+  }
+
+  const atualizarItemIncluso = (id, valor) => {
+    setItensInclusos(itensInclusos.map(item =>
+      item.id === id ? { ...item, valor } : item
+    ))
+  }
+
   const handleFileChange = (e) => {
     setEvento(prev => ({
       ...prev,
@@ -270,6 +289,12 @@ function CriarEvento() {
     try {
       const formData = new FormData()
 
+      // Converter itens inclusos de array para string (um item por linha)
+      const itensInclusosTexto = itensInclusos
+        .map(item => item.valor.trim())
+        .filter(valor => valor !== '')
+        .join('\n')
+
       formData.append('titulo', evento.titulo)
       formData.append('descricao', evento.descricao)
       formData.append('categorias', JSON.stringify(evento.categorias))
@@ -284,7 +309,7 @@ function CriarEvento() {
       formData.append('politica_cancelamento', evento.politica_cancelamento)
 
       if (evento.local_especifico) formData.append('local_especifico', evento.local_especifico)
-      if (evento.itens_incluidos) formData.append('itens_incluidos', evento.itens_incluidos)
+      if (itensInclusosTexto) formData.append('itens_incluidos', itensInclusosTexto)
       if (evento.latitude) formData.append('latitude', evento.latitude)
       if (evento.longitude) formData.append('longitude', evento.longitude)
       if (evento.foto_capa) formData.append('foto_capa', evento.foto_capa)
@@ -345,8 +370,8 @@ function CriarEvento() {
 
                 <div>
                   <label className="block text-sm font-medium mb-2">Categorias * <span className="text-gray-500 text-xs">(selecione uma ou mais)</span></label>
-                  <div className="space-y-2 p-3 border border-gray-300 rounded-lg">
-                    {['Workshop', 'Palestra', 'Networking', 'Curso', 'Outro'].map((cat) => (
+                  <div className="space-y-2 p-3 border border-gray-300 rounded-lg max-h-64 overflow-y-auto">
+                    {['Workshop', 'Palestra', 'Networking', 'Curso', 'Conferência', 'Seminário', 'Hackathon', 'Meetup', 'Webinar', 'Treinamento', 'Festa', 'Show', 'Esporte', 'Cultural', 'Voluntariado', 'Outro'].map((cat) => (
                       <label key={cat} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
                         <input
                           type="checkbox"
@@ -433,17 +458,56 @@ function CriarEvento() {
                   />
                 </div>
 
+                {/* Itens Inclusos - Sistema Dinâmico */}
                 <div>
-                  <label className="block text-sm font-medium mb-1">Itens Incluídos</label>
-                  <textarea
-                    name="itens_incluidos"
-                    value={evento.itens_incluidos}
-                    onChange={handleChange}
-                    rows={4}
-                    placeholder="Digite um item por linha&#10;Ex:&#10;Certificado de participação&#10;Coffee break&#10;Material didático"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                  <small className="text-gray-500">Digite um item por linha</small>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-medium">Itens Incluídos</label>
+                    <button
+                      type="button"
+                      onClick={adicionarItemIncluso}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors font-medium"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                      Adicionar Item
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {itensInclusos.map((item, index) => (
+                      <div key={item.id} className="flex items-center gap-2">
+                        <div className="flex-1 relative">
+                          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium text-sm">
+                            {index + 1}.
+                          </div>
+                          <input
+                            type="text"
+                            value={item.valor}
+                            onChange={(e) => atualizarItemIncluso(item.id, e.target.value)}
+                            placeholder="Ex: Coffe Break"
+                            className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                          />
+                        </div>
+                        {itensInclusos.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removerItemIncluso(item.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors group"
+                            title="Remover item"
+                          >
+                            <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <small className="text-gray-500 mt-2 block">
+                    Adicione os benefícios incluídos no evento (certificado, coffee break, material didático, etc)
+                  </small>
                 </div>
               </div>
             </div>
