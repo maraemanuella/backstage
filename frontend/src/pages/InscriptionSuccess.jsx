@@ -68,7 +68,7 @@ const InscriptionSuccess = () => {
           <h3>Detalhes da Inscrição</h3>
           <div className="detail-row">
             <span className="detail-label">Evento:</span>
-            <span className="detail-value">{inscricao.evento_titulo || 'N/A'}</span>
+            <span className="detail-value">{inscricao.evento?.titulo || inscricao.evento_titulo || 'Evento não informado'}</span>
           </div>
           <div className="detail-row">
             <span className="detail-label">Status:</span>
@@ -79,7 +79,7 @@ const InscriptionSuccess = () => {
           <div className="detail-row">
             <span className="detail-label">Valor pago:</span>
             <span className="detail-value">
-              R$ {parseFloat(inscricao.valor_final || 0).toFixed(2)}
+              R$ {parseFloat(inscricao.valor_pago || inscricao.valor_final || inscricao.valor || 0).toFixed(2)}
             </span>
           </div>
           {inscricao.qr_code && (
