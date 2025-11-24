@@ -14,6 +14,7 @@ from .views import (
     listar_verificacoes_pendentes,
     aprovar_verificacao,
     rejeitar_verificacao,
+    user_ranking,
 )
 
 urlpatterns = [
@@ -23,6 +24,7 @@ urlpatterns = [
     path('user/<int:pk>/delete/', DeleteUserView.as_view(), name='usuario-deletar'),
     path("user/me/", MeView.as_view(), name="me"),
     path('user/profile/', update_user_profile, name='update-user-profile'),
+    path('user/ranking/', user_ranking, name='user-ranking'),
     path('token/', CustomTokenObtainView.as_view(), name='get_token'),
     path('token/refresh/', TokenRefreshView.as_view(), name='refresh'),
     path('api-auth/', include('rest_framework.urls')),

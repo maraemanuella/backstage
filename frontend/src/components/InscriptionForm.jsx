@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import "../styles/EventInscription.css"
+import "../styles/InscriptionInfo.css"
 import EventSummary from './EventSummary'
 import ParticipantForm from './ParticipantForm'
 import PaymentMethodSelector from './PaymentMethodSelector'
@@ -106,7 +107,25 @@ function InscriptionForm({ eventId }) {
 
       console.log('Inscrição iniciada:', response.data)
       
-      // Redireciona para a página de pagamento com os dados
+      // Se for evento sem depósito inicial, redireciona para página de sucesso direto
+      if (response.data.isento || response.data.status === 'confirmada') {
+        toast.success('Inscrição confirmada! Este evento não requer depósito inicial.')
+        navigate('/inscricoes/sucesso', {
+          state: {
+            inscricao: {
+              id: response.data.inscricao_id,
+              evento_titulo: response.data.evento?.titulo || eventData?.titulo || 'Evento',
+              status: 'confirmada',
+              valor_final: response.data.valor_final || '0.00'
+            },
+            message: 'Inscrição confirmada! Compareça ao evento para garantir sua vaga.',
+            isento: true
+          }
+        })
+        return
+      }
+
+      // Se for evento pago, redireciona para a página de pagamento
       if (response.data && response.data.inscricao_id) {
         navigate(`/pagamento/${response.data.inscricao_id}`, {
           state: {
@@ -183,10 +202,13 @@ function InscriptionForm({ eventId }) {
               onInputChange={handleInputChange}
             />
             
-            <PaymentMethodSelector
-              metodoPagamento={metodoPagamento}
-              onSelect={setMetodoPagamento}
-            />
+            {/* Só mostrar seletor de pagamento se não for gratuito */}
+            {eventData?.valor_com_desconto > 0 && eventData?.valor_com_desconto >= 0.50 && (
+              <PaymentMethodSelector
+                metodoPagamento={metodoPagamento}
+                onSelect={setMetodoPagamento}
+              />
+            )}
           </div>
 
           <div className="summary-section">

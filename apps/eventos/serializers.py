@@ -5,6 +5,7 @@ class EventoSerializer(serializers.ModelSerializer):
     inscritos_count = serializers.ReadOnlyField()
     vagas_disponiveis = serializers.ReadOnlyField()
     esta_lotado = serializers.ReadOnlyField()
+    is_nao_reembolsavel = serializers.ReadOnlyField()
 
     organizador_nome = serializers.CharField(source='organizador.get_full_name', read_only=True)
     organizador_username = serializers.CharField(source='organizador.username', read_only=True)
@@ -43,16 +44,17 @@ class EventoSerializer(serializers.ModelSerializer):
             'inscritos_count',
             'vagas_disponiveis',
             'esta_lotado',
+            'is_nao_reembolsavel',
         ]
         read_only_fields = [
             'id', 'created_at', 'updated_at',
-            'inscritos_count', 'vagas_disponiveis', 'esta_lotado',
+            'inscritos_count', 'vagas_disponiveis', 'esta_lotado', 'is_nao_reembolsavel',
             'organizador_nome', 'organizador_username', 'organizador_score'
         ]
 
     def validate(self, data):
         """
-        Valida se categorias_customizadas foi fornecida quando 'Outro' está nas categorias
+        Valida categorias e adiciona automaticamente "Outro" se houver categorias_customizadas
         """
         categorias = data.get('categorias', [])
         categorias_customizadas = data.get('categorias_customizadas', [])
@@ -63,12 +65,23 @@ class EventoSerializer(serializers.ModelSerializer):
                 'categorias': 'Categorias deve ser uma lista.'
             })
         
-        # Validar que pelo menos uma categoria foi selecionada
-        if not categorias:
+        # Validar que categorias_customizadas é uma lista
+        if not isinstance(categorias_customizadas, list):
             raise serializers.ValidationError({
-                'categorias': 'Selecione pelo menos uma categoria.'
+                'categorias_customizadas': 'Categorias customizadas deve ser uma lista.'
             })
-        
+
+        # Validar que pelo menos uma categoria foi selecionada OU há categoria customizada
+        if not categorias and not categorias_customizadas:
+            raise serializers.ValidationError({
+                'categorias': 'Selecione pelo menos uma categoria ou adicione uma categoria personalizada.'
+            })
+
+        # Se houver categorias customizadas, adicionar "Outro" automaticamente
+        if categorias_customizadas and 'Outro' not in categorias:
+            categorias.append('Outro')
+            data['categorias'] = categorias
+
         # Validar categorias válidas
         categorias_validas = [choice[0] for choice in Evento.CATEGORIA_CHOICES]
         for cat in categorias:
@@ -77,22 +90,12 @@ class EventoSerializer(serializers.ModelSerializer):
                     'categorias': f'Categoria inválida: {cat}'
                 })
         
-        # Validar que categorias_customizadas é uma lista
-        if not isinstance(categorias_customizadas, list):
-            raise serializers.ValidationError({
-                'categorias_customizadas': 'Categorias customizadas deve ser uma lista.'
-            })
-        
-        # Se 'Outro' estiver selecionado, pelo menos uma categoria customizada é obrigatória
-        if 'Outro' in categorias and not categorias_customizadas:
-            raise serializers.ValidationError({
-                'categorias_customizadas': 'Adicione pelo menos uma categoria personalizada quando "Outro" é selecionado.'
-            })
-        
-        # Limpar categorias_customizadas se 'Outro' não estiver selecionado
-        if 'Outro' not in categorias and categorias_customizadas:
-            data['categorias_customizadas'] = []
-        
+        # Limpar categorias_customizadas se não houver nenhuma
+        if not categorias_customizadas and 'Outro' in categorias:
+            # Remove "Outro" se não há categorias customizadas
+            categorias.remove('Outro')
+            data['categorias'] = categorias
+
         # Converter itens_incluidos de lista para string se necessário
         itens = data.get('itens_incluidos', [])
         if isinstance(itens, list):

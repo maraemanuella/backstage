@@ -19,6 +19,9 @@ class DisableCSRFCheckForAPIMiddleware:
     """
     Middleware para isentar rotas /api/ da verificação CSRF
     APIs REST usam JWT para autenticação, então CSRF não é necessário
+class MediaCacheMiddleware:
+    """
+    Middleware para adicionar cache de longa duração em arquivos de media
     """
     def __init__(self, get_response):
         self.get_response = get_response
@@ -30,3 +33,15 @@ class DisableCSRFCheckForAPIMiddleware:
         
         response = self.get_response(request)
         return response
+        response = self.get_response(request)
+
+        # Adiciona cache apenas para arquivos de media
+        if request.path.startswith('/media/'):
+            # Cache de 1 ano para imagens e arquivos estáticos
+            response['Cache-Control'] = 'public, max-age=31536000, immutable'
+            # Permite que o navegador valide se mudou
+            response['Vary'] = 'Accept-Encoding'
+
+        return response
+
+
