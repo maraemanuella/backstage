@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from decimal import Decimal
 
 from .models import Inscricao
 from .serializers import InscricaoCreateSerializer, InscricaoSerializer

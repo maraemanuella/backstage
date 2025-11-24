@@ -4,12 +4,14 @@ import Filtro from "../components/Filtro";
 import FiltrosAvancados from "../components/FiltrosAvancados";
 import Eventos from "../components/Eventos";
 import Modal from "../components/Modal";
+import CompleteProfileModal from "../components/CompleteProfileModal";
 import { useContext, useEffect, useState } from "react";
 import api from "../api.js";
 import { FavoritesContext } from "../contexts/FavoritesContext";
+import { useProfile } from "../contexts/ProfileContext";
 
 function Home() {
-  const [user, setUser] = useState(null);
+  const { user, isProfileComplete, refreshUser, loading: profileLoading } = useProfile();
   const [eventos, setEventos] = useState([]);
   const [busca, setBusca] = useState("");
   const [filtroAtivo, setFiltroAtivo] = useState("Todos");
@@ -21,12 +23,13 @@ function Home() {
     ordenacao: 'data'
   });
   const [openModal, setOpenModal] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [showCompleteProfileModal, setShowCompleteProfileModal] = useState(false);
+  const [loadingEventos, setLoadingEventos] = useState(true);
   const { setFavorites } = useContext(FavoritesContext);
 
   const carregarEventos = async () => {
     try {
-      setLoading(true);
+      setLoadingEventos(true);
 
       // Construir query params
       const params = new URLSearchParams();
@@ -61,32 +64,26 @@ function Home() {
       console.error("Erro ao carregar eventos:", error);
       setEventos([]);
     } finally {
-      setLoading(false);
+      setLoadingEventos(false);
     }
   };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoading(true);
-        
-        const [userRes, favoritesRes] = await Promise.allSettled([
-          api.get("/api/user/me/"),
-          api.get("/api/favorites/")
-        ]);
+        setLoadingEventos(true);
 
-        if (userRes.status === 'fulfilled') {
-          setUser(userRes.value.data);
-        }
+        const favoritesRes = await api.get("/api/favorites/").catch(() => null);
 
-        if (favoritesRes.status === 'fulfilled') {
-          const ids = favoritesRes.value.data.map(f => String(f.evento.id));
+        if (favoritesRes) {
+          const ids = favoritesRes.data.map(f => String(f.evento.id));
           setFavorites(ids);
         } else {
           setFavorites([]);
         }
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
+        setFavorites([]);
       }
 
       // Carregar eventos separadamente
@@ -96,6 +93,18 @@ function Home() {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setFavorites]);
+
+  // Verificar se precisa mostrar o modal de completar perfil
+  useEffect(() => {
+    console.log('Home - useEffect modal:', { user, isProfileComplete });
+    if (user && !isProfileComplete) {
+      console.log('Home - Mostrando modal de completar perfil');
+      setShowCompleteProfileModal(true);
+    } else {
+      console.log('Home - Escondendo modal de completar perfil');
+      setShowCompleteProfileModal(false);
+    }
+  }, [user, isProfileComplete]);
 
   // Recarregar eventos quando filtro de categoria mudar
   useEffect(() => {
@@ -113,12 +122,13 @@ function Home() {
     carregarEventos();
   };
 
-  if (loading) {
+  // Mostrar loading apenas se o perfil ainda está carregando
+  if (profileLoading) {
     return (
       <main className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando eventos...</p>
+          <p className="text-gray-600">Carregando...</p>
         </div>
       </main>
     );
@@ -127,6 +137,14 @@ function Home() {
   return (
     <main className="min-h-screen bg-gray-50">
       <Modal isOpen={openModal} setOpenModal={setOpenModal} user={user} />
+      <CompleteProfileModal
+        user={user}
+        isOpen={showCompleteProfileModal}
+        onComplete={() => {
+          refreshUser();
+          setShowCompleteProfileModal(false);
+        }}
+      />
       <Header user={user} setOpenModal={setOpenModal} />
       <Busca busca={busca} setBusca={setBusca} />
       <Filtro filtroAtivo={filtroAtivo} setFiltroAtivo={setFiltroAtivo} />
@@ -135,7 +153,16 @@ function Home() {
         setFiltrosAvancados={setFiltrosAvancados}
         onAplicarFiltros={handleAplicarFiltros}
       />
-      <Eventos eventos={eventosFiltrados} />
+      {loadingEventos ? (
+        <div className="flex items-center justify-center py-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p className="text-gray-600">Carregando eventos...</p>
+          </div>
+        </div>
+      ) : (
+        <Eventos eventos={eventosFiltrados} />
+      )}
     </main>
   );
 }

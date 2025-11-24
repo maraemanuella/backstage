@@ -7,7 +7,8 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from apps.users.views import (
     CreateUserView, CustomTokenObtainView, ListUsersView,
     RetrieveUpdateUserView, DeleteUserView, MeView,
-    update_user_profile, verificar_documento, status_documento
+    update_user_profile, verificar_documento, status_documento,
+    user_ranking
 )
 from apps.users.views import GoogleLoginView
 
@@ -50,6 +51,7 @@ urlpatterns = [
     path('api/user/<int:pk>/delete/', DeleteUserView.as_view(), name='usuario-deletar'),
     path('api/user/me/', MeView.as_view(), name='me'),
     path('api/user/profile/', update_user_profile, name='update-user-profile'),
+    path('api/user/ranking/', user_ranking, name='user-ranking'),
     path('api/token/', CustomTokenObtainView.as_view(), name='get_token'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='refresh'),
     # Google social login (custom endpoint)

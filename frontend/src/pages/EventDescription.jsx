@@ -42,13 +42,13 @@ function EventDescription() {
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [registering, setRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [avaliacoes, setAvaliacoes] = useState([]);
   const [comentario, setComentario] = useState("");
   const [nota, setNota] = useState(0);
   const [enviandoAvaliacao, setEnviandoAvaliacao] = useState(false);
   const [pendingPayment, setPendingPayment] = useState(null);
+  const [inscricaoId, setInscricaoId] = useState(null);
 
   useEffect(() => {
     if (!eventId) {
@@ -94,6 +94,9 @@ function EventDescription() {
         });
         if (res.data && typeof res.data.ja_inscrito !== "undefined") {
           setIsRegistered(!!res.data.ja_inscrito);
+          if (res.data.ja_inscrito && res.data.inscricao_id) {
+            setInscricaoId(res.data.inscricao_id);
+          }
         }
       } catch (err) {
         console.error("Erro ao buscar resumo da inscrição:", err);
@@ -158,6 +161,14 @@ function EventDescription() {
         return;
       }
 
+      // Se já temos o inscricaoId, usar diretamente
+      if (inscricaoId) {
+        toast.success("Abrindo sua página de check-in...");
+        navigate(`/checkin/${inscricaoId}`);
+        return;
+      }
+
+      // Caso contrário, buscar a inscrição
       const res = await api.get("/api/inscricoes/minhas/", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -167,16 +178,23 @@ function EventDescription() {
         return;
       }
 
+      // Comparar usando String() para garantir o mesmo tipo
       const inscricaoEvento = res.data.find(
-        (i) => i.evento_id === event.id
+        (i) => String(i.evento_id) === String(event.id)
       );
 
       if (!inscricaoEvento) {
-        toast.error("Inscrição correspondente a este evento não encontrada.");
+        toast.error("Você não está inscrito neste evento.");
         return;
       }
 
-      toast.success("Check-in iniciado com sucesso!");
+      // Verificar se o pagamento foi aprovado
+      if (inscricaoEvento.status_pagamento !== 'aprovado') {
+        toast.error("Seu pagamento ainda não foi aprovado. Aguarde a confirmação.");
+        return;
+      }
+
+      toast.success("Abrindo sua página de check-in...");
       navigate(`/checkin/${inscricaoEvento.id}`);
     } catch (err) {
       console.error(err);
@@ -305,14 +323,94 @@ function EventDescription() {
         {/* Valores */}
         <section className="mb-6">
           <h3 className="font-semibold mb-2">Valores</h3>
-          <div className="flex gap-4 items-center">
-            <span className="text-gray-700">
-              Depósito original: <b>R$ {event.valor_deposito || "0,00"}</b>
-            </span>
-            <span className="text-green-700">
-              Com desconto: <b>R$ {event.valor_com_desconto || "0,00"}</b>
-            </span>
-          </div>
+
+          {(() => {
+            // Verificar se o evento é gratuito (valor zero ou próximo de zero)
+            const valorFinal = parseFloat(event.valor_com_desconto || event.valor_deposito || 0);
+            const isGratuito = valorFinal === 0 || valorFinal < 0.50;
+
+            if (isGratuito) {
+              // Layout para EVENTOS GRATUITOS
+              return (
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                  <div className="flex items-start gap-3">
+                    <svg className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <div className="flex-1">
+                      <h4 className="text-blue-900 font-bold text-sm mb-1">
+                        🎉 Evento Gratuito
+                      </h4>
+                      <p className="text-blue-800 text-xs leading-relaxed">
+                        Nenhum depósito é necessário, pois se trata de um <strong>evento gratuito</strong>.
+                        Basta se inscrever e comparecer!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            } else if (event.is_nao_reembolsavel) {
+              // Layout para eventos NÃO REEMBOLSÁVEIS
+              return (
+                <div className="space-y-3">
+                  <div className="flex gap-4 items-center">
+                    <span className="text-gray-700">
+                      Valor do Ingresso: <b>R$ {event.valor_deposito || "0,00"}</b>
+                    </span>
+                    {event.valor_com_desconto && event.valor_com_desconto !== event.valor_deposito && (
+                      <span className="text-green-700">
+                        Com desconto: <b>R$ {event.valor_com_desconto || "0,00"}</b>
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      <div className="flex-1">
+                        <h4 className="text-red-900 font-bold text-sm mb-1">
+                          🎫 Compra de Ingresso - Não Reembolsável
+                        </h4>
+                        <p className="text-red-800 text-xs leading-relaxed mb-2">
+                          Este é um <strong>ingresso</strong>, não um depósito. O valor pago <strong>NÃO será devolvido</strong> em caso de cancelamento ou ausência.
+                        </p>
+                        <p className="text-red-700 text-xs italic">
+                          Política: {event.politica_cancelamento}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            } else {
+              // Layout para eventos com DEPÓSITO REEMBOLSÁVEL
+              return (
+                <div className="space-y-3">
+                  <div className="flex gap-4 items-center">
+                    <span className="text-gray-700">
+                      Depósito original: <b>R$ {event.valor_deposito || "0,00"}</b>
+                    </span>
+                    {event.valor_com_desconto && (
+                      <span className="text-green-700">
+                        Com desconto: <b>R$ {event.valor_com_desconto || "0,00"}</b>
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded-r-lg">
+                    <p className="text-green-800 text-xs flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span><strong>Depósito 100% reembolsável</strong> ao comparecer no evento</span>
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+          })()}
         </section>
 
         {/* Ações */}
@@ -330,11 +428,11 @@ function EventDescription() {
             /* Botão Se Inscrever - só aparece se NÃO houver pagamento pendente */
             <EventButton
               onClick={handleRegister}
-              disabled={registering || isRegistered || event.esta_lotado || event.vagas_disponiveis <= 0}
+              disabled={isRegistered || event.esta_lotado || event.vagas_disponiveis <= 0}
               className={`
                 flex items-center gap-2 px-8 py-3
                 ${
-                  registering || isRegistered || event.esta_lotado || event.vagas_disponiveis <= 0
+                  isRegistered || event.esta_lotado || event.vagas_disponiveis <= 0
                     ? "bg-gray-400 text-gray-200 cursor-not-allowed"
                     : "bg-green-600 text-white hover:bg-green-700 cursor-pointer"
                 }

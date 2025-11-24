@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { FavoritesProvider } from "./contexts/FavoritesContext.jsx";
+import { ProfileProvider } from "./contexts/ProfileContext.jsx";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -11,6 +12,7 @@ import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import Notifications from "./pages/Notifications";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RequireCompleteProfile from "./components/RequireCompleteProfile";
 import EventDescription from "./pages/EventDescription";
 import Waitlist from "./pages/Waitlist";
 import RegistrationSuccess from "./pages/RegistrationSuccess";
@@ -52,19 +54,22 @@ function RegisterAndLogout() {
 function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-      <FavoritesProvider>
-        <BrowserRouter>
-          <TitleUpdater />
-          <Routes>
-          {/* Página inicial */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
+      <ProfileProvider>
+        <FavoritesProvider>
+          <BrowserRouter>
+            <TitleUpdater />
+            <Routes>
+            {/* Página inicial */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <RequireCompleteProfile>
+                    <Home />
+                  </RequireCompleteProfile>
+                </ProtectedRoute>
+              }
+            />
 
           {/* Rotas públicas */}
           <Route
@@ -108,7 +113,9 @@ function App() {
             path="/inscricao/:eventId"
             element={
               <ProtectedRoute>
-                <EventInscription />
+                <RequireCompleteProfile>
+                  <EventInscription />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -116,7 +123,9 @@ function App() {
             path="/inscricao-realizada/:registrationId"
             element={
               <ProtectedRoute>
-                <RegistrationSuccess />
+                <RequireCompleteProfile>
+                  <RegistrationSuccess />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -126,7 +135,9 @@ function App() {
             path="/pagamento/:inscricaoId"
             element={
               <ProtectedRoute>
-                <PaymentPage />
+                <RequireCompleteProfile>
+                  <PaymentPage />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -136,7 +147,9 @@ function App() {
             path="/payment/success"
             element={
               <ProtectedRoute>
-                <PaymentSuccessPage />
+                <RequireCompleteProfile>
+                  <PaymentSuccessPage />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -146,7 +159,9 @@ function App() {
             path="/payment/cancel"
             element={
               <ProtectedRoute>
-                <PaymentCancelPage />
+                <RequireCompleteProfile>
+                  <PaymentCancelPage />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -156,7 +171,9 @@ function App() {
             path="/inscricoes/sucesso"
             element={
               <ProtectedRoute>
-                <InscriptionSuccess />
+                <RequireCompleteProfile>
+                  <InscriptionSuccess />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -166,7 +183,9 @@ function App() {
             path="/eventos/:eventoId/gerenciar-pagamentos"
             element={
               <ProtectedRoute>
-                <GerenciarPagamentos />
+                <RequireCompleteProfile>
+                  <GerenciarPagamentos />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -176,7 +195,9 @@ function App() {
             path="/checkin/:id"
             element={
               <ProtectedRoute>
-                <Checkin />
+                <RequireCompleteProfile>
+                  <Checkin />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -185,7 +206,9 @@ function App() {
             path="/checkin/scan/:eventoId?"
             element={
               <ProtectedRoute>
-                <ScanCheckin />
+                <RequireCompleteProfile>
+                  <ScanCheckin />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -195,7 +218,9 @@ function App() {
             path="/transferir-inscricao"
             element={
               <ProtectedRoute>
-                <SolicitarTransferencia />
+                <RequireCompleteProfile>
+                  <SolicitarTransferencia />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -203,7 +228,9 @@ function App() {
             path="/ofertas-transferencia"
             element={
               <ProtectedRoute>
-                <AceitarOferta />
+                <RequireCompleteProfile>
+                  <AceitarOferta />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -213,7 +240,9 @@ function App() {
             path="/perfil"
             element={
               <ProtectedRoute>
-                <Profile />
+                <RequireCompleteProfile>
+                  <Profile />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -222,7 +251,9 @@ function App() {
             path="/perfil/editar"
             element={
               <ProtectedRoute>
-                <EditProfile />
+                <RequireCompleteProfile>
+                  <EditProfile />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -232,7 +263,9 @@ function App() {
             path="/notificacoes"
             element={
               <ProtectedRoute>
-                <Notifications />
+                <RequireCompleteProfile>
+                  <Notifications />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -242,7 +275,9 @@ function App() {
             path="/verificar-documento"
             element={
               <ProtectedRoute>
-                <VerificarDocumento />
+                <RequireCompleteProfile>
+                  <VerificarDocumento />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -252,7 +287,9 @@ function App() {
             path="/heart"
             element={
               <ProtectedRoute>
-                <HeartPage />
+                <RequireCompleteProfile>
+                  <HeartPage />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -262,7 +299,9 @@ function App() {
             path="/meus-eventos"
             element={
               <ProtectedRoute>
-                <MeusEventos />
+                <RequireCompleteProfile>
+                  <MeusEventos />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -271,7 +310,9 @@ function App() {
             path="/proximos"
             element={
               <ProtectedRoute>
-                <ProximosEventos />
+                <RequireCompleteProfile>
+                  <ProximosEventos />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -280,7 +321,9 @@ function App() {
             path="/passados"
             element={
               <ProtectedRoute>
-                <EventosPassados />
+                <RequireCompleteProfile>
+                  <EventosPassados />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -290,7 +333,9 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardOrganizador />
+                <RequireCompleteProfile>
+                  <DashboardOrganizador />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -300,7 +345,9 @@ function App() {
             path="/criar-evento"
             element={
               <ProtectedRoute>
-                <CriarEvento />
+                <RequireCompleteProfile>
+                  <CriarEvento />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -310,7 +357,9 @@ function App() {
             path="/evento/:eventoId/analytics"
             element={
               <ProtectedRoute>
-                <EventoAnalytics />
+                <RequireCompleteProfile>
+                  <EventoAnalytics />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -320,7 +369,9 @@ function App() {
             path="/gerenciar"
             element={
               <ProtectedRoute>
-                <ManageEvent />
+                <RequireCompleteProfile>
+                  <ManageEvent />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -330,7 +381,9 @@ function App() {
             path="/sac"
             element={
               <ProtectedRoute>
-                <Sac />
+                <RequireCompleteProfile>
+                  <Sac />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -340,7 +393,9 @@ function App() {
             path="/user-management"
             element={
               <ProtectedRoute>
-                <UserManagement />
+                <RequireCompleteProfile>
+                  <UserManagement />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -350,27 +405,9 @@ function App() {
             path="/gerenciar/editar/:id"
             element={
               <ProtectedRoute>
-                <EditEvent />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Criar Evento */}
-          <Route
-            path="/criar-evento"
-            element={
-              <ProtectedRoute>
-                <CriarEvento />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Analytics do Evento */}
-          <Route
-            path="/evento/:eventoId/analytics"
-            element={
-              <ProtectedRoute>
-                <EventoAnalytics />
+                <RequireCompleteProfile>
+                  <EditEvent />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -380,6 +417,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </FavoritesProvider>
+      </ProfileProvider>
     </GoogleOAuthProvider>
   );
 }

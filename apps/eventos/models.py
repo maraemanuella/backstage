@@ -95,6 +95,13 @@ class Evento(models.Model):
     def esta_lotado(self):
         return self.vagas_disponiveis <= 0
 
+    @property
+    def is_nao_reembolsavel(self):
+        """Verifica se a política de cancelamento é não reembolsável"""
+        texto = self.politica_cancelamento.lower()
+        keywords = ['não reembolsável', 'nao reembolsavel', 'sem reembolso', 'não será devolvido', 'nao sera devolvido']
+        return any(keyword in texto for keyword in keywords)
+
     def calcular_valor_com_desconto(self, usuario):
         score = usuario.score
         if score >= 8.5:

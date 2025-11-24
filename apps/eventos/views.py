@@ -100,6 +100,7 @@ class EventoDetailView(generics.RetrieveAPIView):
         return context
 
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def evento_resumo_inscricao(request, evento_id):
@@ -107,10 +108,12 @@ def evento_resumo_inscricao(request, evento_id):
 
     evento = get_object_or_404(Evento, id=evento_id, status='publicado')
     usuario = request.user
-    ja_inscrito = Inscricao.objects.filter(
-        usuario=usuario, 
+    inscricao = Inscricao.objects.filter(
+        usuario=usuario,
         evento=evento
-    ).exclude(status='cancelada').exists()
+    ).exclude(status='cancelada').first()
+
+    ja_inscrito = inscricao is not None
 
     itens_incluidos = [
         item.strip()
@@ -156,7 +159,8 @@ def evento_resumo_inscricao(request, evento_id):
             'email': usuario.email,
             'telefone': usuario.telefone,
         },
-        'ja_inscrito': ja_inscrito
+        'ja_inscrito': ja_inscrito,
+        'inscricao_id': str(inscricao.id) if inscricao else None
     }
 
     return Response(data)

@@ -8,27 +8,37 @@ import {
   FaSignOutAlt,
   FaPlus,
   FaEdit,
-  FaStar,
-  FaTrophy,
   FaChartLine,
   FaCheckCircle,
   FaTimesCircle,
   FaHome,
   FaQrcode,
 } from "react-icons/fa";
+import { Award, TrendingUp, Star } from 'lucide-react';
 import "react-toastify/dist/ReactToastify.css";
 
 function Profile() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [statistics, setStatistics] = useState(null);
+  const [rankingData, setRankingData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchUserProfile();
     fetchUserStatistics();
+    fetchRanking();
   }, []);
+
+  const fetchRanking = async () => {
+    try {
+      const response = await api.get('/api/user/ranking/');
+      setRankingData(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar ranking:', error);
+    }
+  };
 
   const fetchUserProfile = async () => {
     try {
@@ -89,28 +99,16 @@ function Profile() {
     }
   };
 
-  const getBadgeInfo = (score) => {
-    if (score >= 8.5) {
-      return { 
-        name: 'GOLD', 
-        color: 'text-amber-800', 
-        bgColor: 'bg-gradient-to-r from-amber-300 to-amber-400',
-        borderColor: 'border-amber-700'
-      };
-    } else if (score >= 7.0) {
-      return { 
-        name: 'SILVER', 
-        color: 'text-gray-600', 
-        bgColor: 'bg-gradient-to-r from-gray-300 to-gray-400',
-        borderColor: 'border-gray-500'
-      };
-    } else {
-      return { 
-        name: 'BRONZE', 
-        color: 'text-orange-700', 
-        bgColor: 'bg-gradient-to-r from-orange-300 to-orange-400',
-        borderColor: 'border-orange-600'
-      };
+  // Ícone por nível
+  const getNivelIcon = (nivel) => {
+    switch (nivel) {
+      case 'Diamante':
+        return <Star className="w-5 h-5" fill="currentColor" />;
+      case 'Platina':
+      case 'Ouro':
+        return <Award className="w-5 h-5" />;
+      default:
+        return <TrendingUp className="w-5 h-5" />;
     }
   };
 
@@ -155,7 +153,17 @@ function Profile() {
     );
   }
 
-  const badge = getBadgeInfo(user.score || 5.0);
+  const { score, nivel, cor, proximo_nivel, descricao } = rankingData || {
+    score: user.score || 5.0,
+    nivel: 'Bronze',
+    cor: '#CD7F32',
+    proximo_nivel: { no_maximo: false, score_faltante: 0, proximo_nivel: 'Prata' },
+    descricao: { titulo: 'Bronze', descricao: 'Carregando...', beneficios: [] }
+  };
+
+  const porcentagemProximoNivel = proximo_nivel && !proximo_nivel.no_maximo
+    ? ((score - (proximo_nivel.score_necessario - proximo_nivel.score_faltante)) / proximo_nivel.score_faltante) * 100
+    : 100;
 
   return (
     <div className="min-h-screen bg-white py-6">
@@ -216,22 +224,85 @@ function Profile() {
               )}
             </div>
 
-            {/* Score e Badge - Estilo similar ao Score.jsx */}
-            <div className={`w-[300px] ${badge.bgColor} rounded-2xl flex justify-center items-center ${badge.borderColor} p-2`}>
-              <div className="flex flex-row gap-2 justify-center items-center">
-                <FaStar className={`text-amber-300 bg-amber-800 rounded-2xl p-1 text-xl`} />
-                <span className={`ml-auto mr-[20px] ${badge.color} font-[600]`}>
-                  {badge.name}
-                </span>
-              </div>
+            {/* Card de Nível e Score - Design Moderno */}
+            <div className="w-full md:w-auto md:min-w-[280px]">
+              <div
+                className="rounded-2xl overflow-hidden shadow-lg"
+                style={{
+                  background: `linear-gradient(135deg, ${cor} 0%, ${cor}dd 100%)`
+                }}
+              >
+                {/* Header com ícone e nível */}
+                <div className="px-6 py-4 text-white">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                      {getNivelIcon(nivel)}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold">{nivel}</h3>
+                      <p className="text-xs opacity-90">{descricao.descricao}</p>
+                    </div>
+                  </div>
 
-              <div className={`ml-auto mr-[20px] ${badge.color} font-[600] flex flex-col justify-center items-center`}>
-                <span>Score Atual</span>
-                <span>{(user.score || 5.0).toFixed(1)}</span>
+                  {/* Score grande */}
+                  <div className="text-center py-2">
+                    <div className="text-5xl font-bold tracking-tight">
+                      {score.toFixed(1)}
+                    </div>
+                    <div className="text-xs opacity-75 uppercase tracking-wider mt-1">
+                      Score
+                    </div>
+                  </div>
+                </div>
+
+                {/* Barra de progresso */}
+                {!proximo_nivel.no_maximo && (
+                  <div className="px-6 py-3 bg-white/10 backdrop-blur-sm">
+                    <div className="flex items-center justify-between text-xs text-white/90 mb-2">
+                      <span>Próximo: <span className="font-semibold">{proximo_nivel.proximo_nivel}</span></span>
+                      <span className="font-semibold">{Math.round(porcentagemProximoNivel)}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-white rounded-full transition-all duration-500"
+                        style={{ width: `${porcentagemProximoNivel}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </div>
+
+        {/* Benefícios do Nível (se houver) */}
+        {descricao.beneficios && descricao.beneficios.length > 0 && (
+          <div className="bg-white shadow-7xl rounded-2xl p-6 mb-6">
+            <h2 className="text-xl font-[600] mb-4 flex items-center gap-2">
+              <Award className="text-sky-700" />
+              Benefícios do seu Nível
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {descricao.beneficios.map((beneficio, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                >
+                  <div
+                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: cor }}
+                  />
+                  <span className="text-sm font-medium text-gray-700">{beneficio}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+              <p className="text-xs text-blue-900 text-center">
+                💡 Mantenha presença constante para manter seu nível e benefícios
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Estatísticas */}
         <div className="bg-white shadow-7xl rounded-2xl p-6 mb-6">

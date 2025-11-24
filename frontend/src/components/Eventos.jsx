@@ -42,28 +42,6 @@ function Eventos({ eventos }) {
     return imagem.startsWith('http') ? imagem : imagem;
   };
 
-  const formatDateTime = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-
-    const dateOptions = {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    };
-
-    const timeOptions = {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    };
-
-    const formattedDate = date.toLocaleDateString('pt-BR', dateOptions);
-    const formattedTime = date.toLocaleTimeString('pt-BR', timeOptions);
-
-    return `${formattedDate} às ${formattedTime}`;
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return '';
     try {
@@ -103,8 +81,6 @@ function Eventos({ eventos }) {
                     src={getImageUrl(evento.foto_capa)}
                     alt={evento.titulo}
                     className="w-full h-full object-cover"
-                    loading="lazy"
-                    onError={(e) => e.target.style.display = "none"}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -133,20 +109,29 @@ function Eventos({ eventos }) {
               {/* Content */}
               <div className="p-4">
                 {/* Category badges */}
-                {evento.categorias && evento.categorias.length > 0 && (
+                {(evento.categorias && evento.categorias.length > 0) || (evento.categorias_customizadas && evento.categorias_customizadas.length > 0) ? (
                   <div className="flex flex-wrap gap-1 mb-2">
-                    {evento.categorias.map((cat, idx) => (
-                      <span key={idx} className="inline-block px-3 py-1 bg-purple-100 text-purple-600 text-xs font-medium rounded-full">
-                        {cat}
-                      </span>
-                    ))}
+                    {/* Mostrar categorias padrão, exceto "Outro" se houver categorias customizadas */}
+                    {evento.categorias && evento.categorias
+                      .filter(cat => !(cat === 'Outro' && evento.categorias_customizadas && evento.categorias_customizadas.length > 0))
+                      .map((cat, idx) => (
+                        <span key={idx} className="inline-block px-3 py-1 bg-purple-100 text-purple-600 text-xs font-medium rounded-full">
+                          {cat}
+                        </span>
+                      ))
+                    }
+                    {/* Mostrar categorias customizadas com estilo diferenciado */}
                     {evento.categorias_customizadas && evento.categorias_customizadas.map((cat, idx) => (
-                      <span key={`custom-${idx}`} className="inline-block px-3 py-1 bg-blue-100 text-blue-600 text-xs font-medium rounded-full">
+                      <span
+                        key={`custom-${idx}`}
+                        className="inline-block px-3 py-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 text-xs font-medium rounded-full border border-blue-200"
+                        title="Categoria: Outros"
+                      >
                         {cat}
                       </span>
                     ))}
                   </div>
-                )}
+                ) : null}
 
                 {/* Title */}
                 <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-1">

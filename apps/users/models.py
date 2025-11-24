@@ -96,7 +96,7 @@ class CustomUser(AbstractUser):
             'Prata': '#C0C0C0',
             'Ouro': '#FFD700',
             'Platina': '#E5E4E2',
-            'Diamante': '#B9F2FF'
+            'Diamante': '#009bde'
         }
         return cores.get(nivel, '#808080')
 
