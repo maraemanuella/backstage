@@ -191,17 +191,19 @@ def update_user_profile(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def verificar_documento(request):
+    """User submits document for verification - sets status to 'verificando'"""
     user = request.user
     if user.documento_verificado == 'aprovado':
-        return Response({'error': 'Seu documento j foi verificado e aprovado.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Seu documento já foi verificado e aprovado.'}, status=status.HTTP_400_BAD_REQUEST)
 
     serializer = DocumentoVerificacaoSerializer(user, data=request.data, partial=True)
     if serializer.is_valid():
+        # Set status to 'verificando' (awaiting admin review)
         serializer.save(documento_verificado='verificando')
-        time.sleep(7)
-        user.documento_verificado = 'aprovado'
-        user.save()
-        return Response({'status': 'aprovado', 'mensagem': 'Documento verificado com sucesso! Voc j pode criar eventos.'})
+        return Response({
+            'status': 'verificando',
+            'mensagem': 'Documento enviado com sucesso! Aguarde a análise de um administrador.'
+        })
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -335,6 +337,86 @@ class GoogleLoginView(APIView):
                 'error': f'Erro ao processar login Google: {str(e)}',
                 'type': type(e).__name__
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# ============================================
+# ADMIN DOCUMENT VERIFICATION VIEWS
+# ============================================
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def listar_verificacoes_pendentes(request):
+    """List all users with documents pending verification"""
+    # Get users with status 'verificando' (awaiting admin review)
+    usuarios_pendentes = User.objects.filter(
+        documento_verificado='verificando',
+        documento_foto__isnull=False  # Only users who uploaded a document
+    ).order_by('-date_joined')
+    
+    data = []
+    for usuario in usuarios_pendentes:
+        data.append({
+            'id': usuario.id,
+            'username': usuario.username,
+            'email': usuario.email,
+            'tipo_documento': usuario.tipo_documento,
+            'numero_documento': usuario.numero_documento,
+            'documento_foto': usuario.documento_foto.url if usuario.documento_foto else None,
+            'data_submissao': usuario.date_joined,
+            'status': usuario.documento_verificado
+        })
+    
+    return Response(data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def aprovar_verificacao(request, user_id):
+    """Admin approves a user's document verification"""
+    try:
+        usuario = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'Usuário não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if usuario.documento_verificado == 'aprovado':
+        return Response({'error': 'Este documento já foi aprovado.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Update status to approved
+    usuario.documento_verificado = 'aprovado'
+    usuario.save()
+    
+    return Response({
+        'mensagem': f'Documento de {usuario.username} aprovado com sucesso!',
+        'usuario_id': usuario.id,
+        'status': 'aprovado'
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def rejeitar_verificacao(request, user_id):
+    """Admin rejects a user's document verification"""
+    try:
+        usuario = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'Usuário não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if usuario.documento_verificado == 'aprovado':
+        return Response({'error': 'Este documento já foi aprovado e não pode ser rejeitado.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Get rejection reason from request body (optional)
+    motivo = request.data.get('motivo', 'Documento não atende aos requisitos.')
+    
+    # Update status to rejected
+    usuario.documento_verificado = 'rejeitado'
+    usuario.save()
+    
+    return Response({
+        'mensagem': f'Documento de {usuario.username} rejeitado.',
+        'usuario_id': usuario.id,
+        'status': 'rejeitado',
+        'motivo': motivo
+    })
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

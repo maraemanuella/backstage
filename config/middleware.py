@@ -15,6 +15,10 @@ class CrossOriginOpenerPolicyMiddleware:
         return response
 
 
+class DisableCSRFCheckForAPIMiddleware:
+    """
+    Middleware para isentar rotas /api/ da verificação CSRF
+    APIs REST usam JWT para autenticação, então CSRF não é necessário
 class MediaCacheMiddleware:
     """
     Middleware para adicionar cache de longa duração em arquivos de media
@@ -23,6 +27,12 @@ class MediaCacheMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        # Se a rota começar com /api/, marca como isenta de CSRF
+        if request.path.startswith('/api/'):
+            setattr(request, '_dont_enforce_csrf_checks', True)
+        
+        response = self.get_response(request)
+        return response
         response = self.get_response(request)
 
         # Adiciona cache apenas para arquivos de media

@@ -16,12 +16,16 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import api from "../api";
+import profile from "../assets/profile.png"; // Adjust the path as necessary
 import { useState } from "react";
 
 function Modal({ isOpen, setOpenModal, user }) {
   const navigate = useNavigate();
   const [showAlert, setShowAlert] = useState(false);
   const [meusEventosExpanded, setMeusEventosExpanded] = useState(false);
+  const [hasEvents, setHasEvents] = useState(false);
 
   const handleLogout = () => {
     // Limpa todos os dados do localStorage
@@ -69,6 +73,21 @@ function Modal({ isOpen, setOpenModal, user }) {
   const isCredenciado = user?.documento_verificado === 'aprovado';
   const isStaff = user?.is_staff || user?.is_superuser;
 
+  useEffect(() => {
+    const checkUserEvents = async () => {
+      if (user && isCredenciado) {
+        try {
+          const response = await api.get('/api/eventos/');
+          setHasEvents(response.data.length > 0);
+        } catch (error) {
+          console.error('Erro ao verificar eventos:', error);
+          setHasEvents(false);
+        }
+      }
+    };
+    checkUserEvents();
+  }, [user, isCredenciado]);
+
   if (isOpen) {
     return (
       <div
@@ -107,7 +126,7 @@ function Modal({ isOpen, setOpenModal, user }) {
                       onClick={() => {
                         setShowAlert(false);
                         setOpenModal(false);
-                        navigate("/credenciamento");
+                        navigate("/verificar-documento");
                       }}
                       className="px-3 py-1.5 bg-amber-600 text-white text-xs font-medium rounded hover:bg-amber-700 transition-colors"
                     >
@@ -185,8 +204,8 @@ function Modal({ isOpen, setOpenModal, user }) {
               </button>
             </li>
 
-            {/* Dashboard - Apenas para credenciados */}
-            {isCredenciado && (
+            {/* Dashboard - Apenas para credenciados que criaram eventos */}
+            {isCredenciado && hasEvents && (
               <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold transition-all duration-300">
                 <button
                   onClick={handleDashboardClick}
@@ -198,6 +217,32 @@ function Modal({ isOpen, setOpenModal, user }) {
               </li>
             )}
 
+            {/* Gerenciar Eventos - Apenas para quem já criou eventos */}
+            {hasEvents && (
+              <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold transition-all duration-300">
+                <Link
+                  to="/gerenciar"
+                  onClick={() => setOpenModal(false)}
+                  className="flex gap-3 items-center"
+                >
+                  <Settings className="h-5 w-5" />
+                  <span>Gerenciar Eventos</span>
+                </Link>
+              </li>
+            )}
+
+            {/* Dashboard Admin - Apenas para staff */}
+            {isStaff && (
+              <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-purple-600 hover:text-white hover:font-bold transition-all duration-300">
+                <button
+                  onClick={() => {
+                    navigate('/admin/dashboard');
+                    setOpenModal(false);
+                  }}
+                  className="flex gap-3 items-center w-full text-left"
+                >
+                  <Settings className="h-5 w-5" />
+                  <span>Dashboard Admin</span>
             {/* Gerenciar Eventos */}
             <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold transition-all duration-300">
               <Link
