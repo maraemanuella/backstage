@@ -10,6 +10,7 @@ import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
+import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RequireCompleteProfile from "./components/RequireCompleteProfile";
@@ -254,6 +255,14 @@ function App() {
                 <RequireCompleteProfile>
                   <EditProfile />
                 </RequireCompleteProfile>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/configuracoes"
+            element={
+              <ProtectedRoute>
+                <Settings />
               </ProtectedRoute>
             }
           />

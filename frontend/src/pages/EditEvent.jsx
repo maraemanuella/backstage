@@ -193,14 +193,11 @@ function EditEvent() {
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white p-8 rounded-lg shadow-md space-y-6"
+          className="bg-white p-6 md:p-8 rounded-lg shadow-md space-y-6"
         >
           {/* Título */}
           <div>
-            <label
-              htmlFor="titulo"
-              className=" flex text-sm font-medium text-white  bg-black inset-0 p-1  rounded-t-2xl justify-center items-center"
-            >
+            <label htmlFor="titulo" className="block text-sm font-medium text-gray-700">
               Título do Evento
             </label>
             <input
@@ -209,17 +206,12 @@ function EditEvent() {
               name="titulo"
               value={evento.titulo}
               onChange={handleChange}
-              className="mt-1 block w-full input-style  bg-gray-100 p-1"
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 p-2 focus:outline-none focus:ring-2 focus:ring-gray-800"
               required
             />
           </div>
-
-          {/* Descrição */}
           <div>
-            <label
-              htmlFor="descricao"
-              className="flex text-sm font-medium text-black  bg-gray-300 inset-0 p-1  rounded-t-2xl justify-center items-center"
-            >
+            <label htmlFor="descricao" className="block text-sm font-medium text-gray-700">
               Descrição
             </label>
             <textarea
@@ -228,16 +220,13 @@ function EditEvent() {
               rows="4"
               value={evento.descricao}
               onChange={handleChange}
-              className=" block w-full input-style  bg-gray-100 p-1 h-[40px]"
+              className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 p-2"
             />
           </div>
 
           {/* Foto de Capa */}
           <div>
-            <label
-              htmlFor="foto_capa"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="foto_capa" className="block text-sm font-medium text-gray-700">
               Foto de Capa
             </label>
             <input
@@ -245,7 +234,7 @@ function EditEvent() {
               id="foto_capa"
               name="foto_capa"
               onChange={handleFileChange}
-              className="mt-1 cursor-pointer   block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+              className="mt-1 block w-full text-sm text-gray-600 cursor-pointer"
             />
             {evento.foto_capa && !coverPhotoFile && (
               <div className="mt-2">
@@ -253,7 +242,7 @@ function EditEvent() {
                 <img
                   src={evento.foto_capa}
                   alt="Capa atual"
-                  className="h-24 flex w-full p-1 input-style border-2 border-gray-300 items-center justify-center"
+                  className="h-24 w-auto rounded-md border border-gray-200 mt-2"
                 />
               </div>
             )}
@@ -263,10 +252,8 @@ function EditEvent() {
           {/* Categorias e Status */}
           <div className="grid grid-cols-1 gap-6">
             <div>
-              <label className="flex text-sm font-medium text-black bg-gray-300 inset-0 p-1 rounded-t-2xl justify-center items-center">
-                Categorias (selecione uma ou mais)
-              </label>
-              <div className="border-2 border-gray-300 rounded-b-2xl p-4 space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Categorias (selecione uma ou mais)</label>
+              <div className="border border-gray-200 rounded-md p-4 space-y-2 bg-gray-50">
                 {['Workshop', 'Palestra', 'Networking', 'Curso', 'Outro'].map((cat) => (
                   <label key={cat} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
                     <input
@@ -290,18 +277,13 @@ function EditEvent() {
               </div>
             </div>
             <div>
-              <label
-                htmlFor="status"
-                className="flex text-sm font-medium text-black  bg-gray-300 inset-0 p-1  rounded-t-2xl justify-center items-center"
-              >
-                Status
-              </label>
+              <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
               <select
                 id="status"
                 name="status"
                 value={evento.status}
                 onChange={handleChange}
-                className="block w-full input-style p-1 border-2 border-gray-300 rounded-b-2xl"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white p-2"
               >
                 <option value="rascunho">Rascunho</option>
                 <option value="publicado">Publicado</option>
@@ -315,29 +297,19 @@ function EditEvent() {
           {/* Data, Valor e Capacidade */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
             <div>
-              <label
-                htmlFor="data_evento"
-                className="flex text-sm font-medium text-black  bg-gray-300 inset-0 p-1  rounded-tl-2xl justify-center items-center"
-              >
-                Data e Hora
-              </label>
+              <label htmlFor="data_evento" className="block text-sm font-medium text-gray-700">Data e Hora</label>
               <input
                 type="datetime-local"
                 id="data_evento"
                 name="data_evento"
                 value={evento.data_evento}
                 onChange={handleChange}
-                className="flex w-full input-style p-1 border-2 border-gray-300 rounded-bl-2xl items-center justify-center"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white p-2"
                 required
               />
             </div>
             <div>
-              <label
-                htmlFor="valor_deposito"
-                className="flex text-sm font-medium text-black  bg-gray-300 inset-0 p-1 justify-center items-center"
-              >
-                Valor (R$)
-              </label>
+              <label htmlFor="valor_deposito" className="block text-sm font-medium text-gray-700">Valor (R$)</label>
               <input
                 type="number"
                 id="valor_deposito"
@@ -345,24 +317,19 @@ function EditEvent() {
                 step="0.01"
                 value={evento.valor_deposito}
                 onChange={handleChange}
-                className="flex w-full input-style p-1 border-2 border-gray-300 items-center justify-cente"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white p-2"
                 required
               />
             </div>
             <div>
-              <label
-                htmlFor="capacidade_maxima"
-                className="flex text-sm font-medium text-black  bg-gray-300 inset-0 rounded-tr-2xl p-1 justify-center items-center"
-              >
-                Capacidade Máx.
-              </label>
+              <label htmlFor="capacidade_maxima" className="block text-sm font-medium text-gray-700">Capacidade Máx.</label>
               <input
                 type="number"
                 id="capacidade_maxima"
                 name="capacidade_maxima"
                 value={evento.capacidade_maxima}
                 onChange={handleChange}
-                className="flex w-full input-style p-1 border-2 border-gray-300 rounded-br-2xl items-center justify-center"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white p-2"
                 required
               />
             </div>
@@ -371,36 +338,26 @@ function EditEvent() {
           {/* Endereço e Local Específico */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
             <div>
-              <label
-                htmlFor="endereco"
-                className="flex text-sm font-medium text-black  bg-gray-300 inset-0 rounded-tl-2xl p-1 justify-center items-center"
-              >
-                Endereço
-              </label>
+              <label htmlFor="endereco" className="block text-sm font-medium text-gray-700">Endereço</label>
               <input
                 type="text"
                 id="endereco"
                 name="endereco"
                 value={evento.endereco}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white p-2"
                 required
               />
             </div>
             <div>
-              <label
-                htmlFor="local_especifico"
-                className="flex text-sm font-medium text-black  bg-gray-300 inset-0 rounded-tr-2xl p-1 justify-center items-center"
-              >
-                Local Específico (ex: Auditório B)
-              </label>
+              <label htmlFor="local_especifico" className="block text-sm font-medium text-gray-700">Local Específico (ex: Auditório B)</label>
               <input
                 type="text"
                 id="local_especifico"
                 name="local_especifico"
                 value={evento.local_especifico}
                 onChange={handleChange}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white p-2"
               />
             </div>
           </div>
@@ -408,35 +365,25 @@ function EditEvent() {
           {/* Políticas */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label
-                htmlFor="politica_cancelamento"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Política de Cancelamento
-              </label>
+              <label htmlFor="politica_cancelamento" className="block text-sm font-medium text-gray-700">Política de Cancelamento</label>
               <textarea
                 id="politica_cancelamento"
                 name="politica_cancelamento"
                 rows="3"
                 value={evento.politica_cancelamento}
                 onChange={handleChange}
-                className="flex w-full p-1 input-style border-2 border-gray-300 items-center justify-center"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white p-2"
               />
             </div>
             <div>
-              <label
-                htmlFor="itens_incluidos"
-                className="block text-sm font-medium text-gray-700"
-              >
-                Itens Incluídos (um por linha)
-              </label>
+              <label htmlFor="itens_incluidos" className="block text-sm font-medium text-gray-700">Itens Incluídos (um por linha)</label>
               <textarea
                 id="itens_incluidos"
                 name="itens_incluidos"
                 rows="3"
                 value={evento.itens_incluidos}
                 onChange={handleChange}
-                className="flex w-full p-1 input-style border-2 border-gray-300 items-center justify-center"
+                className="mt-1 block w-full rounded-md border border-gray-300 bg-white p-2"
               />
             </div>
           </div>

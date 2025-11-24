@@ -13,6 +13,7 @@ import {
   FaTimesCircle,
   FaHome,
   FaQrcode,
+  FaQuestionCircle,
 } from "react-icons/fa";
 import { Award, TrendingUp, Star } from 'lucide-react';
 import "react-toastify/dist/ReactToastify.css";
@@ -124,17 +125,25 @@ function Profile() {
   };
 
   const handleSettings = () => {
-    // TODO: Implementar navegação para configurações
-    toast.info('Configurações em desenvolvimento');
+    navigate('/configuracoes');
   };
 
   const handleCreateEvents = () => {
-    // TODO: Implementar navegação para criação de eventos
-    toast.info('Criação de eventos em desenvolvimento');
+    // Verifica se o usuário já está com documentos aprovados
+    if (user.documento_verificado !== 'aprovado') {
+      toast.warning('Você precisa ter seus documentos aprovados para criar eventos!');
+      navigate('/credenciamento');
+      return;
+    }
+    navigate('/criar-evento');
   };
 
   const handleCheckinScan = () => {
     navigate('/checkin/scan');
+  };
+
+  const handleSAC = () => {
+    navigate('/sac');
   };
 
   if (loading) {
@@ -218,10 +227,6 @@ function Profile() {
                   ? `${user.first_name} ${user.last_name}` 
                   : user.username}
               </h1>
-              <p className="text-black/60 mb-1">{user.email}</p>
-              {user.telefone && (
-                <p className="text-black/60">{user.telefone}</p>
-              )}
             </div>
 
             {/* Card de Nível e Score - Design Moderno */}
@@ -270,6 +275,9 @@ function Profile() {
                     </div>
                   </div>
                 )}
+              <div className={`ml-auto mr-[20px] ${badge.color} font-[600] flex flex-col justify-center items-center`}>
+                <span>Score Atual</span>
+                <span>{(user.score || 0).toFixed(1)}</span>
               </div>
             </div>
           </div>
@@ -319,12 +327,14 @@ function Profile() {
               <div className="text-black/60 text-sm">Eventos Participados</div>
             </div>
             
-            <div className="text-center p-4 bg-gray-50 rounded-2xl">
-              <div className="text-3xl font-[600] text-green-600 mb-1">
-                {statistics?.taxaComparecimento || 0}%
+            {statistics?.eventosParticipados > 0 && (
+              <div className="text-center p-4 bg-gray-50 rounded-2xl">
+                <div className="text-3xl font-[600] text-green-600 mb-1">
+                  {statistics?.taxaComparecimento || 0}%
+                </div>
+                <div className="text-black/60 text-sm">Taxa de Comparecimento</div>
               </div>
-              <div className="text-black/60 text-sm">Taxa de Comparecimento</div>
-            </div>
+            )}
             
             <div className="text-center p-4 bg-gray-50 rounded-2xl">
               <div className="text-3xl font-[600] text-purple-600 mb-1">
@@ -414,6 +424,17 @@ function Profile() {
               <div className="text-left">
                 <div className="font-[500]">Check-in por QR Code</div>
                 <div className="text-sm text-black/60">Escanear para fazer check-in</div>
+              </div>
+            </button>
+
+            <button
+              onClick={handleSAC}
+              className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-2xl hover:bg-gray-50 hover:scale-105 transition-all duration-200"
+            >
+              <FaQuestionCircle className="text-indigo-500 text-xl" />
+              <div className="text-left">
+                <div className="font-[500]">SAC - Suporte</div>
+                <div className="text-sm text-black/60">Central de ajuda e atendimento</div>
               </div>
             </button>
 

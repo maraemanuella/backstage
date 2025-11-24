@@ -17,16 +17,7 @@ import {
   HeartCrack,
 } from "lucide-react";
 import api from "../api.js";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+// gráficos removidos da página de gerenciamento
 
 function ManageEvent() {
   const navigate = useNavigate();
@@ -35,20 +26,6 @@ function ManageEvent() {
   const [meusEventos, setMeusEventos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [stats, setStats] = useState({
-    events: 0,
-    inscriptions: 0,
-    checkins: 0,
-  });
-
-  const chartData = [
-    {
-      name: "Totais",
-      Inscrições: stats.inscriptions,
-      Eventos: stats.events,
-      "Check-ins": stats.checkins,
-    },
-  ];
 
   useEffect(() => {
     const fetchMeusEventos = () => {
@@ -57,22 +34,6 @@ function ManageEvent() {
         .then((response) => {
           const eventos = response.data;
           setMeusEventos(eventos);
-
-          const totalEvents = eventos.length;
-          const totalInscriptions = eventos.reduce(
-            (sum, evento) => sum + (evento.inscritos_count || 0),
-            0
-          );
-          const totalCheckins = eventos.reduce(
-            (sum, evento) => sum + (evento.checkins_count || 0),
-            0
-          );
-
-          setStats({
-            events: totalEvents,
-            inscriptions: totalInscriptions,
-            checkins: totalCheckins,
-          });
         })
         .catch((err) => {
           if (err.response && err.response.status === 401) {
@@ -126,13 +87,13 @@ function ManageEvent() {
         </Link>
       </div>
 
-      <div className="parent-container grid h-[clamp(450px,90vh,900px)] ml-[20%] mr-[20%] mt-[10px] md:grid-rows-[auto] lg:grid-cols-[50%_50%] lg:grid-rows-none gap-4">
+      <div className="parent-container grid h-[clamp(450px,90vh,900px)] ml-[20%] mr-[20%] mt-[10px] md:grid-rows-[auto] lg:grid-cols-1 lg:grid-rows-none gap-4">
         {/* ----------- DIV DOS EVENTOS --------- */}
         <div className="child-box bg-white shadow-lg rounded-2xl p-4 overflow-y-auto h-[80vh]">
           <p className="flex items-center mb-4 border-b border-gray-300 pb-2 text-lg font-poppins font-bold">
             <Martini className="mr-2" /> Seus eventos
           </p>
-          <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {meusEventos.length > 0 ? (
               meusEventos.map((evento) => (
                 <div
@@ -142,7 +103,7 @@ function ManageEvent() {
                   <div className="w-full h-[200px] flex justify-center items-center bg-gray-200 rounded-t-2xl">
                     <img
                       src={
-                        evento.imagem_url ||
+                        evento.foto_capa ||
                         "https://placehold.co/300x200/e2e8f0/e2e8f0?text=."
                       }
                       alt={evento.titulo}
@@ -193,33 +154,7 @@ function ManageEvent() {
           </div>
         </div>
 
-        {/* --- DIV DAS METRICAS DO EVENTO --- */}
-        <div className="child-box bg-white shadow-lg rounded-2xl p-4 flex flex-col h-[80vh]">
-          <h2 className="flex text-lg font-poppins border-b border-gray-300 pb-2 mb-4 text-center font-bold gap-3">
-            <Ruler /> Visão Geral
-          </h2>
-          {/* O ResponsiveContainer faz o gráfico se adaptar ao tamanho da div */}
-          <ResponsiveContainer width="100%" height="90%">
-            <BarChart
-              data={chartData}
-              margin={{
-                top: 5,
-                right: 30,
-                left: 0,
-                bottom: 5,
-              }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="Check-ins" fill="#f97316" />
-              <Bar dataKey="Eventos" fill="#22c55e" />
-              <Bar dataKey="Inscrições" fill="#3b82f6" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        {/* Visão Geral removida conforme solicitado */}
       </div>
     </div>
   );
