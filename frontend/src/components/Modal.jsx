@@ -1,13 +1,12 @@
 import {
-  ChartNoAxesColumn,
   LayoutDashboard,
   LogOut,
   Settings,
-  TicketCheck,
   X,
   PlusCircle,
   AlertCircle,
   CircleHelp,
+  Users,
   DollarSign,
   PartyPopper,
   ChevronDown,
@@ -18,7 +17,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import profile from "../assets/profile.png"; // Adjust the path as necessary
 
 function Modal({ isOpen, setOpenModal, user }) {
   const navigate = useNavigate();
@@ -55,6 +53,12 @@ function Modal({ isOpen, setOpenModal, user }) {
     setOpenModal(false);
     navigate("/criar-evento");
   };
+
+  const handleUserManagement = () => {
+    setOpenModal(false);
+    navigate("/user-management");
+  };
+
 
   const handleAutorizarPagamento = () => {
     setOpenModal(false);
@@ -205,7 +209,27 @@ function Modal({ isOpen, setOpenModal, user }) {
                 <span>Gerenciar Eventos</span>
               </Link>
             </li>
+            
+            {/* Gestão de Usuários - Apenas para staff/superuser */}
+            {user && (user.is_superuser || user.is_staff) && (
+              <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
+                <button
+                  onClick={handleUserManagement}
+                  className="flex gap-3 items-center w-full text-left"
+                >
+                  <Users className="h-5 w-5" />
+                  <span>Gestão de Usuários</span>
+                </button>
+              </li>
+            )}
 
+            <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
+              <Link to="/sac" className="flex gap-3 items-center">
+                <CircleHelp className="h-5 w-5" />
+                <span>SAC</span>
+              </Link>
+            </li>
+            
             {/* Autorizar Pagamento - Apenas para staff */}
             {isStaff && (
               <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold transition-all duration-300">

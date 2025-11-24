@@ -1,0 +1,162 @@
+/* Estilos padronizados e elegantes para tooltips informativos */
+
+/* Container do aviso com tooltip */
+.info-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafb;
+  padding: 14px 16px;
+  border-radius: 8px;
+  margin: 20px 0;
+  border: 1px solid #e2e8f0;
+  font-size: 14px;
+  color: #475569;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.info-notice:hover {
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
+/* Wrapper do ícone com tooltip */
+.info-tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Ícone de informação */
+.info-icon {
+  color: #64748b;
+  cursor: help;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.info-icon:hover {
+  color: #0284c7;
+  transform: scale(1.1);
+}
+
+/* Tooltip - aparece no hover (desktop) e click (mobile) */
+.info-tooltip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  right: 0;
+  min-width: 280px;
+  max-width: 320px;
+  background: #1e293b;
+  color: #f1f5f9;
+  padding: 14px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  font-weight: 400;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* Seta do tooltip */
+.info-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 12px;
+  border: 6px solid transparent;
+  border-top-color: #1e293b;
+}
+
+/* Hover em desktop */
+.info-tooltip-wrapper:hover .info-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Click em mobile - precisa de JS ou usar :focus-within */
+.info-tooltip-wrapper:active .info-tooltip,
+.info-tooltip-wrapper:focus-within .info-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Responsivo - tooltip embaixo em telas pequenas */
+@media (max-width: 768px) {
+  .info-tooltip {
+    bottom: auto;
+    top: calc(100% + 12px);
+    right: 0;
+    left: auto;
+    min-width: 260px;
+    max-width: 280px;
+  }
+
+  .info-tooltip::after {
+    top: auto;
+    bottom: 100%;
+    border-top-color: transparent;
+    border-bottom-color: #1e293b;
+  }
+
+  .info-notice {
+    font-size: 13px;
+  }
+}
+
+/* Desconto aplicado */
+.discount-applied {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f0f9ff;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  border-left: 3px solid #0ea5e9;
+}
+
+.discount-label {
+  font-weight: 600;
+  color: #0369a1;
+  font-size: 14px;
+}
+
+.original-value {
+  color: #64748b;
+  font-size: 13px;
+}
+
+/* Alerta de compromisso (mantido por compatibilidade) */
+.commitment-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fef3c7;
+  padding: 12px;
+  border-radius: 6px;
+  border-left: 3px solid #f59e0b;
+  margin-bottom: 20px;
+}
+
+.commitment-notice svg {
+  flex-shrink: 0;
+  color: #d97706;
+}
+
+.commitment-notice span {
+  color: #92400e;
+  font-size: 13px;
+  line-height: 1.5;
+}
+

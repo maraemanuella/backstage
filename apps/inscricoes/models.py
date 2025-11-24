@@ -13,6 +13,7 @@ class Inscricao(models.Model):
     METODO_PAGAMENTO_CHOICES = [
         ('cartao_credito', 'Cartão de Crédito'),
         ('cartao_debito', 'Cartão de Débito'),
+        ('isento', 'Isento de Depósito'),
     ]
 
     STATUS_PAGAMENTO_CHOICES = [

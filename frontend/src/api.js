@@ -26,7 +26,7 @@ api.interceptors.request.use(
 
 // Intercepta respostas com erro 401 (token expirado)
 api.interceptors.response.use(
-  (response) => response, // Se for sucesso, segue normal
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
@@ -36,7 +36,6 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem(REFRESH_TOKEN);
 
       if (!refreshToken) {
-        // Se não tiver refresh token, redireciona para login
         window.location.href = "/login";
         return Promise.reject(error);
       }

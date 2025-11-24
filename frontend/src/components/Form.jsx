@@ -9,6 +9,27 @@ import '../styles/Form.css'
 import Img from '../assets/logo.png'
 import { useGoogleLogin } from '@react-oauth/google';
 
+// Prefetch de páginas críticas após login
+const prefetchAfterLogin = () => {
+  const pages = [
+    () => import('../pages/Home'),
+    () => import('../pages/Profile'),
+    () => import('../pages/MeusEventos'),
+    () => import('../pages/Notifications'),
+  ];
+
+  setTimeout(() => {
+    pages.forEach((loadPage, index) => {
+      setTimeout(() => {
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(() => loadPage());
+        } else {
+          loadPage();
+        }
+      }, index * 200);
+    });
+  }, 500);
+};
 
 function Form({ route, method }) {
   const [loginOrEmail, setLoginOrEmail] = useState("");
@@ -37,6 +58,7 @@ function Form({ route, method }) {
       if (isLogin) {
         localStorage.setItem(ACCESS_TOKEN, res.data.access);
         localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
+        prefetchAfterLogin(); // Prefetch páginas em background
         navigate("/");
       } else {
         toast.success("Usuário registrado com sucesso!", {
@@ -92,6 +114,7 @@ function Form({ route, method }) {
       if (res.data?.access) localStorage.setItem(ACCESS_TOKEN, res.data.access);
       if (res.data?.refresh) localStorage.setItem(REFRESH_TOKEN, res.data.refresh);
 
+      prefetchAfterLogin(); // Prefetch páginas em background
       toast.success('Login com Google realizado!', { position: 'bottom-right', autoClose: 2000 });
       navigate('/');
     } catch (error) {

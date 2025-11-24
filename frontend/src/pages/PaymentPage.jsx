@@ -19,12 +19,14 @@ const PaymentPage = () => {
       // Se já tem dados via navegação, usa eles
       if (location.state?.paymentData) {
         setPaymentData(location.state.paymentData);
+        setLoading(false);
         return;
       }
 
       // Senão, busca os dados da API
       if (!inscricaoId) {
         setError('ID da inscrição não fornecido');
+        setLoading(false);
         return;
       }
 

@@ -51,7 +51,7 @@ const PaymentSuccessPage = () => {
   }, [searchParams]);
 
   const handleGoToInscricoes = () => {
-    navigate('/inscricoes');
+    navigate('/meus-eventos');
   };
 
   const handleGoHome = () => {

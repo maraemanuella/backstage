@@ -55,6 +55,58 @@ class MeView(APIView):
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def patch(self, request):
+        user = request.user
+        try:
+            updatable_fields = [
+                'username', 'email', 'telefone', 'cpf', 'cnpj',
+                'data_nascimento', 'sexo', 'profile_photo'
+            ]
+
+            if 'email' in request.data:
+                email = request.data['email']
+                if User.objects.filter(email=email).exclude(id=user.id).exists():
+                    return Response({'email': ['Este email já está em uso por outro usuário.']}, status=status.HTTP_400_BAD_REQUEST)
+
+            if 'username' in request.data:
+                username = request.data['username']
+                if User.objects.filter(username=username).exclude(id=user.id).exists():
+                    return Response({'username': ['Este nome de usuário já está em uso.']}, status=status.HTTP_400_BAD_REQUEST)
+
+            if 'cpf' in request.data and request.data['cpf']:
+                cpf = request.data['cpf'].replace('.', '').replace('-', '').replace(' ', '')
+                if len(cpf) != 11 or not cpf.isdigit():
+                    return Response({'cpf': ['CPF deve ter exatamente 11 dígitos.']}, status=status.HTTP_400_BAD_REQUEST)
+                if User.objects.filter(cpf=cpf).exclude(id=user.id).exists():
+                    return Response({'cpf': ['Este CPF já está em uso por outro usuário.']}, status=status.HTTP_400_BAD_REQUEST)
+                request.data['cpf'] = cpf
+
+            if 'cnpj' in request.data and request.data['cnpj']:
+                cnpj = request.data['cnpj'].replace('.', '').replace('/', '').replace('-', '').replace(' ', '')
+                if len(cnpj) != 14 or not cnpj.isdigit():
+                    return Response({'cnpj': ['CNPJ deve ter exatamente 14 dígitos.']}, status=status.HTTP_400_BAD_REQUEST)
+                if User.objects.filter(cnpj=cnpj).exclude(id=user.id).exists():
+                    return Response({'cnpj': ['Este CNPJ já está em uso por outro usuário.']}, status=status.HTTP_400_BAD_REQUEST)
+                request.data['cnpj'] = cnpj
+
+            if 'telefone' in request.data and request.data['telefone']:
+                telefone = request.data['telefone'].replace('(', '').replace(')', '').replace('-', '').replace(' ', '')
+                if len(telefone) not in [10, 11] or not telefone.isdigit():
+                    return Response({'telefone': ['Telefone deve ter 10 ou 11 dígitos.']}, status=status.HTTP_400_BAD_REQUEST)
+                request.data['telefone'] = telefone
+
+            for field in updatable_fields:
+                if field in request.data:
+                    setattr(user, field, request.data[field])
+
+            user.save()
+
+            serializer = UserSerializer(user)
+            return Response({'message': 'Perfil atualizado com sucesso!', 'user': serializer.data}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': 'Erro interno do servidor.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
@@ -284,3 +336,69 @@ class GoogleLoginView(APIView):
                 'type': type(e).__name__
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_ranking(request):
+    """
+    Retorna informações completas de ranking do usuário autenticado.
+    Inclui: score, nível, cor, e informações sobre o próximo nível.
+    """
+    user = request.user
+    ranking_info = user.get_ranking_info()
+
+    return Response({
+        'score': ranking_info['score'],
+        'nivel': ranking_info['nivel'],
+        'cor': ranking_info['cor'],
+        'proximo_nivel': ranking_info['proximo_nivel'],
+        'descricao': get_nivel_descricao(ranking_info['nivel'])
+    }, status=status.HTTP_200_OK)
+
+
+def get_nivel_descricao(nivel):
+    """Retorna a descrição e benefícios de cada nível"""
+    descricoes = {
+        'Bronze': {
+            'titulo': 'Bronze',
+            'descricao': 'Você está começando sua jornada!',
+            'beneficios': [],
+            'dica': 'Para manter seu score alto, compareça aos eventos que você se inscreveu. O objetivo da plataforma é reduzir as ausências!'
+        },
+        'Prata': {
+            'titulo': 'Prata',
+            'descricao': 'Usuário confiável da plataforma',
+            'beneficios': [],
+            'dica': 'Para manter seu score alto, compareça aos eventos que você se inscreveu. O objetivo da plataforma é reduzir as ausências!'
+        },
+        'Ouro': {
+            'titulo': 'Ouro',
+            'descricao': 'Membro valioso da comunidade',
+            'beneficios': [
+                'Acesso a eventos exclusivos',
+                'Check-in prioritário',
+                'Suporte exclusivo'
+            ],
+            'dica': 'Para manter seu score alto, compareça aos eventos que você se inscreveu. O objetivo da plataforma é reduzir as ausências!'
+        },
+        'Platina': {
+            'titulo': 'Platina',
+            'descricao': 'Usuário exemplar e confiável',
+            'beneficios': [
+                'Acesso a eventos exclusivos',
+                'Check-in prioritário',
+                'Suporte exclusivo'
+            ],
+            'dica': 'Para manter seu score alto, compareça aos eventos que você se inscreveu. O objetivo da plataforma é reduzir as ausências!'
+        },
+        'Diamante': {
+            'titulo': 'Diamante',
+            'descricao': 'Elite da plataforma!',
+            'beneficios': [
+                'Acesso a eventos exclusivos',
+                'Check-in prioritário',
+                'Suporte exclusivo'
+            ],
+            'dica': 'Parabéns! Continue comparecendo aos eventos para manter seu nível máximo!'
+        }
+    }
+    return descricoes.get(nivel, descricoes['Bronze'])
