@@ -8,7 +8,7 @@ from apps.users.views import (
     CreateUserView, CustomTokenObtainView, ListUsersView,
     RetrieveUpdateUserView, DeleteUserView, MeView,
     update_user_profile, verificar_documento, status_documento,
-    listar_verificacoes_pendentes, aprovar_verificacao, rejeitar_verificacao
+    listar_verificacoes_pendentes, aprovar_verificacao, rejeitar_verificacao,
     user_ranking
 )
 from apps.users.views import GoogleLoginView
