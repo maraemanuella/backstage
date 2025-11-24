@@ -11,6 +11,9 @@ from .views import (
     update_user_profile,
     verificar_documento,
     status_documento,
+    listar_verificacoes_pendentes,
+    aprovar_verificacao,
+    rejeitar_verificacao,
 )
 
 urlpatterns = [
@@ -27,5 +30,10 @@ urlpatterns = [
     path('verificar-documento/', verificar_documento, name='verificar-documento'),
     path('status-documento/', status_documento, name='status-documento'),
     path('user-management/', include('apps.user_management.urls')),
+    
+    # Admin verification endpoints
+    path('admin/verificacoes/pendentes/', listar_verificacoes_pendentes, name='listar-verificacoes-pendentes'),
+    path('admin/verificacoes/<int:user_id>/aprovar/', aprovar_verificacao, name='aprovar-verificacao'),
+    path('admin/verificacoes/<int:user_id>/rejeitar/', rejeitar_verificacao, name='rejeitar-verificacao'),
 ]
 

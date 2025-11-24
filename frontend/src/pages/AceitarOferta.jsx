@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
+import Modal from "../components/Modal";
 import api from "../api.js";
 import "../styles/Form.css";
 
@@ -7,6 +8,7 @@ function AceitarOferta() {
   const [user, setUser] = useState(null);
   const [ofertas, setOfertas] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
 
   useEffect(() => {
     api.get("/api/user/me/")
@@ -38,7 +40,8 @@ function AceitarOferta() {
 
   return (
     <main>
-      <Header user={user} />
+      <Header user={user} setOpenModal={setOpenModal} />
+      <Modal isOpen={openModal} setOpenModal={setOpenModal} user={user} />
       <div
         className="form-container"
         style={{

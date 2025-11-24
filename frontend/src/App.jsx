@@ -39,6 +39,8 @@ import PaymentCancelPage from "./pages/PaymentCancelPage";
 import InscriptionSuccess from "./pages/InscriptionSuccess";
 import GerenciarPagamentos from "./pages/GerenciarPagamentos";
 import MeusEventos from "./pages/MeusEventos";
+import DashboardAdmin from "./pages/DashboardAdmin";
+import AdminVerificacoes from "./pages/AdminVerificacoes";
 
 function Logout() {
   localStorage.clear();
@@ -380,6 +382,26 @@ function App() {
             element={
               <ProtectedRoute>
                 <EventoAnalytics />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Dashboard Admin */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardAdmin />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin Document Verification */}
+          <Route
+            path="/admin/verificacoes"
+            element={
+              <ProtectedRoute>
+                <AdminVerificacoes />
               </ProtectedRoute>
             }
           />

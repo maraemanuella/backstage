@@ -79,6 +79,7 @@ MIDDLEWARE = [
     'config.middleware.CrossOriginOpenerPolicyMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'config.middleware.DisableCSRFCheckForAPIMiddleware',  # Deve vir ANTES do CsrfViewMiddleware
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -206,6 +207,19 @@ CORS_ALLOWED_ORIGINS = [
 
 # Permitir todas as origens na rede local (desenvolvimento)
 ALLOWED_HOSTS = ["*"]
+
+# CSRF Configuration
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://192.168.100.34:5173",
+    "http://192.168.0.102:5173",
+]
+
+# Isentar rotas da API da verificação CSRF (usam JWT)
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_USE_SESSIONS = False
 
 # Configuração adicional para CORS
 CORS_ALLOW_HEADERS = [
