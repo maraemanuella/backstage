@@ -19,7 +19,6 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "../api";
 import profile from "../assets/profile.png"; // Adjust the path as necessary
-import { useState } from "react";
 
 function Modal({ isOpen, setOpenModal, user }) {
   const navigate = useNavigate();
@@ -77,7 +76,7 @@ function Modal({ isOpen, setOpenModal, user }) {
     const checkUserEvents = async () => {
       if (user && isCredenciado) {
         try {
-          const response = await api.get('/api/eventos/');
+          const response = await api.get('/api/manage/');
           setHasEvents(response.data.length > 0);
         } catch (error) {
           console.error('Erro ao verificar eventos:', error);
@@ -243,20 +242,12 @@ function Modal({ isOpen, setOpenModal, user }) {
                 >
                   <Settings className="h-5 w-5" />
                   <span>Dashboard Admin</span>
-            {/* Gerenciar Eventos */}
-            <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold transition-all duration-300">
-              <Link
-                to="/gerenciar"
-                onClick={() => setOpenModal(false)}
-                className="flex gap-3 items-center"
-              >
-                <Settings className="h-5 w-5" />
-                <span>Gerenciar Eventos</span>
-              </Link>
-            </li>
+                </button>
+              </li>
+            )}
             
             {/* Gestão de Usuários - Apenas para staff/superuser */}
-            {user && (user.is_superuser || user.is_staff) && (
+            {isStaff && (
               <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
                 <button
                   onClick={handleUserManagement}
