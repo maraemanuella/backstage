@@ -1,0 +1,731 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    color: #ffffff;
+    background-color: #000000;
+    overflow-x: hidden;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+/* ===================================
+   SEÇÃO HERO COM CORTINA
+   =================================== */
+
+#hero {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1000;
+    overflow: hidden;
+    background-color: #000000;
+    transition: opacity 0.3s ease;
+}
+
+/* ===================================
+   CORTINAS DE TEATRO COM TEXTURA
+   =================================== */
+
+.curtain {
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    z-index: 10;
+    transition: transform 0.1s linear;
+
+    /* Cor base da cortina - vermelho escuro */
+    background-color: #1a0000;
+
+    /* Sombra interna para profundidade */
+    box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.8);
+
+    /* Textura de dobras verticais */
+    background-image:
+            repeating-linear-gradient(
+                    90deg,
+                    #0d0000 0px,
+                    #1a0000 15px,
+                    #260000 30px,
+                    #1a0000 45px,
+                    #0d0000 60px
+            ),
+            repeating-linear-gradient(
+                    90deg,
+                    transparent 0px,
+                    rgba(0, 0, 0, 0.5) 30px,
+                    transparent 60px
+            );
+}
+
+/* Textura de tecido */
+.curtain::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    background:
+            repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.2) 2px,
+                    rgba(0, 0, 0, 0.2) 3px
+            );
+    opacity: 0.3;
+}
+
+/* Borda lateral */
+.curtain::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    z-index: 2;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.curtain-left {
+    left: 0;
+    transform-origin: left;
+}
+
+.curtain-left::after {
+    right: 0;
+}
+
+.curtain-right {
+    right: 0;
+    transform-origin: right;
+}
+
+.curtain-right::after {
+    left: 0;
+}
+
+/* ===================================
+   CONTEÚDO PRINCIPAL
+   =================================== */
+
+#main-content {
+    position: relative;
+    z-index: 1;
+    margin-top: 100vh;
+    background-color: #000000;
+}
+
+/* ===================================
+   SEÇÕES GERAIS
+   =================================== */
+
+section {
+    padding: 6rem 0;
+    border-bottom: 1px solid #1a1a1a;
+}
+
+.section-title {
+    font-size: 2.5rem;
+    color: #ffffff;
+    text-align: center;
+    margin-bottom: 3rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+/* ===================================
+   BANNER PRINCIPAL
+   =================================== */
+
+.banner-section {
+    position: relative;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image: url("IMG_6533.JPEG");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    border-bottom: none;
+}
+
+.banner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.banner-content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+}
+
+.main-title {
+    font-size: 5rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 1rem;
+    color: #ffffff;
+}
+
+.main-subtitle {
+    font-size: 1.5rem;
+    color: #ffffff;
+    margin-bottom: 3rem;
+    font-weight: 300;
+}
+
+.banner-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ===================================
+   BOTÕES
+   =================================== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-family: inherit;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background-color: #272727;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: #ffffff;
+    border: 2px solid #ffffff;
+}
+
+.btn-secondary:hover {
+    background-color: #ffffff;
+    color: #000000;
+    transform: translateY(-2px);
+}
+
+/* ===================================
+   SOBRE O PROJETO
+   =================================== */
+
+.about-section {
+    background-color: #0a0a0a;
+}
+
+.about-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.about-text {
+    font-size: 1.25rem;
+    line-height: 1.8;
+    text-align: center;
+    color: #b0b0b0;
+}
+
+.about-text strong {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* ===================================
+   ESTATÍSTICAS - NOVA VERSÃO
+   =================================== */
+
+.stats-section {
+    background-color: #000000;
+}
+
+.stats-highlight {
+    margin-top: 3rem;
+}
+
+.stat-main {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a0000 100%);
+    border: 2px solid #cc0000;
+    margin-bottom: 3rem;
+}
+
+.stat-number-large {
+    font-size: 8rem;
+    font-weight: 700;
+    color: #cc0000;
+    line-height: 1;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.03em;
+}
+
+.stat-description-large {
+    font-size: 1.8rem;
+    color: #cccccc;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.4;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+}
+
+.stats-impact {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.impact-item {
+    background-color: #0a0a0a;
+    padding: 2.5rem;
+    border: 1px solid #1a1a1a;
+    transition: all 0.3s ease;
+}
+
+.impact-item:hover {
+    border-color: #cc0000;
+    transform: translateY(-5px);
+}
+
+.impact-item h3 {
+    font-size: 1.3rem;
+    color: #ffffff;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.impact-item p {
+    font-size: 1rem;
+    color: #808080;
+    line-height: 1.7;
+}
+
+/* ===================================
+   FUNCIONALIDADES
+   =================================== */
+
+.features-section {
+    background-color: #0a0a0a;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.feature-card {
+    background-color: #000000;
+    padding: 2.5rem;
+    border: 1px solid #1a1a1a;
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    border-color: #cc0000;
+    transform: translateY(-5px);
+}
+
+.feature-card h3 {
+    font-size: 1.5rem;
+    color: #ffffff;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.feature-card p {
+    font-size: 1rem;
+    color: #808080;
+    line-height: 1.7;
+}
+
+/* ===================================
+   GALERIA
+   =================================== */
+
+.gallery-section {
+    background-color: #000000;
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    margin-top: 3rem;
+    grid-auto-flow: dense;
+}
+
+.gallery-item {
+    position: relative;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid #1a1a1a;
+    transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Imagem expandida */
+.gallery-item.expanded {
+    grid-column: span 2;
+    grid-row: span 2;
+    z-index: 10;
+    border-color: #cc0000;
+    box-shadow: 0 20px 60px rgba(204, 0, 0, 0.3);
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.gallery-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.95), transparent);
+    padding: 1.5rem;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+}
+
+.gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+.gallery-item.expanded img {
+    transform: scale(1);
+}
+
+.gallery-item:hover .gallery-overlay,
+.gallery-item.expanded .gallery-overlay {
+    transform: translateY(0);
+}
+
+.gallery-overlay p {
+    color: #ffffff;
+    font-size: 1rem;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .main-title {
+        font-size: 3rem;
+    }
+
+    .main-subtitle {
+        font-size: 1.2rem;
+    }
+
+    .section-title {
+        font-size: 2rem;
+    }
+
+    .banner-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .stat-number-large {
+        font-size: 5rem;
+    }
+
+    .stat-description-large {
+        font-size: 1.3rem;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .gallery-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .gallery-item.expanded {
+        grid-column: span 1;
+        grid-row: span 1;
+    }
+
+    .team-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .team-member:nth-child(5),
+    .team-member:nth-child(6) {
+        grid-column: auto;
+    }
+
+    section {
+        padding: 4rem 0;
+    }
+}
+
+/* ===================================
+   EQUIPE
+   =================================== */
+
+.team-section {
+    background-color: #0a0a0a;
+}
+
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+/* Centraliza os dois últimos membros */
+.team-member:nth-child(5) {
+    grid-column: 2;
+}
+
+.team-member:nth-child(6) {
+    grid-column: 3;
+}
+
+.team-member {
+    text-align: center;
+    padding: 2rem;
+    background-color: #000000;
+    border: 1px solid #1a1a1a;
+    transition: all 0.3s ease;
+}
+
+.team-member:hover {
+    border-color: #cc0000;
+    transform: translateY(-5px) scale(1.05);
+}
+
+.member-avatar {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 1.5rem;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #1a1a1a;
+    transition: transform 0.3s ease;
+}
+
+.member-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.team-member:hover .member-avatar img {
+    transform: scale(1.1);
+}
+
+.team-member h3 {
+    font-size: 1.1rem;
+    color: #ffffff;
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+}
+
+.github-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #808080;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.github-link:hover {
+    color: #ffffff;
+}
+
+/* ===================================
+   CONTATO
+   =================================== */
+
+.contact-section {
+    background-color: #000000;
+}
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.contact-item {
+    text-align: center;
+    padding: 2.5rem;
+    background-color: #0a0a0a;
+    border: 1px solid #1a1a1a;
+    transition: all 0.3s ease;
+}
+
+.contact-item:hover {
+    border-color: #cc0000;
+}
+
+.contact-item h3 {
+    font-size: 1.2rem;
+    color: #ffffff;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.contact-item p {
+    color: #808080;
+    font-size: 1rem;
+}
+
+/* ===================================
+   FOOTER
+   =================================== */
+
+.footer {
+    background-color: #000000;
+    padding: 2rem 0;
+    border-top: 1px solid #1a1a1a;
+}
+
+.footer-bottom {
+    text-align: center;
+    color: #666666;
+}
+/* ===================================
+   RESPONSIVIDADE
+   =================================== */
+
+@media (max-width: 968px) {
+    .footer-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-title {
+        font-size: 3rem;
+    }
+
+    .main-subtitle {
+        font-size: 1.2rem;
+    }
+
+    .section-title {
+        font-size: 2rem;
+    }
+
+    .banner-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .stat-number-large {
+        font-size: 5rem;
+    }
+
+    .stat-description-large {
+        font-size: 1.3rem;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .team-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .team-member:nth-child(5),
+    .team-member:nth-child(6) {
+        grid-column: auto;
+    }
+
+    section {
+        padding: 4rem 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-title {
+        font-size: 2rem;
+    }
+
+    .main-subtitle {
+        font-size: 1rem;
+    }
+
+    .stat-number-large {
+        font-size: 3.5rem;
+    }
+
+    .stat-description-large {
+        font-size: 1.1rem;
+    }
+
+    .team-grid {
+        grid-template-columns: 1fr;
+    }
+
+    section {
+        padding: 3rem 0;
+    }
+}
