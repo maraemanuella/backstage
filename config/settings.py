@@ -75,13 +75,16 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'config.middleware.CrossOriginOpenerPolicyMiddleware',
+    'config.middleware.MediaCacheMiddleware',  # Cache de longa duração para media
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'config.middleware.DisableCSRFCheckForAPIMiddleware',  # Deve vir ANTES do CsrfViewMiddleware
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -106,22 +109,35 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-db_options = {}
+# Verificar se deve usar PostgreSQL (se DB_NAME está definido)
+DB_NAME = os.getenv('DB_NAME')
 
-if os.getenv('ENV') == 'production':
-    db_options = {'sslmode': 'require'}
+if DB_NAME:
+    # PostgreSQL Configuration
+    db_options = {}
+
+    # Obter modo SSL do .env ou decidir baseado no ENV
+    db_sslmode = os.getenv('DB_SSLMODE', 'disable')
+
+    # Se ENV é production e sslmode não foi especificado, usar require
+    if os.getenv('ENV') == 'production' and os.getenv('DB_SSLMODE') is None:
+        db_sslmode = 'require'
+
+    db_options = {'sslmode': db_sslmode}
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME'),
-            'USER': os.getenv('DB_USER'),
-            'PASSWORD': os.getenv('DB_PASSWORD'),
-            'HOST': os.getenv('DB_HOST'),
-            'PORT': os.getenv('DB_PORT'),
+            'NAME': DB_NAME,
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
             'OPTIONS': db_options
         }
     }
 else:
+    # SQLite (padrão quando não há DB_NAME)
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -160,7 +176,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'pt-BR'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Sao_Paulo'
 
 USE_I18N = True
 
@@ -192,6 +208,19 @@ CORS_ALLOWED_ORIGINS = [
 
 # Permitir todas as origens na rede local (desenvolvimento)
 ALLOWED_HOSTS = ["*"]
+
+# CSRF Configuration
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://192.168.100.34:5173",
+    "http://192.168.0.102:5173",
+]
+
+# Isentar rotas da API da verificação CSRF (usam JWT)
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_USE_SESSIONS = False
 
 # Configuração adicional para CORS
 CORS_ALLOW_HEADERS = [
@@ -225,18 +254,27 @@ CHANNEL_LAYERS = {
 
 
 # EMAIL / MAILERSEND CONFIG
-EMAIL_BACKEND = "anymail.backends.mailersend.EmailBackend"
+# Para desenvolvimento, usar console backend
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = "anymail.backends.mailersend.EmailBackend"
+    ANYMAIL = {
+        "MAILERSEND_API_KEY": os.getenv("MAILERSEND_API_TOKEN")
+    }
 
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL")
-if not DEFAULT_FROM_EMAIL:
-    raise ValueError("DEFAULT_FROM_EMAIL não definido no .env")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@localhost.dev")
 
-MAILERSEND_API_TOKEN = os.getenv("MAILERSEND_API_TOKEN")
-if not MAILERSEND_API_TOKEN:
-    raise ValueError("MAILERSEND_API_TOKEN não definido no .env")
+# STRIPE CONFIG (Cartão de Crédito/Débito)
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY', 'your_stripe_secret_key_here')
+STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY', 'your_stripe_publishable_key_here')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET', '')
+STRIPE_CURRENCY = 'brl'
 
-ANYMAIL = {
-    "MAILERSEND_API_KEY": MAILERSEND_API_TOKEN
-}
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+# Security headers for Google OAuth
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+

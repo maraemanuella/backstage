@@ -1,5 +1,4 @@
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 import uuid
 
 class Inscricao(models.Model):
@@ -14,7 +13,7 @@ class Inscricao(models.Model):
     METODO_PAGAMENTO_CHOICES = [
         ('cartao_credito', 'Cartão de Crédito'),
         ('cartao_debito', 'Cartão de Débito'),
-        ('pix', 'PIX'),
+        ('isento', 'Isento de Depósito'),
     ]
 
     STATUS_PAGAMENTO_CHOICES = [
@@ -67,6 +66,9 @@ class Inscricao(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Campo para controlar tempo de expiração da inscrição pendente
+    expira_em = models.DateTimeField(blank=True, null=True, help_text="Data/hora em que a inscrição pendente expira")
+
     class Meta:
         unique_together = ['usuario', 'evento']
         ordering = ['-created_at']
@@ -84,4 +86,11 @@ class Inscricao(models.Model):
 
     def calcular_reembolso_estimado(self):
         return self.valor_final
+
+    def esta_expirada(self):
+        """Verifica se a inscrição pendente está expirada"""
+        from django.utils import timezone
+        if self.expira_em and self.status_pagamento == 'pendente':
+            return timezone.now() > self.expira_em
+        return False
 

@@ -7,7 +7,9 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from apps.users.views import (
     CreateUserView, CustomTokenObtainView, ListUsersView,
     RetrieveUpdateUserView, DeleteUserView, MeView,
-    update_user_profile, verificar_documento, status_documento
+    update_user_profile, verificar_documento, status_documento,
+    listar_verificacoes_pendentes, aprovar_verificacao, rejeitar_verificacao,
+    user_ranking
 )
 from apps.users.views import GoogleLoginView
 
@@ -21,7 +23,8 @@ from apps.eventos.views import (
 from apps.inscricoes.views import (
     InscricaoCreateView, MinhasInscricoesView, inscricao_detalhes,
     iniciar_inscricao_pagamento, confirmar_pagamento_inscricao,
-    aprovar_pagamento_inscricao, listar_pagamentos_pendentes
+    aprovar_pagamento_inscricao, listar_pagamentos_pendentes, cancelar_inscricao,
+    trocar_metodo_pagamento, verificar_pagamento_pendente
 )
 from apps.avaliacoes.views import AvaliacaoListView, AvaliacaoCreateView
 from apps.favoritos.views import list_favorites, toggle_favorite
@@ -34,7 +37,9 @@ from apps.analytics.views import (
     evento_analytics_roi, evento_analytics_atualizar_custo, evento_analytics_exportar_pdf
 )
 from apps.dashboard.views import (
-    dashboard_metricas, eventos_proximos, eventos_anteriores, notificacoes, graficos
+    dashboard_metricas, eventos_proximos, eventos_anteriores, notificacoes, graficos,
+    dashboard_metricas_globais, dashboard_organizadores, dashboard_verificacoes,
+    dashboard_performance, dashboard_logs
 )
 from apps.checkin.views import realizar_checkin
 
@@ -49,6 +54,7 @@ urlpatterns = [
     path('api/user/<int:pk>/delete/', DeleteUserView.as_view(), name='usuario-deletar'),
     path('api/user/me/', MeView.as_view(), name='me'),
     path('api/user/profile/', update_user_profile, name='update-user-profile'),
+    path('api/user/ranking/', user_ranking, name='user-ranking'),
     path('api/token/', CustomTokenObtainView.as_view(), name='get_token'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='refresh'),
     # Google social login (custom endpoint)
@@ -82,8 +88,16 @@ urlpatterns = [
     # Pagamento PIX
     path('api/inscricoes/iniciar-pagamento/', iniciar_inscricao_pagamento, name='iniciar-inscricao-pagamento'),
     path('api/inscricoes/<uuid:inscricao_id>/confirmar-pagamento/', confirmar_pagamento_inscricao, name='confirmar-pagamento'),
+    path('api/inscricoes/<uuid:inscricao_id>/trocar-metodo-pagamento/', trocar_metodo_pagamento, name='trocar-metodo-pagamento'),
     path('api/inscricoes/<uuid:inscricao_id>/aprovar-pagamento/', aprovar_pagamento_inscricao, name='aprovar-pagamento'),
+    path('api/inscricoes/evento/<uuid:evento_id>/pagamento-pendente/', verificar_pagamento_pendente, name='verificar-pagamento-pendente'),
     path('api/inscricoes/evento/<uuid:evento_id>/pagamentos-pendentes/', listar_pagamentos_pendentes, name='pagamentos-pendentes'),
+    
+    # Pagamento - Todas as formas (PIX e Stripe)
+    path('api/pagamento/', include('apps.inscricoes.payment_urls')),
+
+    # Cancelar inscrição
+    path('api/inscricoes/<uuid:inscricao_id>/cancelar/', cancelar_inscricao, name='cancelar-inscricao'),
 
     # Avaliações
     path('api/eventos/<uuid:evento_id>/avaliacoes/', AvaliacaoListView.as_view(), name='avaliacao-list'),
@@ -112,12 +126,24 @@ urlpatterns = [
     path('api/eventos/<uuid:evento_id>/analytics/atualizar-custo/', evento_analytics_atualizar_custo, name='evento-analytics-atualizar-custo'),
     path('api/eventos/<uuid:evento_id>/analytics/exportar-pdf/', evento_analytics_exportar_pdf, name='evento-analytics-exportar-pdf'),
 
-    # Dashboard
+    # Dashboard (Organizer)
     path('api/dashboard/metricas/', dashboard_metricas, name='dashboard-metricas'),
     path('api/dashboard/eventos-proximos/', eventos_proximos, name='dashboard-eventos-proximos'),
     path('api/dashboard/eventos-anteriores/', eventos_anteriores, name='dashboard-eventos-anteriores'),
     path('api/dashboard/notificacoes/', notificacoes, name='dashboard-notificacoes'),
     path('api/dashboard/graficos/', graficos, name='dashboard-graficos'),
+    
+    # Admin Dashboard
+    path('api/admin/dashboard/metricas/', dashboard_metricas_globais, name='admin-dashboard-metricas'),
+    path('api/admin/dashboard/organizadores/', dashboard_organizadores, name='admin-dashboard-organizadores'),
+    path('api/admin/dashboard/verificacoes/', dashboard_verificacoes, name='admin-dashboard-verificacoes'),
+    path('api/admin/dashboard/performance/', dashboard_performance, name='admin-dashboard-performance'),
+    path('api/admin/dashboard/logs/', dashboard_logs, name='admin-dashboard-logs'),
+    
+    # Admin Verification Management
+    path('api/admin/verificacoes/pendentes/', listar_verificacoes_pendentes, name='listar-verificacoes-pendentes'),
+    path('api/admin/verificacoes/<int:user_id>/aprovar/', aprovar_verificacao, name='aprovar-verificacao'),
+    path('api/admin/verificacoes/<int:user_id>/rejeitar/', rejeitar_verificacao, name='rejeitar-verificacao'),
 
     # Check-in
     path('api/checkin/<uuid:inscricao_id>/', realizar_checkin, name='realizar-checkin'),

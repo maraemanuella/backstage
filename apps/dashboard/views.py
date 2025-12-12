@@ -1,13 +1,24 @@
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
-from django.db.models import Sum, Avg, Count
+from rest_framework import status
+from django.db.models import Sum, Avg, Count, Q
 from django.utils import timezone
 from datetime import datetime, timedelta
 
 from apps.eventos.models import Evento
 from apps.inscricoes.models import Inscricao
 from apps.avaliacoes.models import Avaliacao
+from apps.users.models import CustomUser
+from apps.transferencias.models import TransferRequest
+from .serializers import (
+    DashboardMetricasSerializer,
+    DashboardOrganizadoresSerializer,
+    DashboardVerificacoesSerializer,
+    DashboardPerformanceSerializer,
+    DashboardLogInscricaoSerializer,
+    DashboardLogTransferenciaSerializer
+)
 
 
 @api_view(['GET'])
@@ -195,5 +206,205 @@ def graficos(request):
         'comparecimentoMensal': comparecimento_mensal,
         'scoreMedio': score_medio,
         'desempenhoEventos': desempenho_eventos
+    })
+
+
+# ============================================
+# ADMIN DASHBOARD VIEWS (Staff Only)
+# ============================================
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def dashboard_metricas_globais(request):
+    """Global system metrics for admin dashboard"""
+    # Total active users
+    usuarios_ativos = CustomUser.objects.filter(is_active=True).count()
+    
+    # Completed events
+    eventos_realizados = Evento.objects.filter(
+        data_evento__lt=timezone.now()
+    ).count()
+    
+    # Total revenue from approved payments
+    revenue_total = Inscricao.objects.filter(
+        status_pagamento='aprovado'
+    ).aggregate(total=Sum('valor_final'))['total'] or 0
+    
+    # Growth rate (last 30 days vs previous 30 days)
+    now = timezone.now()
+    last_30_days = now - timedelta(days=30)
+    previous_60_days = now - timedelta(days=60)
+    
+    users_last_30 = CustomUser.objects.filter(
+        date_joined__gte=last_30_days
+    ).count()
+    users_previous_30 = CustomUser.objects.filter(
+        date_joined__gte=previous_60_days,
+        date_joined__lt=last_30_days
+    ).count()
+    
+    if users_previous_30 > 0:
+        taxa_crescimento = round(((users_last_30 - users_previous_30) / users_previous_30) * 100, 1)
+    else:
+        taxa_crescimento = 100.0 if users_last_30 > 0 else 0.0
+    
+    data = {
+        'usuarios_ativos': usuarios_ativos,
+        'eventos_realizados': eventos_realizados,
+        'revenue_total': revenue_total,
+        'taxa_crescimento': taxa_crescimento
+    }
+    
+    serializer = DashboardMetricasSerializer(data)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def dashboard_organizadores(request):
+    """Organizer statistics for admin dashboard"""
+    # Get all user IDs that have created events (organizers)
+    organizador_ids = Evento.objects.values_list('organizador_id', flat=True).distinct()
+    
+    # Count verified and unverified organizers
+    total_organizadores = len(organizador_ids)
+    verificados = CustomUser.objects.filter(
+        id__in=organizador_ids,
+        documento_verificado='aprovado'
+    ).count()
+    nao_verificados = total_organizadores - verificados
+    
+    # Calculate percentage
+    percentual_verificados = round((verificados / total_organizadores) * 100, 1) if total_organizadores > 0 else 0
+    
+    # Count events by verified vs unverified organizers
+    eventos_verificados = Evento.objects.filter(
+        organizador__documento_verificado='aprovado'
+    ).count()
+    eventos_nao_verificados = Evento.objects.exclude(
+        organizador__documento_verificado='aprovado'
+    ).count()
+    
+    data = {
+        'total_organizadores': total_organizadores,
+        'verificados': verificados,
+        'nao_verificados': nao_verificados,
+        'percentual_verificados': percentual_verificados,
+        'eventos_verificados': eventos_verificados,
+        'eventos_nao_verificados': eventos_nao_verificados
+    }
+    
+    serializer = DashboardOrganizadoresSerializer(data)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def dashboard_verificacoes(request):
+    """Document verification statistics for admin dashboard"""
+    # Count by verification status
+    pendentes = CustomUser.objects.filter(documento_verificado='pendente').count()
+    verificando = CustomUser.objects.filter(documento_verificado='verificando').count()
+    aprovados = CustomUser.objects.filter(documento_verificado='aprovado').count()
+    rejeitados = CustomUser.objects.filter(documento_verificado='rejeitado').count()
+    
+    # Recent activity (using date_joined as proxy for submission date)
+    now = timezone.now()
+    last_7_days = now - timedelta(days=7)
+    last_30_days = now - timedelta(days=30)
+    
+    # Count submissions in last 7 and 30 days
+    ultimos_7_dias = CustomUser.objects.filter(
+        date_joined__gte=last_7_days,
+        documento_verificado__in=['verificando', 'aprovado', 'rejeitado']
+    ).count()
+    ultimos_30_dias = CustomUser.objects.filter(
+        date_joined__gte=last_30_days,
+        documento_verificado__in=['verificando', 'aprovado', 'rejeitado']
+    ).count()
+    
+    data = {
+        'pendentes': pendentes,
+        'verificando': verificando,
+        'aprovados': aprovados,
+        'rejeitados': rejeitados,
+        'ultimos_7_dias': ultimos_7_dias,
+        'ultimos_30_dias': ultimos_30_dias
+    }
+    
+    serializer = DashboardVerificacoesSerializer(data)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def dashboard_performance(request):
+    """System performance metrics for admin dashboard"""
+    now = timezone.now()
+    last_month = now - timedelta(days=30)
+    
+    # Inscriptions in last month
+    inscricoes_mes = Inscricao.objects.filter(
+        created_at__gte=last_month
+    ).count()
+    
+    # Conversion rate (approved / total inscriptions)
+    total_inscricoes = Inscricao.objects.count()
+    aprovadas = Inscricao.objects.filter(status_pagamento='aprovado').count()
+    taxa_conversao = round((aprovadas / total_inscricoes) * 100, 1) if total_inscricoes > 0 else 0
+    
+    # Most popular events (by inscription count)
+    eventos_populares = Evento.objects.annotate(
+        total_inscricoes=Count('inscricoes')
+    ).order_by('-total_inscricoes')[:5]
+    
+    eventos_populares_list = [
+        {
+            'titulo': evento.titulo,
+            'total_inscricoes': evento.total_inscricoes
+        }
+        for evento in eventos_populares
+    ]
+    
+    data = {
+        'inscricoes_mes': inscricoes_mes,
+        'taxa_conversao': taxa_conversao,
+        'eventos_populares': eventos_populares_list
+    }
+    
+    serializer = DashboardPerformanceSerializer(data)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def dashboard_logs(request):
+    """Recent activity logs for admin dashboard"""
+    # Last 10 inscriptions
+    ultimas_inscricoes = Inscricao.objects.select_related(
+        'usuario', 'evento'
+    ).order_by('-created_at')[:10].values(
+        'id',
+        'usuario__username',
+        'evento__titulo',
+        'status_pagamento',
+        'created_at'
+    )
+    
+    # Last 10 transfers
+    ultimas_transferencias = TransferRequest.objects.select_related(
+        'from_user', 'to_user', 'inscricao__evento'
+    ).order_by('-created_at')[:10].values(
+        'id',
+        'from_user__username',
+        'to_user__username',
+        'inscricao__evento__titulo',
+        'status',
+        'created_at'
+    )
+    
+    return Response({
+        'ultimas_inscricoes': list(ultimas_inscricoes),
+        'ultimas_transferencias': list(ultimas_transferencias)
     })
 

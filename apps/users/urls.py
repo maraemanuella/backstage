@@ -11,6 +11,10 @@ from .views import (
     update_user_profile,
     verificar_documento,
     status_documento,
+    listar_verificacoes_pendentes,
+    aprovar_verificacao,
+    rejeitar_verificacao,
+    user_ranking,
 )
 
 urlpatterns = [
@@ -20,6 +24,7 @@ urlpatterns = [
     path('user/<int:pk>/delete/', DeleteUserView.as_view(), name='usuario-deletar'),
     path("user/me/", MeView.as_view(), name="me"),
     path('user/profile/', update_user_profile, name='update-user-profile'),
+    path('user/ranking/', user_ranking, name='user-ranking'),
     path('token/', CustomTokenObtainView.as_view(), name='get_token'),
     path('token/refresh/', TokenRefreshView.as_view(), name='refresh'),
     path('api-auth/', include('rest_framework.urls')),
@@ -27,5 +32,10 @@ urlpatterns = [
     path('verificar-documento/', verificar_documento, name='verificar-documento'),
     path('status-documento/', status_documento, name='status-documento'),
     path('user-management/', include('apps.user_management.urls')),
+    
+    # Admin verification endpoints
+    path('admin/verificacoes/pendentes/', listar_verificacoes_pendentes, name='listar-verificacoes-pendentes'),
+    path('admin/verificacoes/<int:user_id>/aprovar/', aprovar_verificacao, name='aprovar-verificacao'),
+    path('admin/verificacoes/<int:user_id>/rejeitar/', rejeitar_verificacao, name='rejeitar-verificacao'),
 ]
 

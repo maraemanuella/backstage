@@ -55,76 +55,155 @@ class MeView(APIView):
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def patch(self, request):
+        user = request.user
+        try:
+            updatable_fields = [
+                'username', 'email', 'telefone', 'cpf', 'cnpj',
+                'data_nascimento', 'sexo', 'profile_photo'
+            ]
+
+            if 'email' in request.data:
+                email = request.data['email']
+                if User.objects.filter(email=email).exclude(id=user.id).exists():
+                    return Response({'email': ['Este email já está em uso por outro usuário.']}, status=status.HTTP_400_BAD_REQUEST)
+
+            if 'username' in request.data:
+                username = request.data['username']
+                if User.objects.filter(username=username).exclude(id=user.id).exists():
+                    return Response({'username': ['Este nome de usuário já está em uso.']}, status=status.HTTP_400_BAD_REQUEST)
+
+            if 'cpf' in request.data and request.data['cpf']:
+                cpf = request.data['cpf'].replace('.', '').replace('-', '').replace(' ', '')
+                if len(cpf) != 11 or not cpf.isdigit():
+                    return Response({'cpf': ['CPF deve ter exatamente 11 dígitos.']}, status=status.HTTP_400_BAD_REQUEST)
+                if User.objects.filter(cpf=cpf).exclude(id=user.id).exists():
+                    return Response({'cpf': ['Este CPF já está em uso por outro usuário.']}, status=status.HTTP_400_BAD_REQUEST)
+                request.data['cpf'] = cpf
+
+            if 'cnpj' in request.data and request.data['cnpj']:
+                cnpj = request.data['cnpj'].replace('.', '').replace('/', '').replace('-', '').replace(' ', '')
+                if len(cnpj) != 14 or not cnpj.isdigit():
+                    return Response({'cnpj': ['CNPJ deve ter exatamente 14 dígitos.']}, status=status.HTTP_400_BAD_REQUEST)
+                if User.objects.filter(cnpj=cnpj).exclude(id=user.id).exists():
+                    return Response({'cnpj': ['Este CNPJ já está em uso por outro usuário.']}, status=status.HTTP_400_BAD_REQUEST)
+                request.data['cnpj'] = cnpj
+
+            if 'telefone' in request.data and request.data['telefone']:
+                telefone = request.data['telefone'].replace('(', '').replace(')', '').replace('-', '').replace(' ', '')
+                if len(telefone) not in [10, 11] or not telefone.isdigit():
+                    return Response({'telefone': ['Telefone deve ter 10 ou 11 dígitos.']}, status=status.HTTP_400_BAD_REQUEST)
+                request.data['telefone'] = telefone
+
+            for field in updatable_fields:
+                if field in request.data:
+                    setattr(user, field, request.data[field])
+
+            user.save()
+
+            serializer = UserSerializer(user)
+            return Response({'message': 'Perfil atualizado com sucesso!', 'user': serializer.data}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': 'Erro interno do servidor.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_user_profile(request):
     user = request.user
     try:
+        # Campos permitidos para atualização
         updatable_fields = [
             'username', 'email', 'telefone', 'cpf', 'cnpj',
             'data_nascimento', 'sexo', 'profile_photo'
         ]
 
-        if 'email' in request.data:
-            email = request.data['email']
+        # Construir um dicionário com os novos valores sem mutar request.data
+        updates = {}
+
+        # Email e username: verificar unicidade se fornecidos
+        email = request.data.get('email')
+        if email:
             if User.objects.filter(email=email).exclude(id=user.id).exists():
-                return Response({'email': ['Este email j est em uso por outro usurio.']}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'email': ['Este email já está em uso por outro usuário.']}, status=status.HTTP_400_BAD_REQUEST)
+            updates['email'] = email
 
-        if 'username' in request.data:
-            username = request.data['username']
+        username = request.data.get('username')
+        if username:
             if User.objects.filter(username=username).exclude(id=user.id).exists():
-                return Response({'username': ['Este nome de usurio j est em uso.']}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'username': ['Este nome de usuário já está em uso.']}, status=status.HTTP_400_BAD_REQUEST)
+            updates['username'] = username
 
-        if 'cpf' in request.data and request.data['cpf']:
-            cpf = request.data['cpf'].replace('.', '').replace('-', '').replace(' ', '')
+        # CPF
+        cpf_raw = request.data.get('cpf')
+        if cpf_raw:
+            cpf = ''.join(ch for ch in cpf_raw if ch.isdigit())
             if len(cpf) != 11 or not cpf.isdigit():
-                return Response({'cpf': ['CPF deve ter exatamente 11 dgitos.']}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'cpf': ['CPF deve ter exatamente 11 dígitos.']}, status=status.HTTP_400_BAD_REQUEST)
             if User.objects.filter(cpf=cpf).exclude(id=user.id).exists():
-                return Response({'cpf': ['Este CPF j est em uso por outro usurio.']}, status=status.HTTP_400_BAD_REQUEST)
-            request.data['cpf'] = cpf
+                return Response({'cpf': ['Este CPF já está em uso por outro usuário.']}, status=status.HTTP_400_BAD_REQUEST)
+            updates['cpf'] = cpf
 
-        if 'cnpj' in request.data and request.data['cnpj']:
-            cnpj = request.data['cnpj'].replace('.', '').replace('/', '').replace('-', '').replace(' ', '')
+        # CNPJ
+        cnpj_raw = request.data.get('cnpj')
+        if cnpj_raw:
+            cnpj = ''.join(ch for ch in cnpj_raw if ch.isdigit())
             if len(cnpj) != 14 or not cnpj.isdigit():
-                return Response({'cnpj': ['CNPJ deve ter exatamente 14 dgitos.']}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'cnpj': ['CNPJ deve ter exatamente 14 dígitos.']}, status=status.HTTP_400_BAD_REQUEST)
             if User.objects.filter(cnpj=cnpj).exclude(id=user.id).exists():
-                return Response({'cnpj': ['Este CNPJ j est em uso por outro usurio.']}, status=status.HTTP_400_BAD_REQUEST)
-            request.data['cnpj'] = cnpj
+                return Response({'cnpj': ['Este CNPJ já está em uso por outro usuário.']}, status=status.HTTP_400_BAD_REQUEST)
+            updates['cnpj'] = cnpj
 
-        if 'telefone' in request.data and request.data['telefone']:
-            telefone = request.data['telefone'].replace('(', '').replace(')', '').replace('-', '').replace(' ', '')
+        # Telefone
+        telefone_raw = request.data.get('telefone')
+        if telefone_raw:
+            telefone = ''.join(ch for ch in telefone_raw if ch.isdigit())
             if len(telefone) not in [10, 11] or not telefone.isdigit():
-                return Response({'telefone': ['Telefone deve ter 10 ou 11 dgitos.']}, status=status.HTTP_400_BAD_REQUEST)
-            request.data['telefone'] = telefone
+                return Response({'telefone': ['Telefone deve ter 10 ou 11 dígitos.']}, status=status.HTTP_400_BAD_REQUEST)
+            updates['telefone'] = telefone
 
-        for field in updatable_fields:
-            if field in request.data:
-                setattr(user, field, request.data[field])
+        # Outros campos simples
+        for fld in ['data_nascimento', 'sexo']:
+            if fld in request.data:
+                updates[fld] = request.data.get(fld)
+
+        # profile_photo pode vir em request.FILES
+        if 'profile_photo' in request.FILES:
+            updates['profile_photo'] = request.FILES.get('profile_photo')
+
+        # Aplicar updates no usuário
+        for field, val in updates.items():
+            setattr(user, field, val)
 
         user.save()
 
         serializer = UserSerializer(user)
         return Response({'message': 'Perfil atualizado com sucesso!', 'user': serializer.data}, status=status.HTTP_200_OK)
 
-    except Exception:
+    except Exception as exc:
+        # Log do erro para facilitar debug (será visível no console do servidor)
+        import traceback
+        traceback.print_exc()
         return Response({'error': 'Erro interno do servidor.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def verificar_documento(request):
+    """User submits document for verification - sets status to 'verificando'"""
     user = request.user
     if user.documento_verificado == 'aprovado':
-        return Response({'error': 'Seu documento j foi verificado e aprovado.'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Seu documento já foi verificado e aprovado.'}, status=status.HTTP_400_BAD_REQUEST)
 
     serializer = DocumentoVerificacaoSerializer(user, data=request.data, partial=True)
     if serializer.is_valid():
+        # Set status to 'verificando' (awaiting admin review)
         serializer.save(documento_verificado='verificando')
-        time.sleep(7)
-        user.documento_verificado = 'aprovado'
-        user.save()
-        return Response({'status': 'aprovado', 'mensagem': 'Documento verificado com sucesso! Voc j pode criar eventos.'})
+        return Response({
+            'status': 'verificando',
+            'mensagem': 'Documento enviado com sucesso! Aguarde a análise de um administrador.'
+        })
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -140,10 +219,7 @@ def status_documento(request):
     })
 
 class GoogleLoginView(APIView):
-    """Recebe `code` do frontend (fluxo auth-code + PKCE), troca por tokens
-    no Google, obtém info do usuário, cria/retorna usuário local e gera JWTs.
-    Compatível com o formato atual do projeto (campo documento_verificado usa strings).
-    """
+
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -152,22 +228,34 @@ class GoogleLoginView(APIView):
             return Response({'error': 'Código não fornecido'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
+            client_secret = os.getenv('GOOGLE_CLIENT_SECRET', '')
+            client_id = os.getenv('GOOGLE_CLIENT_ID', '')
+            
+            print(f"[DEBUG] Client Secret presente: {bool(client_secret) and client_secret != 'YOUR_GOOGLE_CLIENT_SECRET_HERE'}")
+            print(f"[DEBUG] Tamanho do secret: {len(client_secret) if client_secret else 0}")
+            
+            # Se não tiver client secret configurado, retornar erro explicativo
+            if not client_secret or client_secret == 'YOUR_GOOGLE_CLIENT_SECRET_HERE':
+                return Response({
+                    'error': 'Google Client Secret não configurado',
+                    'message': 'Por favor, configure o GOOGLE_CLIENT_SECRET no arquivo .env com o valor correto do Google Cloud Console'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
             token_url = 'https://oauth2.googleapis.com/token'
             
-            # Para @react-oauth/google com flow: 'auth-code', usar 'postmessage'
-            # Mas também tentar com a URL real se falhar
+           
             redirect_uri = 'postmessage'
             
             token_data = {
                 'code': code,
-                'client_id': os.getenv('GOOGLE_CLIENT_ID', ''),
-                'client_secret': os.getenv('GOOGLE_CLIENT_SECRET', ''),
+                'client_id': client_id,
+                'client_secret': client_secret,
                 'redirect_uri': redirect_uri,
                 'grant_type': 'authorization_code',
             }
 
             print(f"[DEBUG] Tentando trocar code por token...")
-            print(f"[DEBUG] Client ID: {os.getenv('GOOGLE_CLIENT_ID', '')[:20]}...")
+            print(f"[DEBUG] Client ID: {client_id[:20]}...")
             print(f"[DEBUG] Redirect URI: {redirect_uri}")
             
             token_resp = requests.post(token_url, data=token_data, timeout=10)
@@ -200,18 +288,27 @@ class GoogleLoginView(APIView):
             if not email:
                 return Response({'error': 'Email não disponível no perfil do Google'}, status=status.HTTP_400_BAD_REQUEST)
 
-            username = email.split('@')[0]
-            user, created = User.objects.get_or_create(
-                email=email,
-                defaults={
-                    'username': username,
-                    'first_name': userinfo.get('given_name', ''),
-                    'last_name': userinfo.get('family_name', ''),
-                    'documento_verificado': 'pendente',
-                }
-            )
-
-            if created:
+            # Tentar obter usuário existente por email
+            user = User.objects.filter(email=email).first()
+            
+            if not user:
+                # Criar novo usuário
+                base_username = email.split('@')[0]
+                username = base_username
+                
+                # Se o username já existir, adicionar um número
+                counter = 1
+                while User.objects.filter(username=username).exists():
+                    username = f"{base_username}{counter}"
+                    counter += 1
+                
+                user = User.objects.create(
+                    email=email,
+                    username=username,
+                    first_name=userinfo.get('given_name', ''),
+                    last_name=userinfo.get('family_name', ''),
+                    documento_verificado='pendente',
+                )
                 # definir senha aleatória segura
                 user.set_password(secrets.token_urlsafe(32))
                 user.save()
@@ -232,5 +329,158 @@ class GoogleLoginView(APIView):
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
-            return Response({'error': f'Erro ao processar login Google: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+            import traceback
+            print(f"[ERROR] Erro no login do Google: {str(e)}")
+            print(f"[ERROR] Traceback completo:")
+            traceback.print_exc()
+            return Response({
+                'error': f'Erro ao processar login Google: {str(e)}',
+                'type': type(e).__name__
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+# ============================================
+# ADMIN DOCUMENT VERIFICATION VIEWS
+# ============================================
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def listar_verificacoes_pendentes(request):
+    """List all users with documents pending verification"""
+    # Get users with status 'verificando' (awaiting admin review)
+    usuarios_pendentes = User.objects.filter(
+        documento_verificado='verificando',
+        documento_foto__isnull=False  # Only users who uploaded a document
+    ).order_by('-date_joined')
+    
+    data = []
+    for usuario in usuarios_pendentes:
+        data.append({
+            'id': usuario.id,
+            'username': usuario.username,
+            'email': usuario.email,
+            'tipo_documento': usuario.tipo_documento,
+            'numero_documento': usuario.numero_documento,
+            'documento_foto': usuario.documento_foto.url if usuario.documento_foto else None,
+            'data_submissao': usuario.date_joined,
+            'status': usuario.documento_verificado
+        })
+    
+    return Response(data)
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def aprovar_verificacao(request, user_id):
+    """Admin approves a user's document verification"""
+    try:
+        usuario = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'Usuário não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if usuario.documento_verificado == 'aprovado':
+        return Response({'error': 'Este documento já foi aprovado.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Update status to approved
+    usuario.documento_verificado = 'aprovado'
+    usuario.save()
+    
+    return Response({
+        'mensagem': f'Documento de {usuario.username} aprovado com sucesso!',
+        'usuario_id': usuario.id,
+        'status': 'aprovado'
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def rejeitar_verificacao(request, user_id):
+    """Admin rejects a user's document verification"""
+    try:
+        usuario = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response({'error': 'Usuário não encontrado.'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if usuario.documento_verificado == 'aprovado':
+        return Response({'error': 'Este documento já foi aprovado e não pode ser rejeitado.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Get rejection reason from request body (optional)
+    motivo = request.data.get('motivo', 'Documento não atende aos requisitos.')
+    
+    # Update status to rejected
+    usuario.documento_verificado = 'rejeitado'
+    usuario.save()
+    
+    return Response({
+        'mensagem': f'Documento de {usuario.username} rejeitado.',
+        'usuario_id': usuario.id,
+        'status': 'rejeitado',
+        'motivo': motivo
+    })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_ranking(request):
+    """
+    Retorna informações completas de ranking do usuário autenticado.
+    Inclui: score, nível, cor, e informações sobre o próximo nível.
+    """
+    user = request.user
+    ranking_info = user.get_ranking_info()
+
+    return Response({
+        'score': ranking_info['score'],
+        'nivel': ranking_info['nivel'],
+        'cor': ranking_info['cor'],
+        'proximo_nivel': ranking_info['proximo_nivel'],
+        'descricao': get_nivel_descricao(ranking_info['nivel'])
+    }, status=status.HTTP_200_OK)
+
+
+def get_nivel_descricao(nivel):
+    """Retorna a descrição e benefícios de cada nível"""
+    descricoes = {
+        'Bronze': {
+            'titulo': 'Bronze',
+            'descricao': 'Você está começando sua jornada!',
+            'beneficios': [],
+            'dica': 'Para manter seu score alto, compareça aos eventos que você se inscreveu. O objetivo da plataforma é reduzir as ausências!'
+        },
+        'Prata': {
+            'titulo': 'Prata',
+            'descricao': 'Usuário confiável da plataforma',
+            'beneficios': [],
+            'dica': 'Para manter seu score alto, compareça aos eventos que você se inscreveu. O objetivo da plataforma é reduzir as ausências!'
+        },
+        'Ouro': {
+            'titulo': 'Ouro',
+            'descricao': 'Membro valioso da comunidade',
+            'beneficios': [
+                'Acesso a eventos exclusivos',
+                'Check-in prioritário',
+                'Suporte exclusivo'
+            ],
+            'dica': 'Para manter seu score alto, compareça aos eventos que você se inscreveu. O objetivo da plataforma é reduzir as ausências!'
+        },
+        'Platina': {
+            'titulo': 'Platina',
+            'descricao': 'Usuário exemplar e confiável',
+            'beneficios': [
+                'Acesso a eventos exclusivos',
+                'Check-in prioritário',
+                'Suporte exclusivo'
+            ],
+            'dica': 'Para manter seu score alto, compareça aos eventos que você se inscreveu. O objetivo da plataforma é reduzir as ausências!'
+        },
+        'Diamante': {
+            'titulo': 'Diamante',
+            'descricao': 'Elite da plataforma!',
+            'beneficios': [
+                'Acesso a eventos exclusivos',
+                'Check-in prioritário',
+                'Suporte exclusivo'
+            ],
+            'dica': 'Parabéns! Continue comparecendo aos eventos para manter seu nível máximo!'
+        }
+    }
+    return descricoes.get(nivel, descricoes['Bronze'])

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import "../styles/EventInscription.css"
+import "../styles/InscriptionInfo.css"
 import EventSummary from './EventSummary'
 import ParticipantForm from './ParticipantForm'
 import PaymentMethodSelector from './PaymentMethodSelector'
@@ -23,6 +24,7 @@ function InscriptionForm({ eventId }) {
     cpf_inscricao: ''
   })
   
+  const [metodoPagamento, setMetodoPagamento] = useState('pix')
   const [aceitouTermos, setAceitouTermos] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
@@ -31,6 +33,10 @@ function InscriptionForm({ eventId }) {
       try {
         const response = await api.get(`/api/eventos/${eventId}/resumo-inscricao/`)
         setEventData(response.data)
+
+        // Apenas cartão é aceito como método de pagamento
+        setMetodoPagamento('cartao_credito')
+
         setError(null)
       } catch (err) {
         console.error('Erro ao carregar evento:', err)
@@ -90,21 +96,43 @@ function InscriptionForm({ eventId }) {
         evento_id: eventId,
         ...dadosParticipante,
         cpf_inscricao: cpfLimpo,
+        metodo_pagamento: metodoPagamento,
         aceita_termos: aceitouTermos
       }
       
-      console.log('Criando inscrição com pagamento PIX:', payload)
-      
-      // Usa o novo endpoint que retorna o QR Code
+      console.log('Criando inscrição:', payload)
+
+      // Usa o endpoint de iniciar pagamento
       const response = await api.post('/api/inscricoes/iniciar-pagamento/', payload)
 
       console.log('Inscrição iniciada:', response.data)
       
-      // Redireciona para a página de pagamento com os dados
+      // Se for evento sem depósito inicial, redireciona para página de sucesso direto
+      if (response.data.isento || response.data.status === 'confirmada') {
+        toast.success('Inscrição confirmada! Este evento não requer depósito inicial.')
+        navigate('/inscricoes/sucesso', {
+          state: {
+            inscricao: {
+              id: response.data.inscricao_id,
+              evento_titulo: response.data.evento?.titulo || eventData?.titulo || 'Evento',
+              status: 'confirmada',
+              valor_final: response.data.valor_final || '0.00'
+            },
+            message: 'Inscrição confirmada! Compareça ao evento para garantir sua vaga.',
+            isento: true
+          }
+        })
+        return
+      }
+
+      // Se for evento pago, redireciona para a página de pagamento
       if (response.data && response.data.inscricao_id) {
         navigate(`/pagamento/${response.data.inscricao_id}`, {
           state: {
-            paymentData: response.data
+            paymentData: {
+              ...response.data,
+              metodo_pagamento: metodoPagamento
+            }
           }
         })
         return
@@ -174,28 +202,19 @@ function InscriptionForm({ eventId }) {
               onInputChange={handleInputChange}
             />
             
-            <div className="payment-info-box">
-              <h3>💳 Método de Pagamento</h3>
-              <div className="pix-only-notice">
-                <div className="pix-icon">
-                  <svg width="40" height="40" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M242.4 292.5C247.8 287.1 247.8 278.2 242.4 272.8L155.5 185.9C150.1 180.5 141.2 180.5 135.8 185.9L106.6 215.1C101.2 220.5 101.2 229.4 106.6 234.8L193.5 321.7C198.9 327.1 207.8 327.1 213.2 321.7L242.4 292.5Z" fill="#32BCAD"/>
-                    <path d="M405.4 234.8L318.5 321.7C313.1 327.1 304.2 327.1 298.8 321.7L269.6 292.5C264.2 287.1 264.2 278.2 269.6 272.8L356.5 185.9C361.9 180.5 370.8 180.5 376.2 185.9L405.4 215.1C410.8 220.5 410.8 229.4 405.4 234.8Z" fill="#32BCAD"/>
-                  </svg>
-                </div>
-                <p><strong>Pagamento via PIX</strong></p>
-                <p className="pix-description">
-                  Após preencher seus dados, você será direcionado para a página de pagamento 
-                  onde poderá escanear o QR Code PIX do evento.
-                </p>
-              </div>
-            </div>
+            {/* Só mostrar seletor de pagamento se não for gratuito */}
+            {eventData?.valor_com_desconto > 0 && eventData?.valor_com_desconto >= 0.50 && (
+              <PaymentMethodSelector
+                metodoPagamento={metodoPagamento}
+                onSelect={setMetodoPagamento}
+              />
+            )}
           </div>
 
           <div className="summary-section">
             <FinancialSummary 
               eventData={eventData}
-              metodoPagamento="pix"
+              metodoPagamento={metodoPagamento}
               aceitouTermos={aceitouTermos}
               onTermosChange={setAceitouTermos}
               onSubmit={handleSubmit}

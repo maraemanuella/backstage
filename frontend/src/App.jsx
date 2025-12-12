@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { FavoritesProvider } from "./contexts/FavoritesContext.jsx";
+import { ProfileProvider } from "./contexts/ProfileContext.jsx";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -9,8 +10,10 @@ import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
+import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RequireCompleteProfile from "./components/RequireCompleteProfile";
 import EventDescription from "./pages/EventDescription";
 import Waitlist from "./pages/Waitlist";
 import RegistrationSuccess from "./pages/RegistrationSuccess";
@@ -33,8 +36,13 @@ import EventoAnalytics from "./pages/EventoAnalytics";
 import Sac from "./pages/Sac.jsx";
 import UserManagement from "./pages/UserManagement";
 import PaymentPage from "./pages/PaymentPage";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
+import PaymentCancelPage from "./pages/PaymentCancelPage";
 import InscriptionSuccess from "./pages/InscriptionSuccess";
 import GerenciarPagamentos from "./pages/GerenciarPagamentos";
+import MeusEventos from "./pages/MeusEventos";
+import DashboardAdmin from "./pages/DashboardAdmin";
+import AdminVerificacoes from "./pages/AdminVerificacoes";
 
 function Logout() {
   localStorage.clear();
@@ -49,19 +57,22 @@ function RegisterAndLogout() {
 function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-      <FavoritesProvider>
-        <BrowserRouter>
-          <TitleUpdater />
-          <Routes>
-          {/* Página inicial */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
+      <ProfileProvider>
+        <FavoritesProvider>
+          <BrowserRouter>
+            <TitleUpdater />
+            <Routes>
+            {/* Página inicial */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <RequireCompleteProfile>
+                    <Home />
+                  </RequireCompleteProfile>
+                </ProtectedRoute>
+              }
+            />
 
           {/* Rotas públicas */}
           <Route
@@ -105,7 +116,9 @@ function App() {
             path="/inscricao/:eventId"
             element={
               <ProtectedRoute>
-                <EventInscription />
+                <RequireCompleteProfile>
+                  <EventInscription />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -113,7 +126,9 @@ function App() {
             path="/inscricao-realizada/:registrationId"
             element={
               <ProtectedRoute>
-                <RegistrationSuccess />
+                <RequireCompleteProfile>
+                  <RegistrationSuccess />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -123,17 +138,45 @@ function App() {
             path="/pagamento/:inscricaoId"
             element={
               <ProtectedRoute>
-                <PaymentPage />
+                <RequireCompleteProfile>
+                  <PaymentPage />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
-          
+
+          {/* Stripe payment success */}
+          <Route
+            path="/payment/success"
+            element={
+              <ProtectedRoute>
+                <RequireCompleteProfile>
+                  <PaymentSuccessPage />
+                </RequireCompleteProfile>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Stripe payment cancel */}
+          <Route
+            path="/payment/cancel"
+            element={
+              <ProtectedRoute>
+                <RequireCompleteProfile>
+                  <PaymentCancelPage />
+                </RequireCompleteProfile>
+              </ProtectedRoute>
+            }
+          />
+
           {/* Sucesso da inscrição */}
           <Route
             path="/inscricoes/sucesso"
             element={
               <ProtectedRoute>
-                <InscriptionSuccess />
+                <RequireCompleteProfile>
+                  <InscriptionSuccess />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -143,7 +186,9 @@ function App() {
             path="/eventos/:eventoId/gerenciar-pagamentos"
             element={
               <ProtectedRoute>
-                <GerenciarPagamentos />
+                <RequireCompleteProfile>
+                  <GerenciarPagamentos />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -153,7 +198,9 @@ function App() {
             path="/checkin/:id"
             element={
               <ProtectedRoute>
-                <Checkin />
+                <RequireCompleteProfile>
+                  <Checkin />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -162,7 +209,9 @@ function App() {
             path="/checkin/scan/:eventoId?"
             element={
               <ProtectedRoute>
-                <ScanCheckin />
+                <RequireCompleteProfile>
+                  <ScanCheckin />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -172,7 +221,9 @@ function App() {
             path="/transferir-inscricao"
             element={
               <ProtectedRoute>
-                <SolicitarTransferencia />
+                <RequireCompleteProfile>
+                  <SolicitarTransferencia />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -180,7 +231,9 @@ function App() {
             path="/ofertas-transferencia"
             element={
               <ProtectedRoute>
-                <AceitarOferta />
+                <RequireCompleteProfile>
+                  <AceitarOferta />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -190,7 +243,9 @@ function App() {
             path="/perfil"
             element={
               <ProtectedRoute>
-                <Profile />
+                <RequireCompleteProfile>
+                  <Profile />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -199,7 +254,17 @@ function App() {
             path="/perfil/editar"
             element={
               <ProtectedRoute>
-                <EditProfile />
+                <RequireCompleteProfile>
+                  <EditProfile />
+                </RequireCompleteProfile>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/configuracoes"
+            element={
+              <ProtectedRoute>
+                <Settings />
               </ProtectedRoute>
             }
           />
@@ -209,7 +274,9 @@ function App() {
             path="/notificacoes"
             element={
               <ProtectedRoute>
-                <Notifications />
+                <RequireCompleteProfile>
+                  <Notifications />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -219,7 +286,9 @@ function App() {
             path="/verificar-documento"
             element={
               <ProtectedRoute>
-                <VerificarDocumento />
+                <RequireCompleteProfile>
+                  <VerificarDocumento />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -229,7 +298,21 @@ function App() {
             path="/heart"
             element={
               <ProtectedRoute>
-                <HeartPage />
+                <RequireCompleteProfile>
+                  <HeartPage />
+                </RequireCompleteProfile>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Meus Eventos - Página Unificada */}
+          <Route
+            path="/meus-eventos"
+            element={
+              <ProtectedRoute>
+                <RequireCompleteProfile>
+                  <MeusEventos />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -238,7 +321,9 @@ function App() {
             path="/proximos"
             element={
               <ProtectedRoute>
-                <ProximosEventos />
+                <RequireCompleteProfile>
+                  <ProximosEventos />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -247,7 +332,9 @@ function App() {
             path="/passados"
             element={
               <ProtectedRoute>
-                <EventosPassados />
+                <RequireCompleteProfile>
+                  <EventosPassados />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -257,7 +344,9 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardOrganizador />
+                <RequireCompleteProfile>
+                  <DashboardOrganizador />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -267,7 +356,9 @@ function App() {
             path="/criar-evento"
             element={
               <ProtectedRoute>
-                <CriarEvento />
+                <RequireCompleteProfile>
+                  <CriarEvento />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -277,7 +368,9 @@ function App() {
             path="/evento/:eventoId/analytics"
             element={
               <ProtectedRoute>
-                <EventoAnalytics />
+                <RequireCompleteProfile>
+                  <EventoAnalytics />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -287,7 +380,9 @@ function App() {
             path="/gerenciar"
             element={
               <ProtectedRoute>
-                <ManageEvent />
+                <RequireCompleteProfile>
+                  <ManageEvent />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -297,7 +392,9 @@ function App() {
             path="/sac"
             element={
               <ProtectedRoute>
-                <Sac />
+                <RequireCompleteProfile>
+                  <Sac />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -307,7 +404,9 @@ function App() {
             path="/user-management"
             element={
               <ProtectedRoute>
-                <UserManagement />
+                <RequireCompleteProfile>
+                  <UserManagement />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
@@ -317,27 +416,29 @@ function App() {
             path="/gerenciar/editar/:id"
             element={
               <ProtectedRoute>
-                <EditEvent />
+                <RequireCompleteProfile>
+                  <EditEvent />
+                </RequireCompleteProfile>
               </ProtectedRoute>
             }
           />
 
-          {/* Criar Evento */}
+          {/* Dashboard Admin */}
           <Route
-            path="/criar-evento"
+            path="/admin/dashboard"
             element={
               <ProtectedRoute>
-                <CriarEvento />
+                <DashboardAdmin />
               </ProtectedRoute>
             }
           />
 
-          {/* Analytics do Evento */}
+          {/* Admin Document Verification */}
           <Route
-            path="/evento/:eventoId/analytics"
+            path="/admin/verificacoes"
             element={
               <ProtectedRoute>
-                <EventoAnalytics />
+                <AdminVerificacoes />
               </ProtectedRoute>
             }
           />
@@ -347,6 +448,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </FavoritesProvider>
+      </ProfileProvider>
     </GoogleOAuthProvider>
   );
 }

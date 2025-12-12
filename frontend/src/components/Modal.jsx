@@ -1,23 +1,30 @@
 import {
-  ChartNoAxesColumn,
   LayoutDashboard,
   LogOut,
   Settings,
-  TicketCheck,
   X,
   PlusCircle,
   AlertCircle,
   CircleHelp,
+  Users,
+  DollarSign,
+  PartyPopper,
+  ChevronDown,
+  CircleArrowRight,
+  CircleArrowLeft,
+  Heart,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-import MeuEvento from "./MeuEvento";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../api";
 import profile from "../assets/profile.png"; // Adjust the path as necessary
 
 function Modal({ isOpen, setOpenModal, user }) {
   const navigate = useNavigate();
   const [showAlert, setShowAlert] = useState(false);
+  const [meusEventosExpanded, setMeusEventosExpanded] = useState(false);
+  const [hasEvents, setHasEvents] = useState(false);
 
   const handleLogout = () => {
     // Limpa todos os dados do localStorage
@@ -41,7 +48,7 @@ function Modal({ isOpen, setOpenModal, user }) {
   };
 
   const handleCriarEvento = () => {
-    if (!user?.documento_verificado) {
+    if (user?.documento_verificado !== 'aprovado') {
       setShowAlert(true);
       return;
     }
@@ -49,6 +56,36 @@ function Modal({ isOpen, setOpenModal, user }) {
     setOpenModal(false);
     navigate("/criar-evento");
   };
+
+  const handleUserManagement = () => {
+    setOpenModal(false);
+    navigate("/user-management");
+  };
+
+
+  const handleAutorizarPagamento = () => {
+    setOpenModal(false);
+    // Redireciona para a página de gerenciar eventos onde pode selecionar o evento
+    navigate("/gerenciar");
+  };
+
+  const isCredenciado = user?.documento_verificado === 'aprovado';
+  const isStaff = user?.is_staff || user?.is_superuser;
+
+  useEffect(() => {
+    const checkUserEvents = async () => {
+      if (user && isCredenciado) {
+        try {
+          const response = await api.get('/api/manage/');
+          setHasEvents(response.data.length > 0);
+        } catch (error) {
+          console.error('Erro ao verificar eventos:', error);
+          setHasEvents(false);
+        }
+      }
+    };
+    checkUserEvents();
+  }, [user, isCredenciado]);
 
   if (isOpen) {
     return (
@@ -88,7 +125,7 @@ function Modal({ isOpen, setOpenModal, user }) {
                       onClick={() => {
                         setShowAlert(false);
                         setOpenModal(false);
-                        navigate("/credenciamento");
+                        navigate("/verificar-documento");
                       }}
                       className="px-3 py-1.5 bg-amber-600 text-white text-xs font-medium rounded hover:bg-amber-700 transition-colors"
                     >
@@ -106,12 +143,57 @@ function Modal({ isOpen, setOpenModal, user }) {
             </div>
           )}
 
-          <ul className="px-2">
-            <li className="relative mb-4">
-              <MeuEvento />
+          <ul className="px-2 space-y-2">
+            {/* Meus Eventos - Colapsável */}
+            <li className="relative">
+              <button
+                onClick={() => setMeusEventosExpanded(!meusEventosExpanded)}
+                className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold transition-all duration-300 w-[280px] flex items-center justify-between"
+              >
+                <span className="flex items-center gap-3">
+                  <PartyPopper className="h-5 w-5" />
+                  <span>Meus Eventos</span>
+                </span>
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform duration-300 ${
+                    meusEventosExpanded ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Submenu expandido */}
+              {meusEventosExpanded && (
+                <div className="bg-gray-100 rounded mx-2 mt-1 py-2 animate-in slide-in-from-top duration-200">
+                  <Link
+                    to="/proximos"
+                    onClick={() => setOpenModal(false)}
+                    className="flex items-center gap-3 px-6 py-2 text-black hover:bg-lime-300 hover:font-bold transition-all duration-300"
+                  >
+                    <CircleArrowRight className="h-4 w-4" />
+                    <span>Futuros</span>
+                  </Link>
+                  <Link
+                    to="/passados"
+                    onClick={() => setOpenModal(false)}
+                    className="flex items-center gap-3 px-6 py-2 text-black hover:bg-sky-300 hover:font-bold transition-all duration-300"
+                  >
+                    <CircleArrowLeft className="h-4 w-4" />
+                    <span>Passados</span>
+                  </Link>
+                  <Link
+                    to="/heart"
+                    onClick={() => setOpenModal(false)}
+                    className="flex items-center gap-3 px-6 py-2 text-black hover:bg-red-400 hover:text-white hover:font-bold transition-all duration-300"
+                  >
+                    <Heart className="h-4 w-4" />
+                    <span>Favoritos</span>
+                  </Link>
+                </div>
+              )}
             </li>
 
-            <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-black hover:text-white transition-colors duration-300 mb-2">
+            {/* Criar Evento */}
+            <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold transition-all duration-300">
               <button
                 onClick={handleCriarEvento}
                 className="flex gap-3 items-center w-full text-left"
@@ -121,21 +203,61 @@ function Modal({ isOpen, setOpenModal, user }) {
               </button>
             </li>
 
-            <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
-              <button
-                onClick={handleDashboardClick}
-                className="flex gap-3 items-center w-full text-left"
-              >
-                <LayoutDashboard className="h-5 w-5" />
-                <span>DashBoard</span>
-              </button>
-            </li>
+            {/* Dashboard - Apenas para credenciados que criaram eventos */}
+            {isCredenciado && hasEvents && (
+              <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold transition-all duration-300">
+                <button
+                  onClick={handleDashboardClick}
+                  className="flex gap-3 items-center w-full text-left"
+                >
+                  <LayoutDashboard className="h-5 w-5" />
+                  <span>Dashboard</span>
+                </button>
+              </li>
+            )}
 
-            <li className="ml-2 text-black p-1 rounded w-[280px] shadow-7xl cursor-pointer mt-4 hover:bg-black  hover:text-white transition-colors duration-300">
-              <Link to="/gerenciar" className="flex gap-1 items-center">
-                <Settings className="h-5 w-5 ml-2" /> Gerenciar eventos
-              </Link>
-            </li>
+            {/* Gerenciar Eventos - Apenas para quem já criou eventos */}
+            {hasEvents && (
+              <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold transition-all duration-300">
+                <Link
+                  to="/gerenciar"
+                  onClick={() => setOpenModal(false)}
+                  className="flex gap-3 items-center"
+                >
+                  <Settings className="h-5 w-5" />
+                  <span>Gerenciar Eventos</span>
+                </Link>
+              </li>
+            )}
+
+            {/* Dashboard Admin - Apenas para staff */}
+            {isStaff && (
+              <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-purple-600 hover:text-white hover:font-bold transition-all duration-300">
+                <button
+                  onClick={() => {
+                    navigate('/admin/dashboard');
+                    setOpenModal(false);
+                  }}
+                  className="flex gap-3 items-center w-full text-left"
+                >
+                  <Settings className="h-5 w-5" />
+                  <span>Dashboard Admin</span>
+                </button>
+              </li>
+            )}
+            
+            {/* Gestão de Usuários - Apenas para staff/superuser */}
+            {isStaff && (
+              <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
+                <button
+                  onClick={handleUserManagement}
+                  className="flex gap-3 items-center w-full text-left"
+                >
+                  <Users className="h-5 w-5" />
+                  <span>Gestão de Usuários</span>
+                </button>
+              </li>
+            )}
 
             <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-gray-100 transition-colors duration-300 mb-2">
               <Link to="/sac" className="flex gap-3 items-center">
@@ -143,6 +265,19 @@ function Modal({ isOpen, setOpenModal, user }) {
                 <span>SAC</span>
               </Link>
             </li>
+            
+            {/* Autorizar Pagamento - Apenas para staff */}
+            {isStaff && (
+              <li className="text-black p-3 rounded mx-2 cursor-pointer hover:bg-black hover:text-white hover:font-bold transition-all duration-300">
+                <button
+                  onClick={handleAutorizarPagamento}
+                  className="flex gap-3 items-center w-full text-left"
+                >
+                  <DollarSign className="h-5 w-5" />
+                  <span>Autorizar Pagamento</span>
+                </button>
+              </li>
+            )}
           </ul>
 
           {/* Footer com perfil e logout */}
